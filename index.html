@@ -1740,10 +1740,10 @@ async function callImageGen(hero, sceneText){
 
 /* Kicks off (and caches) an illustration for the current chapter's opening
    scene. Fire-and-forget: updates STATE and re-renders when it resolves. */
-/* Looks for images/<chapterId>.jpg (then .png) next to index.html. Resolves
+/* Looks for images/<chapterId>.jpg (then .jpeg, .png, .webp) next to index.html. Resolves
    to the URL of the first one that loads, or null if none exist. */
 function probeChapterImage(id){
-  const exts = ['jpg','png'];
+  const exts = ['jpg','jpeg','png','webp'];
   return new Promise(resolve=>{
     let i = 0;
     const next = ()=>{
