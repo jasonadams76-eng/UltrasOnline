@@ -1085,7 +1085,7 @@ if(!GEMINI_WORKER_URL && !GEMINI_API_KEY) console.warn('No workerUrl or Gemini A
 const GEMINI_MODEL_PRIMARY = "gemini-3.5-flash-lite";
 const GEMINI_MODEL_FALLBACK = "gemini-3.1-flash-lite";
 const IMAGE_MODEL = 'flux';          // Pollinations' base Flux model — free, no key required; stronger prompt adherence and more coherent, photoreal output than 'turbo'
-const IMAGE_STYLE = 'photorealistic, live-action movie still, 35mm film, real actors, natural lighting, shallow depth of field, cinematic color grading. Not a drawing, not a comic, not anime, not cel-shaded, not line art.';
+const IMAGE_STYLE = 'photorealistic live-action film still, shot on 35mm anamorphic lens, sharp focus, highly detailed textures, realistic skin, fabric and metal, natural volumetric lighting, rich cinematic color grading, high resolution.';
 
 /* Fixed per-chapter illustrations. Add an entry keyed by chapter id with a
    data URI (or any image URL) and that image is used for the chapter opening
@@ -1714,12 +1714,12 @@ async function callImageGen(hero, sceneText){
   // backends mostly ignore negative prompts. The hero is deliberately not
   // described here — their appearance text (e.g. "birds nearby") pulls scenes
   // toward wildlife — so describe the hero inside the scene text if needed.
-  const scene = sceneText.slice(0, 450);
-  const prompt = `Photorealistic cinematic movie still, wide shot. ${scene} ${IMAGE_STYLE}`.slice(0, 700);
+  const scene = sceneText.slice(0, 520);
+  const prompt = `Photorealistic cinematic movie still, wide shot. ${scene} ${IMAGE_STYLE}`.slice(0, 900);
 
   const params = new URLSearchParams({
-    width: '768',
-    height: '432',
+    width: '1280',
+    height: '720',
     model: IMAGE_MODEL,
     nologo: 'true',
     enhance: 'false',
@@ -1800,7 +1800,7 @@ async function describeSceneForImage(hero, sceneText){
   try{
     const ch = currentChapter();
     const heroLook = hero && hero.appearance ? String(hero.appearance).replace(/,?\s*(often shown[^.]*|and birds nearby)\.?/gi,'').slice(0,260) : '';
-    const prompt = `You write shot descriptions for an image generator. Read the story passage and describe, in ONE sentence of at most 45 words, exactly what a movie camera would see at its key moment.
+    const prompt = `You write shot descriptions for an image generator. Read the story passage and describe, in ONE sentence of at most 60 words, exactly what a movie camera would see at its key moment. Include the time of day, the lighting, and a camera angle (for example low angle, over-the-shoulder, or wide establishing shot).
 
 RULES:
 - Only concrete, visible things: the place, lighting, weather, objects, and people or creatures actually named in the passage, and what they are physically doing.
@@ -1821,7 +1821,7 @@ ${sceneText.slice(0, 1800)}`;
     const data = await response.json();
     const text = data.candidates?.[0]?.content?.parts?.map(p=>p.text).join('').trim();
     if(!text) return null;
-    return text.replace(/^["'\s]+|["'\s]+$/g,'').slice(0, 450);
+    return text.replace(/^["'\s]+|["'\s]+$/g,'').slice(0, 520);
   }catch(e){
     return null;
   }
