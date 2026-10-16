@@ -1740,12 +1740,30 @@ async function callImageGen(hero, sceneText){
 
 /* Kicks off (and caches) an illustration for the current chapter's opening
    scene. Fire-and-forget: updates STATE and re-renders when it resolves. */
+/* Looks for images/<chapterId>.jpg (then .png) next to index.html. Resolves
+   to the URL of the first one that loads, or null if none exist. */
+function probeChapterImage(id){
+  const exts = ['jpg','png'];
+  return new Promise(resolve=>{
+    let i = 0;
+    const next = ()=>{
+      if(i >= exts.length) return resolve(null);
+      const url = `images/${id}.${exts[i++]}`;
+      const im = new Image();
+      im.onload = ()=>resolve(url);
+      im.onerror = next;
+      im.src = url;
+    };
+    next();
+  });
+}
+
 function ensureOpeningImage(){
   if(STATE.chapterId === 'FINISHED') return;
   const cacheKey = STATE.activeHero.id + ':' + STATE.chapterId;
   if(STATE.openingImageChapterId === cacheKey) return; // already have it / already loading
   STATE.openingImageChapterId = cacheKey;
-  // A fixed, pre-supplied image for this chapter wins over live generation.
+  // 1) A fixed image embedded in CHAPTER_IMAGES wins.
   if(CHAPTER_IMAGES[STATE.chapterId]){
     STATE.openingImage = { url: CHAPTER_IMAGES[STATE.chapterId] };
     STATE.openingImageStatus = 'done';
@@ -1754,23 +1772,74 @@ function ensureOpeningImage(){
   STATE.openingImage = null;
   STATE.openingImageStatus = 'loading';
   const ch = currentChapter();
-  const scene = CHAPTER_IMAGE_PROMPTS[ch.id] || ch.opening;
-  callImageGen(STATE.activeHero, scene).then(img=>{
-    STATE.openingImage = img;
-    STATE.openingImageStatus = img ? 'done' : 'error';
-    render();
+  // 2) Then a file in the images/ folder named after the chapter id (e.g. images/ecl1.jpg).
+  //    3) Otherwise fall back to live generation from the scene description.
+  probeChapterImage(ch.id).then(fileUrl=>{
+    if(STATE.openingImageChapterId !== cacheKey) return; // chapter changed while loading
+    if(fileUrl){
+      STATE.openingImage = { url: fileUrl };
+      STATE.openingImageStatus = 'done';
+      render();
+      return;
+    }
+    const scene = CHAPTER_IMAGE_PROMPTS[ch.id] || ch.opening;
+    callImageGen(STATE.activeHero, scene).then(img=>{
+      if(STATE.openingImageChapterId !== cacheKey) return;
+      STATE.openingImage = img;
+      STATE.openingImageStatus = img ? 'done' : 'error';
+      render();
+    });
   });
 }
 
+/* Turns a block of GM prose into one concrete, purely visual sentence for the
+   image model. The GM text is atmospheric and abstract, and image models fill
+   vague text with generic imagery, so Gemini first rewrites it as "what a
+   camera would actually see". Falls back to the raw prose if that call fails. */
+async function describeSceneForImage(hero, sceneText){
+  try{
+    const ch = currentChapter();
+    const heroLook = hero && hero.appearance ? String(hero.appearance).replace(/,?\s*(often shown[^.]*|and birds nearby)\.?/gi,'').slice(0,260) : '';
+    const prompt = `You write shot descriptions for an image generator. Read the story passage and describe, in ONE sentence of at most 45 words, exactly what a movie camera would see at its key moment.
+
+RULES:
+- Only concrete, visible things: the place, lighting, weather, objects, and people or creatures actually named in the passage, and what they are physically doing.
+- No metaphors, feelings, sounds, smells, or abstract ideas. No animals or creatures unless the passage explicitly names them.
+- The hero (called "you" in the passage) may appear only if the passage puts them in view. If so, describe them briefly from this look: ${heroLook || 'a costumed superhero'}
+- Do not mention the hero's powers by name. Do not include any text, captions, or logos.
+- Output only the sentence, nothing else.
+
+STORY LOCATION (for context): ${ch && ch.title ? ch.title : 'unknown'}
+
+PASSAGE:
+${sceneText.slice(0, 1800)}`;
+    const response = await fetchGeminiWithFallback({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.4, maxOutputTokens: 200 }
+    });
+    if(!response.ok) return null;
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.map(p=>p.text).join('').trim();
+    if(!text) return null;
+    return text.replace(/^["'\s]+|["'\s]+$/g,'').slice(0, 450);
+  }catch(e){
+    return null;
+  }
+}
+
 /* Fire-and-forget: generates an illustration for a completed GM log entry
-   and mutates it in place once ready, then re-renders. */
+   and mutates it in place once ready, then re-renders. The GM text is first
+   distilled into a concrete visual description (see above), then sent to the
+   image generator. */
 function generateEntryImage(entry, sceneText, hero){
   entry.imageStatus = 'loading';
-  callImageGen(hero, sceneText).then(img=>{
-    entry.image = img;
-    entry.imageStatus = img ? 'done' : 'error';
-    render();
-  });
+  describeSceneForImage(hero, sceneText)
+    .then(desc => callImageGen(hero, desc || sceneText))
+    .then(img=>{
+      entry.image = img;
+      entry.imageStatus = img ? 'done' : 'error';
+      render();
+    });
 }
 
 /* ---------- Rendering ---------- */
