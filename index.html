@@ -1075,10 +1075,13 @@ async function saveGame(heroId, gameState){
    combined, so we deliberately run the image call AFTER the text call
    finishes rather than in parallel. */
 /* The API key lives in config.js (same folder as this file), which defines
-   window.ULTRAS_CONFIG = { geminiApiKey: "..." }. Keep config.js out of
+   window.ULTRAS_CONFIG = { workerUrl: "https://...workers.dev" } (preferred) or { geminiApiKey: "..." }. Keep config.js out of
    version control and out of anything you share. */
 const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKey) || "";
-if(!GEMINI_API_KEY) console.warn('No Gemini API key found — create config.js next to index.html (see comment above).');
+/* If config.js sets workerUrl, all Gemini calls go through that Cloudflare Worker
+   (which holds the real key) and no key is needed in the browser. */
+const GEMINI_WORKER_URL = ((window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.workerUrl) || "").replace(/\/+$/, "");
+if(!GEMINI_WORKER_URL && !GEMINI_API_KEY) console.warn('No workerUrl or Gemini API key found — create config.js next to index.html (see comment above).');
 const GEMINI_MODEL_PRIMARY = "gemini-3.5-flash-lite";
 const GEMINI_MODEL_FALLBACK = "gemini-3.1-flash-lite";
 const IMAGE_MODEL = 'flux';          // Pollinations' base Flux model — free, no key required; stronger prompt adherence and more coherent, photoreal output than 'turbo'
@@ -1129,10 +1132,12 @@ const CHAPTER_IMAGE_PROMPTS = {
    response.ok / response.json() handling unchanged. */
 async function fetchGeminiWithFallback(requestBody) {
   const callModel = (model) => fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+    `${GEMINI_WORKER_URL || "https://generativelanguage.googleapis.com"}/v1beta/models/${model}:generateContent`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/json", "x-goog-api-key": GEMINI_API_KEY },
+      headers: GEMINI_WORKER_URL
+        ? { "Content-Type": "application/json" }
+        : { "Content-Type": "application/json", "x-goog-api-key": GEMINI_API_KEY },
       body: JSON.stringify(requestBody)
     }
   );
