@@ -160,12 +160,12 @@
   .scene-image{ display:block; width:100%; height:auto; border:2px solid var(--ink); box-shadow:4px 4px 0 rgba(11,18,38,0.35); }
   .scene-image-loading{
     display:flex; align-items:center; justify-content:center;
-    height:160px; border:2px dashed rgba(11,18,38,0.4); background:rgba(11,18,38,0.03);
+    width:100%; aspect-ratio:16/9; border:2px dashed rgba(11,18,38,0.4); background:rgba(11,18,38,0.03);
     font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:#666;
     animation:pulseFade 1.6s ease-in-out infinite;
   }
   @keyframes pulseFade{ 0%,100%{opacity:0.55;} 50%{opacity:1;} }
-  .entry .scene-image-wrap{ margin-top:10px; margin-bottom:0; }
+  .entry .scene-image-wrap{ margin-top:0; margin-bottom:12px; }
 </style>
 </head>
 <body>
@@ -997,6 +997,7 @@ RULES YOU MUST FOLLOW:
 - When — and only when — the chapter's stated goals have been meaningfully achieved through the player's own actions, end your reply with the exact line "[CHAPTER_COMPLETE]" on its own line, after a satisfying closing beat for the scene. Do not use this token at any other time, and do not mention it exists.
 - NEVER fire [CHAPTER_COMPLETE] while a thread you just introduced is still hanging — e.g. if an NPC is mid-interrogation, mid-conversation, or about to reveal information, that exchange must actually play out (the NPC answers, refuses, escapes, or is otherwise definitively resolved) before the chapter can end. If the player's stated action is asking a character a question, your reply must answer it in-fiction first — never cut away, timeskip, or jump to a closing beat that skips over the answer. This applies just as strongly to physical danger and rescues: if your own reply introduces or reiterates someone still trapped, pounding on a door, in a burning/collapsing structure, or otherwise in active danger, that person must actually be reached and made safe — not just heard or implied — before the chapter can end. Never end a reply on a newly-introduced emergency and the completion token at the same time; a chapter whose goals include "civilians safe" is not complete while anyone is still confirmed in danger, however close the hero is to reaching them. When in doubt about whether a goal is "meaningfully achieved," err toward one more exchange rather than ending early.
 - When a chapter's stated goals describe multiple discrete targets (e.g. "destroy all four Shadow Conduits," "free every hostage," "question each lieutenant," "collect all seven fragments"), treat each one as its own hanging thread, exactly like an unresolved NPC exchange or a trapped civilian: [CHAPTER_COMPLETE] cannot fire — and you must not narrate a summary, montage, or time-skip that glosses past any of them — until every single target has its own distinct, played-out beat in the actual narration. Keep a running mental tally as the scene progresses; if the player's action would only resolve one of several remaining targets, resolve that one and let the others still stand, unresolved, for the next exchange. Never let a chapter's grand finale (an escalation, an emerging final threat, a partial-success beat, etc.) substitute for actually finishing off outstanding targets first, unless the chapter's own instructions explicitly say that finale should happen "regardless" of how many targets were cleared — and even then, only after making it explicit in the narration exactly which targets were and weren't dealt with, so the story's own logic stays consistent.
+- PACING: Resolve only what the player's single stated action attempts, then stop and hand control back. Never carry the hero through several separate beats in one reply (for example entering, rescuing someone, leaving, re-entering and discovering a clue). Each of a chapter's goals must be earned through separate player actions: do not let a single reply both complete a rescue and uncover the chapter's key clue, and do not end the chapter in the same reply that achieves its final goal. Offer the next discovery or complication as something the player can choose to pursue.
 - Once the chapter's main threat has already been dealt with, don't manufacture a brand-new element of menace or dread — an unseen watcher, a fresh attacker, a strange sound or chill, a newly-glimpsed danger — just to end the scene on a dramatic note. A closing beat can be atmospheric or eerie in tone without introducing a new unresolved threat; let the scene's existing stakes (what the hero just went through) carry the weight of the ending instead. Whatever kind of threat you do introduce anywhere in a chapter — physical danger to someone, a new attacker, an ominous presence, or anything else framed as a menace — must be fully resolved in-fiction (not just glanced at or hinted at) before [CHAPTER_COMPLETE] fires. If something you introduced isn't resolved yet, that is reason enough to hold off ending the chapter.`;
 
 /* ---------- Storage helpers ----------
@@ -1799,14 +1800,13 @@ function ensureOpeningImage(){
 async function describeSceneForImage(hero, sceneText){
   try{
     const ch = currentChapter();
-    const heroLook = hero && hero.appearance ? String(hero.appearance).replace(/,?\s*(often shown[^.]*|and birds nearby)\.?/gi,'').slice(0,260) : '';
-    const prompt = `You write shot descriptions for an image generator. Read the story passage and describe, in ONE sentence of at most 60 words, exactly what a movie camera would see at its key moment. Include the time of day, the lighting, and a camera angle (for example low angle, over-the-shoulder, or wide establishing shot).
+    const prompt = `You write shot descriptions for an image generator. Read the story passage and describe, in ONE sentence of at most 60 words, the SETTING at its key moment as a movie camera would see it from a distance. Include the time of day, the lighting, and a wide or establishing camera angle (for example a wide shot, high angle, or low wide angle).
 
 RULES:
-- Only concrete, visible things: the place, lighting, weather, objects, and people or creatures actually named in the passage, and what they are physically doing.
-- No metaphors, feelings, sounds, smells, or abstract ideas. No animals or creatures unless the passage explicitly names them.
-- The hero (called "you" in the passage) may appear only if the passage puts them in view. If so, describe them briefly from this look: ${heroLook || 'a costumed superhero'}
-- Do not mention the hero's powers by name. Do not include any text, captions, or logos.
+- The picture is about the place and the event, not about a person. Show the environment, structures, fire, smoke, debris, vehicles, machines and objects, and any other people or creatures the passage names, as small figures in the scene.
+- Do NOT depict the main character (called "you" in the passage, or the hero by name). Never describe their face, body, costume or a close-up of any person. If a hand or silhouette is unavoidable, keep it tiny and far away.
+- Only concrete, visible things. No metaphors, feelings, sounds, smells, or abstract ideas. No animals unless the passage explicitly names them.
+- Do not include any text, captions, or logos.
 - Output only the sentence, nothing else.
 
 STORY LOCATION (for context): ${ch && ch.title ? ch.title : 'unknown'}
@@ -1834,7 +1834,7 @@ ${sceneText.slice(0, 1800)}`;
 function generateEntryImage(entry, sceneText, hero){
   entry.imageStatus = 'loading';
   describeSceneForImage(hero, sceneText)
-    .then(desc => callImageGen(hero, desc || sceneText))
+    .then(desc => callImageGen(hero, desc || ('Wide establishing shot of the location, no close-up of any person. ' + sceneText)))
     .then(img=>{
       entry.image = img;
       entry.imageStatus = img ? 'done' : 'error';
@@ -2335,10 +2335,10 @@ function renderPlay(){
       </div>` : '';
     return `
     <div class="entry ${e.who}">
+      ${imageHtml}
       <div class="who">${e.who==='gm' ? 'Game Master' : hero.alias}</div>
       ${mechanicsHtml}
       <div class="text">${escapeHtml(e.text)}</div>
-      ${imageHtml}
     </div>
   `;
   }).join('');
@@ -2360,9 +2360,9 @@ function renderPlay(){
       <div class="log" id="log">
         ${isFinished ? '' : `
         <div class="entry gm">
+          ${openingImageHtml}
           <div class="who">Game Master</div>
           <div class="text">${escapeHtml(chapter.opening)}</div>
-          ${openingImageHtml}
         </div>`}
         ${logHtml}
       </div>
@@ -2416,7 +2416,17 @@ function renderPlay(){
   `;
 
   const logEl = document.getElementById('log');
-  if(logEl) logEl.scrollTop = logEl.scrollHeight;
+  if(logEl){
+    // Show the top of the newest Game Master entry (its picture comes first);
+    // otherwise (e.g. while the player's own line is last) stay at the bottom.
+    const entries = logEl.querySelectorAll('.entry');
+    const lastEntry = entries[entries.length-1];
+    if(lastEntry && lastEntry.classList.contains('gm')){
+      logEl.scrollTop += lastEntry.getBoundingClientRect().top - logEl.getBoundingClientRect().top;
+    } else {
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+  }
 
   const backBtn = document.getElementById('btn-menu') || document.getElementById('btn-menu-2');
   if(backBtn) backBtn.onclick = ()=>{ STATE.busy = false; STATE.pendingAdvance = null; STATE.screen='HERO_SELECT'; STATE.error=null; render(); };
