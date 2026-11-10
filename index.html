@@ -227,6 +227,7 @@
   .chips{ display:flex; flex-wrap:wrap; gap:6px; }
   .chip{ font-family:'JetBrains Mono',monospace; font-size:0.7rem; padding:2px 8px; border:1.5px solid var(--ink); background:var(--paper); }
   .chip.origin{ background:var(--ink); color:var(--paper); }
+  .chip.strength{ background:var(--hero-gold); border-color:var(--ink); font-weight:600; }
   .power-line{ font-family:'JetBrains Mono',monospace; font-size:0.74rem; color:#333; line-height:1.4; flex:1; }
   .badges{ display:flex; flex-wrap:wrap; gap:6px; }
   .badge{ font-family:'JetBrains Mono',monospace; font-size:0.68rem; padding:1px 8px; border:1.5px solid #444; }
@@ -2274,6 +2275,7 @@ function renderHeroSelect(isRefresh){
         <div class="chips">
           <span class="chip">Health ${maxHealth(h)}</span>
           <span class="chip">Karma ${maxKarma(h)}</span>
+          ${(h.stats.Strength >= 40) ? `<span class="chip strength">${escapeHtml(rankNameForNumber(h.stats.Strength))} Strength</span>` : ''}
           ${heroOriginTag(h) ? `<span class="chip origin">${escapeHtml(heroOriginTag(h))}</span>` : ''}
         </div>
         <div class="power-line">${powers}</div>
