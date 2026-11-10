@@ -1,8 +1,8 @@
 {
   "id": "the_hollow_mile",
   "title": "The Hollow Mile",
-  "tagline": "Somewhere beneath the city, a train is still running.",
-  "blurb": "When a New York subway train vanishes with twenty-three passengers and its operator aboard, ORACLE discovers evidence of an experimental transit project that has opened a passage into a distorted version of New York City. With the help of an unreliable informant and two brilliant but distrusted scientific consultants, the hero must find the missing commuters, uncover the truth behind the experiment, and prevent two versions of the city from occupying the same space.",
+  "tagline": "A Superhero Chronicle — 10 Chapters",
+  "blurb": "A subway train vanishes with twenty-three passengers aboard, an experimental transit project opens a passage into a distorted twin of the city, and two worlds begin to overlap.",
   "chapters": [
     {
       "id": "the_empty_train",
@@ -215,7 +215,7 @@
       "opening": [
         "The first passengers make it through.",
         "Then the next group.",
-       "The passage flickers as the spatial disturbance reaches the station. For a moment, the world on the other side becomes visible through the tunnel walls.",
+        "The passage flickers as the spatial disturbance reaches the station. For a moment, the world on the other side becomes visible through the tunnel walls.",
         "You can see the real city.",
         "But it is no longer entirely separate from the place you are standing.",
         "The experiment has begun to affect both sides."
