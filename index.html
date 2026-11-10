@@ -217,6 +217,7 @@
   .adv-in{ width:80px; }
   .adv-line{ margin-top:10px; padding:8px 12px; border:2px solid var(--hero-red); border-radius:8px; display:inline-block; font-weight:700; }
   .hist-vol{ margin:22px 0 8px; }
+  .coming-soon-badge{ background:var(--hero-red); color:#fff; padding:1px 7px; border:2px solid var(--ink); letter-spacing:.06em; }
   .hist-banner{ position:relative; min-height:120px; background:var(--ink); border:3px solid var(--ink); box-shadow:5px 5px 0 rgba(10,31,68,0.85); overflow:hidden; display:flex; align-items:flex-end; }
   .hist-banner img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:1; }
   .hist-banner .hist-banner-text{ position:relative; z-index:2; padding:14px 18px; color:#fff; background:linear-gradient(0deg, rgba(10,31,68,0.92), rgba(10,31,68,0)); width:100%; }
@@ -2433,9 +2434,9 @@ function renderHistory(){
     const allies = (v.allies||[]).map(id=>historyTile(id)).join('');
     return `<section class="hist-vol">
       <div class="hist-banner"><div class="portrait-fallback small" style="position:absolute;inset:0;"></div>${lookupImg('images/history/'+v.id, v.title)}
-        <div class="hist-banner-text"><div class="chapter-eyebrow display" style="color:var(--hero-gold); font-size:0.75rem;">Volume ${vi+1}</div><h3>${escapeHtml(v.title)}</h3><p>${escapeHtml(v.tagline)}</p></div></div>
+        <div class="hist-banner-text"><div class="chapter-eyebrow display" style="color:var(--hero-gold); font-size:0.75rem;">Volume ${vi+1}${v.comingSoon?' · <span class="coming-soon-badge">Coming Soon</span>':''}</div><h3>${escapeHtml(v.title)}</h3><p>${escapeHtml(v.tagline)}</p></div></div>
       <p style="margin:12px 0;">${escapeHtml(v.intro)}</p>
-      ${missions}
+      ${v.comingSoon && !v.missions.length ? '<div class="hist-thread hist-soon"><b>Missions</b><div>Missions will be revealed as the story unfolds.</div></div>' : missions}
       ${roll ? `<div class="hist-sub">Roll Call</div><div class="hist-people">${roll}</div>` : ''}
       ${vill ? `<div class="hist-sub">Rogues' Gallery</div><div class="hist-people">${vill}</div>` : ''}
       ${allies ? `<div class="hist-sub">Allies and Contacts</div><div class="hist-people">${allies}</div>` : ''}
