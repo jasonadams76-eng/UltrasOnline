@@ -1,0 +1,197 @@
+{
+  "id": "the_long_game",
+  "title": "The Long Game",
+  "tagline": "A Superhero Chronicle — 10 Chapters",
+  "blurb": "A string of petty thefts across New York City turns out to be a carefully built trap, set by someone who has been waiting a long time to settle a score.",
+  "chapters": [
+    {
+      "id": "tlg1",
+      "title": "Petty Business",
+      "eyebrow": "Chapter One",
+      "opening": [
+        "The first report barely seems worth your attention: someone broke into a small electrical supply warehouse in Queens and stole copper cable, industrial batteries, and several crates of electrical components. No one was hurt. The owner estimates the loss at a few thousand dollars.",
+        "Before the week is out, two more minor incidents appear in the local reports. A contractor in Brooklyn has lost portable pumps and heavy-duty hoses. A construction site in Manhattan reports missing work lights, a generator, and a collection of tools.",
+        "The police are treating them as ordinary property crimes. There is no obvious connection between the locations, the owners, or the stolen goods.",
+        "",
+        "Then an ORACLE message arrives. The director's office has flagged the reports as unusual—not because of the value of the stolen property, but because of the specific equipment taken.",
+        "",
+        "Where do you begin?"
+      ],
+      "gmInstructions": [
+        "SETTING: The hero begins investigating a small cluster of low-level thefts in different parts of New York City. The initial incidents are an electrical supply warehouse burglary in Queens, a contractor's yard in Brooklyn, and a construction site in Manhattan. The stolen goods include copper cable, industrial batteries, electrical components, portable pumps, heavy-duty hoses, work lights, a portable generator, and tools. These are ordinary thefts on the surface; do not introduce an overtly superhuman element.",
+        "GOALS FOR THIS CHAPTER: The hero should establish that the incidents are real and gather the first details about what was stolen. The hero may visit one or more crime scenes, speak with owners or workers, review police reports, or ask ORACLE to compare the reports. The first useful discovery is that the stolen items are practical equipment rather than valuables chosen for resale. A witness at one location recalls a quiet intruder who seemed to know exactly what to take, but cannot provide a reliable description.",
+        "GM GUIDANCE: Do not identify the person responsible or imply a specific animal, mutant, or returning villain. The thief carries out these thefts in ordinary human form, since the equipment is heavy and must be carried, so witnesses describe an ordinary-looking person. Let the hero choose which scene to investigate first. If they focus on one incident, ORACLE can supply summaries of the others. A Reason FEAT may recognize that the stolen goods have complementary practical uses, but the hero should not yet know what they are being used for. Chapter complete once the hero recognizes that the thefts may be connected by the selection of equipment.",
+        "TONE: Low-key urban investigation. The crimes should feel small enough to be overlooked, with the odd precision of the stolen-item lists providing the first hint that something more deliberate is happening."
+      ],
+      "imagePrompt": "A commercial electrical supply warehouse in Queens after a nighttime break-in, a padlock cut from a service door, shelves with conspicuous gaps where copper cable spools and industrial batteries were stored, a police officer taking notes, grounded cinematic superhero comic-book realism, no text."
+    },
+    {
+      "id": "tlg2",
+      "title": "A Useful Collection",
+      "eyebrow": "Chapter Two",
+      "opening": [
+        "The inventory lists are beginning to look less random. Cable, batteries, pumps, hoses, generators, and work lights are not the usual haul for a crew looking to make quick money. Someone is collecting equipment for a job.",
+        "A fresh report comes in from a municipal maintenance depot in the Bronx. Several access keys, old utility plans, and specialized maintenance tools have disappeared. The depot manager insists the plans are outdated and mostly useless to anyone outside city maintenance.",
+        "The combination is harder to dismiss now. Whoever is responsible may be preparing a location that needs power, water control, lighting, and access through service infrastructure.",
+        "",
+        "How do you follow the trail?"
+      ],
+      "gmInstructions": [
+        "SETTING: The hero investigates the newer break-in at a municipal maintenance depot in the Bronx. Stolen property includes service access keys, outdated utility plans, and specialized maintenance tools. These items are being gathered for the same hidden operation as the earlier thefts.",
+        "GOALS FOR THIS CHAPTER: The hero must obtain or reconstruct a useful inventory of the stolen equipment and learn what the utility plans cover. The depot manager, a city employee named Elena Ruiz, is frustrated and embarrassed by the breach but can explain that the plans show older municipal service corridors and pumping infrastructure. The stolen keys are not master keys; they open particular maintenance doors and equipment enclosures.",
+        "GM GUIDANCE: The player can pursue security footage, interview workers, inspect the break-in, or compare the plans with city infrastructure records. Footage shows an intruder getting past a locked service door by way of a narrow opening and then unlocking it from inside; the thief carries the heavy equipment in ordinary human form. The image is obstructed and should not be enough to identify anyone, and nothing about the thief's body should seem unusual. A successful Reason or Intuition FEAT reveals that the equipment could support a concealed site with pumps, controllable water levels, backup power, lighting, and monitored access. Do not yet name the final location. OPTIONAL CONTACT: the hero may consult Frankie Vega, the underworld informant. Frankie confirms that none of the stolen goods are being fenced, so the thefts are not about money. He has also heard that someone polite and eerily calm tried to buy a portable pump with cash from a chop shop, then walked away without a fuss. He is funny, likable and transactional: he hints that the hero will owe him a favor and will not say more than he actually knows. He cannot identify the thief. Chapter complete once the hero understands the broad functional purpose of the stolen items and has a copy or description of the utility plans.",
+        "TONE: A patient detective story. The pattern is becoming clear, but the actual objective remains hidden."
+      ],
+      "imagePrompt": "An aging municipal maintenance depot in the Bronx, open equipment lockers and a desk scattered with old utility plans, a city employee pointing out missing keys to a costumed superhero, fluorescent industrial lighting, realistic cinematic comic-book concept art, no text."
+    },
+    {
+      "id": "tlg3",
+      "title": "The Missing Pieces",
+      "eyebrow": "Chapter Three",
+      "opening": [
+        "A review of the stolen equipment against the maintenance plans narrows the possibilities. Several old municipal facilities have the kind of infrastructure that would make use of the pumps, generators, hoses, and electrical components.",
+        "One site stands out: a decommissioned pumping station beneath an older section of the city. Its public records are incomplete, and the most recent inspection notes are years out of date. It is not the only possible location, but it is the best fit so far.",
+        "Before you can investigate, another theft is reported. This time, a small security contractor has lost cameras, motion sensors, and monitoring equipment.",
+        "",
+        "Someone is not merely preparing a site. They intend to watch it."
+      ],
+      "gmInstructions": [
+        "SETTING: The hero follows the utility-plan lead and discovers that a decommissioned municipal pumping station is one plausible destination for the stolen equipment. The station is not yet confirmed as the target. A separate burglary at a small security contractor has yielded cameras, motion sensors, and monitoring equipment.",
+        "GOALS FOR THIS CHAPTER: The hero must connect the security equipment to the earlier thefts and investigate the contractor burglary. A technician named Malik Grant can explain that the missing equipment is basic but reliable: enough to monitor entrances, track movement, and provide a crude warning system. The hero should also identify two or three other abandoned municipal sites that could fit the equipment profile, keeping the investigation open.",
+        "GM GUIDANCE: Add one short physical beat: as the hero arrives at or leaves the contractor's shop, they notice a figure slipping out the back of the building. A brief chase through an industrial yard follows, ending when the figure reaches a drainage cover and is gone. When the hero checks the access, it is far too narrow for an ordinary adult. The hero cannot identify the figure. Avoid making the pumping station a certainty too early. Let the player compare site layouts, access routes, and equipment needs. A successful investigation may reveal that the pumping station is especially suitable because it has multiple service entrances, large internal chambers, and old water-control systems. A failed roll should still produce the list of candidate sites, but cost time or allow the thief to complete more preparations. Chapter complete once the hero has a shortlist of possible sites and understands that the stolen security gear is intended to monitor one of them.",
+        "TONE: The investigation tightens. The hero is getting closer, but each answer opens another question."
+      ],
+      "imagePrompt": "A small security equipment contractor's showroom after a break-in, empty mounting racks where cameras and motion sensors were displayed, a technician examining a damaged alarm panel while a superhero studies the scene, New York industrial district at dusk, cinematic comic-book realism, no text."
+    },
+    {
+      "id": "tlg4",
+      "title": "An Old Grudge",
+      "eyebrow": "Chapter Four",
+      "opening": [
+        "The pattern has attracted attention beyond your own investigation. ORACLE has been monitoring unusual activity among known criminal networks, and Victor Cross has a question for you.",
+        "\"There was a disturbance at the upstate facility holding several enhanced offenders,\" he says. \"A riot. One inmate escaped. The riot damaged the prison's records, so we are still confirming who got out, and at this stage I don't have a reason to connect it to your thefts.\"",
+        "He sends over a brief incident summary. The escaped prisoner had been held under special restrictions. The report says the prison's containment procedures failed during the riot, but the details are incomplete.",
+        "",
+        "The thefts continue. What do you do?"
+      ],
+      "gmInstructions": [
+        "SETTING: ORACLE informs the hero of a recent riot at the maximum-security facility for super-criminals in upstate New York. One enhanced inmate escaped after the facility's mutant-nullifying restraint system was compromised during the chaos. The riot damaged the prison's cell records, headcount database and cameras, and several inmates were moved during the chaos, so the report is incomplete. ORACLE knows one enhanced inmate is unaccounted for and has narrowed it to a small group, but cannot yet say which. The escaped inmate's identity is not confirmed to the hero at this stage.",
+        "GOALS FOR THIS CHAPTER: The hero must decide how much attention to give the prison escape while continuing the theft investigation. ORACLE can provide the public and internal details currently available: the escape happened during a riot; the inmate had been restrained by a custom nullifying device; the device was removed or defeated amid the confusion; and the escapee got out through a route too small for an ordinary adult. This information should raise concern without identifying the escapee.",
+        "GM GUIDANCE: Do not name Copperhead or use snake imagery, venom references, scales, or other unmistakable identifiers. Cross is careful not to speculate, but he asks the hero to be careful and to report anything unusual about the thefts to ORACLE. He can say the escapee may be dangerous and that ORACLE is pursuing confirmation. If the hero investigates the prison directly, staff can confirm the unusual escape route and that the inmate was capable of changing physical form, but cannot give a name because the riot damaged the records; only a compelling, earned lead should narrow it further, and never to a certainty before Chapter Seven. The chapter is complete once the hero knows the escape may be relevant but has no proof linking it to the thefts.",
+        "TONE: A subtle turn toward personal stakes. The prison escape is an unsettling parallel, not yet an answer."
+      ],
+      "imagePrompt": "A maximum-security prison corridor in upstate New York after a riot, overturned security cart, damaged reinforced cell door with transparent wall panels, emergency strobes reflecting off concrete, guards securing the area, a small open maintenance hatch visible in the background, cinematic comic-book realism, no text."
+    },
+    {
+      "id": "tlg5",
+      "title": "Eyes on the Investigation",
+      "eyebrow": "Chapter Five",
+      "opening": [
+        "The latest break-in is different. Nothing especially valuable was taken, and the intruder appears to have left several useful items untouched. But a worker at the site remembers seeing someone watching the street from a parked vehicle earlier that evening.",
+        "Then you notice the same vehicle—or one very much like it—near a second location you have investigated. It disappears before you can get close.",
+        "Someone may know what you are looking into. The question is whether they are simply keeping watch or trying to steer you somewhere."
+      ],
+      "gmInstructions": [
+        "SETTING: The hero discovers that the person behind the thefts is monitoring the investigation. A nondescript vehicle has been seen near two crime scenes, and a witness reports a watcher observing the street. The latest theft involved additional valves and fittings needed to control water flow through an industrial system.",
+        "GOALS FOR THIS CHAPTER: The hero should identify and investigate the surveillance pattern. They may stake out a crime scene, trace the vehicle through traffic cameras, question witnesses, or use powers to observe without being noticed. The evidence should establish that someone is watching the hero's movements and that the thefts are still part of a single preparation effort. The hero may find a small, deliberately planted clue suggesting that one of the candidate municipal sites deserves closer attention, but it should not be a direct invitation or reveal the trap.",
+        "GM GUIDANCE: The watcher is the escaped inmate who is the adventure's villain (identified in Chapter Seven), in ordinary human form and driving a stolen car; do not reveal or hint at his identity yet, and do not use any snake imagery. The watcher is cautious and avoids direct confrontation. If cornered, the watcher abandons the vehicle and escapes through ordinary streets or service passages; do not make this person a superpowered combatant. The vehicle may be stolen or registered through a shell identity, and its trail should go cold after a few blocks. The hero can find a partial note or maintenance reference that points toward the pumping station, but the clue should still require comparison with the utility plans. Chapter complete once the hero realizes the operation is aware of their investigation and obtains a stronger lead toward the abandoned pumping station.",
+        "TONE: Paranoia and counter-surveillance. The hero is no longer simply following a trail; someone is paying attention to every move."
+      ],
+      "imagePrompt": "A rainy New York street at night, a dark unmarked sedan parked across from a fenced utility entrance, a shadowed figure visible behind the windshield watching a distant costumed hero, reflections of streetlights on wet pavement, cinematic noir comic-book art, no text."
+    },
+    {
+      "id": "tlg6",
+      "title": "The Gathering Place",
+      "eyebrow": "Chapter Six",
+      "opening": [
+        "The utility plans, the stolen access keys, and the equipment lists finally converge. The abandoned municipal pumping station is the strongest match by far.",
+        "It sits below street level, sealed from public access and largely forgotten. The old plans show several maintenance entrances, enormous concrete chambers, catwalks, and a network of pipes and service passages. The station was built to move and regulate water on a scale that makes the stolen pumps and valves suddenly make sense.",
+        "There is no sign of official activity at the site. But the missing equipment suggests someone has been working below the city for days.",
+        "",
+        "How do you approach the station?"
+      ],
+      "gmInstructions": [
+        "SETTING: The hero has identified an abandoned underground municipal pumping station beneath New York City as the likely destination for the stolen equipment. The site contains huge concrete water chambers, deep reservoirs, narrow metal catwalks, thick pipes, maintenance tunnels, several service entrances, and old pumping machinery.",
+        "GOALS FOR THIS CHAPTER: The hero should investigate the exterior and accessible service areas, determine whether the station is occupied, and find evidence that it has been prepared as an operational base. Evidence can include fresh tool marks on a service door, new electrical cabling, recently installed cameras, pump hoses, work lights, and signs that water levels have been altered. The hero should also find evidence that the occupant has studied the station's access routes and can monitor approaches.",
+        "GM GUIDANCE: This chapter is reconnaissance, not the final battle. The station should feel quiet and deliberately prepared. If the hero enters deeply, let them discover one or two hazards—an unexpectedly flooded passage, a work light that switches off, or a camera tracking their movement—then withdraw or be forced to retreat before reaching the main chamber. Do not reveal Copperhead yet. The hero should leave with the strong impression that the station has been turned into a controlled environment and that the person responsible may be waiting. Chapter complete once the hero has confirmed the station is occupied and prepared, and has a reason to return or proceed inside.",
+        "TONE: Atmospheric suspense. The underground setting should feel vast, damp, and hostile, with the sense that the hero is entering someone else's carefully arranged territory."
+      ],
+      "imagePrompt": "An enormous abandoned municipal pumping station beneath New York City, concrete water reservoir, rusted pipes, narrow metal catwalks suspended above dark water, recently installed work lights and cables contrasting with old machinery, deep shadows and damp atmospheric haze, cinematic superhero comic-book realism, no people, no text."
+    },
+    {
+      "id": "tlg7",
+      "title": "A Familiar Face",
+      "eyebrow": "Chapter Seven",
+      "opening": [
+        "The station is quiet when you return—or at least, it seems quiet. The new lights are off. The pumps have stopped. Somewhere in the darkness, water drips steadily into the reservoir below.",
+        "A voice comes through a speaker you did not notice on your first visit.",
+        "\"Took you long enough. I was starting to think you'd lost interest.\"",
+        "A figure steps into the light at the far end of the catwalk. You recognize him immediately. The prison escape, the carefully chosen thefts, the surveillance, the site itself—none of it was random.",
+        "Copperhead has escaped, and he has been building this moment for you."
+      ],
+      "gmInstructions": [
+        "SETTING: This is the first direct confrontation with Copperhead in the adventure and the intended reveal. Copperhead is the escaped inmate from the upstate maximum-security facility. He has used the thefts to prepare the pumping station as an ambush site and has deliberately allowed the hero's investigation to lead here. His motive is revenge for his previous capture and for the prison sentence that followed.",
+        "GOALS FOR THIS CHAPTER: Reveal Copperhead clearly and give him time to speak before the fight begins. He should be sarcastic, bitter, and pleased with the elaborate setup. He can refer to the previous encounter in which the Ultras stopped him after the Infinity Codex theft, and to the prison conversation in which he warned that the facility would not hold him forever and that he would come for the people who put him there. He should make clear that the crimes were not about money: each theft supplied something needed to prepare this chamber and monitor the hero's approach. He can admit that he was the man in the car watching the investigation and that he carried out the thefts himself. Treat the player's hero as one of the Ultras who took part in capturing him; another Ultra was the one he poisoned, so the player's hero need not have been the one bitten. The chapter should end when Copperhead initiates the ambush or triggers the station's defenses.",
+        "GM GUIDANCE: Copperhead is a mutant who can transform into a copperhead snake and control his size from tiny to giant, approximately thirty feet long. He has a venomous bite. In his small form he can move through narrow openings and reposition unseen; in his giant form he can dominate the main chamber and threaten the catwalks. His previous venomous bite poisoned an Ultra badly enough that ORACLE had to administer an antidote. Do not make the poison an automatic defeat; it is a serious escalating danger that can be resisted, treated, or countered through sensible hero actions and ORACLE support if needed. Copperhead is dangerous, confident, and prepared, but not omniscient. Let the player respond to his speech, use the environment, or attempt to disrupt the setup before the fight fully develops. Chapter complete once the ambush is sprung and the hero is committed to the confrontation.",
+        "TONE: A dramatic identity reveal followed by personal, hard-edged menace. Copperhead should feel like a returning enemy who has spent time planning, not a random monster appearing in a tunnel."
+      ],
+      "imagePrompt": "Inside a vast abandoned underground pumping station, a costumed superhero stands on a narrow metal catwalk above dark water as a dangerous mutant villain steps from the shadows at the far end; industrial work lights illuminate towering pipes and concrete chambers, tense cinematic superhero comic-book realism, dramatic reveal, no text."
+    },
+    {
+      "id": "tlg8",
+      "title": "No Way Out",
+      "eyebrow": "Chapter Eight",
+      "opening": [
+        "The lights snap on in sections, revealing just how thoroughly the chamber has been prepared. Pumps roar to life. Water begins moving through channels beneath the catwalks. Several access doors slam shut, and the cameras you found earlier turn toward you.",
+        "Copperhead has chosen the ground, the lighting, and the timing. He has also made sure that leaving will not be as simple as walking back the way you came.",
+        "",
+        "The fight is underway. What do you do?"
+      ],
+      "gmInstructions": [
+        "SETTING: The ambush is fully active inside the pumping station. Copperhead uses the stolen equipment to control lighting, water levels, pump operation, and access doors. The main chamber has narrow catwalks above deep water, thick pipes and machinery that create cover and blind spots, and several dark maintenance passages.",
+        "GOALS FOR THIS CHAPTER: The hero must survive the initial trap, understand how the station's systems are being used against them, and begin turning the environment to their advantage. The hero may disable cameras, shut down pumps, force open access doors, use the catwalk structure, or draw Copperhead away from prepared positions. Copperhead should test the hero's capabilities and exploit weaknesses without assuming every hero fights the same way.",
+        "GM GUIDANCE: Make the environment dangerous but fair. Water can rise or surge through channels, catwalk sections can become unstable, work lights can be switched off, and doors can be locked, but provide discoverable controls, alternate routes, or opportunities for creative powers. Do not require flight, super-strength, electricity, or any one specific ability. Copperhead can shift between tiny and giant forms to reposition, strike, or escape attacks. He should use the setting intelligently, but the hero should be able to learn and counter his methods. Chapter complete once the hero has disrupted at least one major part of the trap and forced Copperhead into a more direct confrontation.",
+        "TONE: A tactical action sequence in a hostile environment. The hero should feel the pressure of the ambush while gaining opportunities to outthink the person who built it."
+      ],
+      "imagePrompt": "A dramatic underground pumping station battle, industrial pumps surging and water rushing beneath narrow metal catwalks, emergency lights and work lamps cutting through mist, a superhero navigating the dangerous machinery while a huge copperhead snake form moves through the shadows, cinematic comic-book action, no text."
+    },
+    {
+      "id": "tlg9",
+      "title": "The Long Game",
+      "eyebrow": "Chapter Nine",
+      "opening": [
+        "The station's systems are no longer working the way Copperhead intended. Water spills across the lower floor, lights flicker, and one of the access doors hangs half open.",
+        "For the first time, he looks less amused.",
+        "\"You always did have a talent for ruining a good plan,\" he snarls. \"This one was supposed to be different.\"",
+        "He draws back into the darkness. The next attack will not be a test. It will be an attempt to finish this."
+      ],
+      "gmInstructions": [
+        "SETTING: The final phase of the battle takes place in the station's largest pumping chamber. The hero has disrupted part of the prepared system, but Copperhead still has room to use his full size and his venomous bite. The chamber includes high catwalks, broad concrete ledges, pipe bridges, deep water, machinery housings, and several service exits.",
+        "GOALS FOR THIS CHAPTER: The hero must defeat or force Copperhead to surrender, escape, or become unable to continue fighting. Copperhead should use his full range of transformations: a small form to evade or reposition, a human form to taunt or operate controls, and a giant snake form to attack and control space. His venomous bite is a serious threat, especially if the hero has already been injured or exposed to environmental hazards. The hero should have a chance to neutralize the remaining environmental dangers while fighting.",
+        "GM GUIDANCE: Scale Copperhead's threat to the individual hero and their powers. His giant form should be physically formidable, but do not make him immune to clever tactics, environmental manipulation, or focused attacks. A fast hero may evade and strike at vulnerable points; a strong hero may contest his coils or shift heavy machinery; an energy-based hero may target equipment or force him away from a position; a tactical or investigative hero may exploit the station controls and his overconfidence. These are examples, not required solutions. If the hero is bitten, make the poison's effects clear and urgent without declaring instant defeat. ORACLE can arrange an antidote after the fight, as it did previously, but the hero must still survive and win the confrontation. Chapter complete once Copperhead is defeated, captured, or driven into a clear retreat and the station's immediate hazards are controlled.",
+        "TONE: A dangerous, personal climax. Copperhead is fighting for revenge, and the hero is fighting to end a threat that has been carefully building since the escape."
+      ],
+      "imagePrompt": "A climactic superhero battle in the largest chamber of an abandoned underground pumping station, a giant copperhead mutant coiled around heavy industrial pipes and rising above a narrow catwalk, a lone hero facing him amid splashing water, sparks, and dramatic work lights, cinematic high-detail comic-book art, no text."
+    },
+    {
+      "id": "tlg10",
+      "title": "Settling Accounts",
+      "eyebrow": "Chapter Ten — Finale",
+      "opening": [
+        "The pumps wind down one by one. Water settles into the lower channels, and the last emergency lights cast long reflections across the concrete walls.",
+        "Copperhead is finally out of the fight. The elaborate trap that brought you here has become the evidence that will send him back into custody.",
+        "ORACLE's response team is on its way. Victor Cross comes over the communicator, his voice calm but unmistakably relieved.",
+        "\"Hold your position if you can. We'll take custody from here.\"",
+        "",
+        "The immediate danger is over. But there is still the matter of what comes next."
+      ],
+      "gmInstructions": [
+        "SETTING: The aftermath takes place inside and around the abandoned pumping station. ORACLE agents arrive to secure Copperhead and assist the hero. If the hero has been poisoned or seriously injured, ORACLE provides appropriate medical support, including an antidote for Copperhead's venom. City emergency personnel can be brought in once the station is safe.",
+        "GOALS FOR THIS CHAPTER: Resolve Copperhead's fate and the consequences of the escape. If captured, he is returned to secure custody under stronger precautions. If he escapes, make the escape a consequence of the hero's choices and the battle rather than an arbitrary reversal; ORACLE should still recover evidence of the operation and begin a renewed search. The hero should secure or hand over the stolen equipment, surveillance system, and utility plans as evidence. The pumping station should be left safe enough for authorities to inspect.",
+        "GM GUIDANCE: Victor Cross should acknowledge that Copperhead's escape and the preparation of the trap represent a serious security failure, without pretending the danger is permanently gone unless the story outcome supports that. Copperhead may get one final bitter or sarcastic line consistent with his established personality. Do not introduce new facts about the Infinity Codex or claim to know its current location. The previous encounter can be referenced only as history: Copperhead stole it for the Genesis Alliance, was double-crossed when they took it from him, fought the Ultras, poisoned one of them, and was captured by the team, including the player's hero. His prison warning has now been fulfilled. End with a character-appropriate quiet beat: the hero returning to the city above, ORACLE debriefing them, or Cross reminding them that a grudge like this can make an enemy patient—but that this time, the hero was ready. Clearly close the adventure.",
+        "TONE: A grounded, satisfying conclusion with consequences. The hero has survived a carefully prepared personal vendetta and brought a dangerous returning enemy to account."
+      ],
+      "imagePrompt": "The aftermath inside an underground municipal pumping station, ORACLE agents in practical dark tactical clothing securing the area while a costumed superhero stands near the quieted machinery, dawn light filtering through an open street-level service entrance, cinematic superhero comic-book realism, no text."
+    }
+  ]
+}
