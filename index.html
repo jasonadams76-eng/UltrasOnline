@@ -238,6 +238,36 @@
   .badge.done{ background:#2c6b3f; border-color:#2c6b3f; color:#fff; }
   .play-btn{ width:100%; margin-top:4px; }
 
+  .detail-top{ display:grid; grid-template-columns:minmax(200px, 300px) 1fr; gap:22px; margin-bottom:16px; align-items:start; }
+  .detail-portrait{ position:relative; aspect-ratio:4/5; overflow:hidden; background:var(--ink); border:3px solid var(--ink); box-shadow:5px 5px 0 rgba(10,31,68,0.85); }
+  .detail-portrait img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 30%; z-index:2; }
+  .facts{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:8px; margin-top:14px; }
+  .fact{ border:2px solid var(--ink); background:var(--paper-dim); padding:6px 10px; display:flex; flex-direction:column; }
+  .fact-k{ font-family:'JetBrains Mono',monospace; font-size:0.66rem; text-transform:uppercase; letter-spacing:1px; color:#4a5570; }
+  .fact-v{ font-family:'Spectral',serif; font-size:1rem; font-weight:600; overflow-wrap:anywhere; }
+  .fact.wide{ grid-column:span 2; }
+  .detail-actions{ display:flex; gap:10px; flex-wrap:wrap; margin:14px 0 20px; }
+  .detail-actions .play-btn{ width:auto; margin:0; }
+  .detail-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+  .detail-sec{ border:2px solid var(--ink); background:var(--paper-dim); padding:12px 16px; margin-bottom:16px; }
+  .detail-grid .detail-sec{ margin-bottom:0; }
+  .detail-sec h3{ font-family:'Anton',sans-serif; text-transform:uppercase; letter-spacing:1px; font-size:1.05rem; margin:0 0 8px; color:var(--ink); }
+  .detail-sec p{ margin:0; line-height:1.5; }
+  .detail-sec ul{ margin:0; padding-left:18px; line-height:1.5; }
+  .stat-row{ display:grid; grid-template-columns:132px 1fr 128px; gap:8px; align-items:center; font-family:'JetBrains Mono',monospace; font-size:0.72rem; margin-bottom:6px; }
+  .stat-bar{ height:10px; border:1.5px solid var(--ink); background:#fff; display:block; }
+  .stat-bar span{ display:block; height:100%; background:var(--hero-red); }
+  .stat-val{ text-align:right; white-space:nowrap; }
+  .stat-name{ white-space:nowrap; }
+  @media (max-width:640px){
+    .detail-top{ grid-template-columns:1fr; }
+    .detail-portrait{ max-width:280px; }
+    .detail-grid{ grid-template-columns:1fr; }
+    .stat-row{ grid-template-columns:96px 1fr 112px; font-size:0.66rem; }
+    .stat-name{ white-space:normal; line-height:1.15; }
+    .detail-actions .play-btn, .detail-actions .secondary{ flex:1 1 100%; }
+  }
+
   .adv-hero{ display:flex; align-items:center; gap:14px; margin-bottom:16px; }
   .adv-hero-pic{ position:relative; width:78px; height:78px; flex:none; border:3px solid var(--ink); border-radius:50%; overflow:hidden; background:var(--ink); }
   .adv-hero-pic img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 14%; transform:scale(1.6); transform-origin:50% 14%; z-index:2; }
@@ -383,6 +413,8 @@ const PREMADE_HEROES = [
     name: 'Donnie Element', alias: 'Silver Star',
     origin: 'Altered Human. Physicist Donnie Element was experimenting with a particle accelerator when a lab accident caused an explosion. Instead of being injured, Element was transformed and was now able to move at a tremendous rate of speed. In addition, he heals at an advanced rate and can also control the intensity of light, making any light source more or less bright.',
     occupation: 'Physicist',
+    age: 30,
+    build: [{ label:'', height:"6'0\"", weight:"195 lbs" }],
     appearance: 'A powerfully built man in a black and gunmetal-silver armored suit with silver shoulder plates, forearm guards and shin armor, a utility belt, black gloves, and a large silver star on his chest. He wears a silver cowl with pointed ears and a visor-style eye mask.',
     powers: [ { name:'Lightning Speed', rank:40 }, { name:'Regeneration', rank:20 }, { name:'Light Manipulation', rank:20 } ],
     stats: { 'Fighting Ability': 20, Agility: 20, Strength: 20, Endurance: 30, Reason: 20, Intuition: 20, Psyche: 20 },
@@ -399,6 +431,8 @@ const PREMADE_HEROES = [
     name: 'Charles Limbird', alias: 'Steel Talon',
     origin: 'Altered Human. Charles Limbird was a talented test pilot in the Air Force. During a flight, equipment aboard the aircraft malfunctioned and caused an explosion — the equipment was a machine designed to control the weather. Charles was engulfed by the resulting energy and badly injured, but once healed he discovered he could control air currents (granting flight and use of wind in attack and defense) and communicate with birds.',
     occupation: 'Air Force pilot',
+    age: 23,
+    build: [{ label:'', height:"6'3\"", weight:"220 lbs" }],
     appearance: 'A trim, square-jawed man with short dark hair in a royal-blue suit with a long slate-gray cape and a blue eye mask. A silver star-shaped emblem sits on his chest, and he wears silver gauntlets and boots with a metallic belt.',
     powers: [ { name:'Flight', rank:20 }, { name:'Air Control', rank:30 }, { name:'Animal Control (Birds)', rank:30 } ],
     stats: { 'Fighting Ability': 20, Agility: 10, Strength: 30, Endurance: 20, Reason: 30, Intuition: 20, Psyche: 10 },
@@ -415,6 +449,8 @@ const PREMADE_HEROES = [
     name: 'Henry Struk', alias: 'Thunder Bolt',
     origin: 'Altered Human. Henry Struk was a skilled archer preparing for the Olympics when he was struck by lightning while practicing. Instead of being permanently injured, when he awoke Henry discovered that he could now control and generate lightning.',
     occupation: 'Archery Instructor',
+    age: 23,
+    build: [{ label:'', height:"6'2\"", weight:"180 lbs" }],
     appearance: 'A muscular man in a gold-and-silver armored suit with armored shoulders, a long gold-and-gray cape, and a gold winged helmet with glowing cyan eyes. A glowing cyan lightning emblem is on his chest, and silver gauntlets and gold boots complete the look. He carries no bow: he forms it out of pure crackling energy when he needs it, and it vanishes when he is done.',
     powers: [ { name:'Resistance to Electricity', rank:50 }, { name:'Energy Generation - Energy Arrows', rank:50 }, { name:'Body Armor', rank:10 } ],
     stats: { 'Fighting Ability': 20, Agility: 30, Strength: 20, Endurance: 20, Reason: 20, Intuition: 20, Psyche: 10 },
@@ -430,6 +466,8 @@ const PREMADE_HEROES = [
     name: 'Charles "Charlie" Hawke', alias: 'TraumaHawk',
     origin: 'High-Tech. Charlie Hawke was an exceptional flight paramedic renowned for his incredible medical skills, compassionate nature, and courageous spirit. In a different realm, an ancient elemental entity named Aetheris — representing life and healing — sensed an imbalance growing in the human world and sought out Charlie for his potent combination of medical expertise and innate heroism, bequeathing him powerful talons and transforming him into TraumaHawk.',
     occupation: 'Flight Paramedic',
+    age: 35,
+    build: [{ label:'', height:"6'3\"", weight:"215 lbs" }],
     appearance: 'A muscular man with short dark hair and round blue glowing goggles, in a red and navy suit with gold trim, a belt with pouches, and navy boots. Gold gauntlets have curved talons on the fingertips that extend in combat. He has no wings anywhere on his body; he flies through cosmic power, not wings.',
     powers: [ { name:'Flight', rank:10 }, { name:'Talons', rank:50 }, { name:'Healing', rank:20 }, { name:'Elemental Communication', rank:10 } ],
     stats: { 'Fighting Ability': 30, Agility: 20, Strength: 40, Endurance: 10, Reason: 20, Intuition: 10, Psyche: 10 },
@@ -446,6 +484,8 @@ const PREMADE_HEROES = [
     name: 'Joseph Steele', alias: 'Tungsten Titan',
     origin: 'Altered Human. Joseph Steele is a brilliant metallurgist and materials scientist at the New York Institute of Advanced Materials (NYIAM), known for developing new, lightweight, incredibly strong alloys. During an experiment, an explosion hurled Steele into a vat of molten tungsten. Amazingly, Steele emerged unharmed, and had gained the ability to transform his entire body into tungsten at will.',
     occupation: 'Metallurgist/Materials Scientist',
+    age: 34,
+    build: [{ label:"Human form", height:"6'6\"", weight:"250 lbs" }, { label:"Tungsten form", height:"6'7\"", weight:"750 lbs" }],
     appearance: 'A heavily muscled man whose entire body is solid gunmetal-gray tungsten: a bald, polished metal skull with no hair or eyebrows and faintly glowing reddish eyes, and metal forearms and fists, all with a dull metallic sheen. This is his actual body, not armor. He wears an ordinary fitted black t-shirt, jeans with a belt, and black boots over the metal, and he is metal everywhere, even where it is covered.',
     powers: [ { name:'Natural Body Armor - Tungsten Skin', rank:40 }, { name:'Body Transformation', rank:40 } ],
     stats: { 'Fighting Ability': 30, Agility: 10, Strength: 50, Endurance: 50, Reason: 10, Intuition: 20, Psyche: 10 },
@@ -462,6 +502,8 @@ const PREMADE_HEROES = [
     name: 'Lynée Boackle', alias: 'Bones',
     origin: 'Altered Human. After working a crime scene, Lynée had taken off her PPE when she accidentally came into contact with a strange sample. The sample rendered her unconscious, and when she woke up in the hospital, she had super-human powers.',
     occupation: 'Forensic Scientist',
+    age: 35,
+    build: [{ label:'', height:"5'7\"", weight:'' }],
     appearance: 'A strong, athletic woman with long black hair in a black leather jacket, black leather pants, a belt, black gloves and knee-high black boots. She has a calm, analytical expression, even in a fight.',
     powers: [ { name:'Regeneration', rank:10 }, { name:'Tracking Ability', rank:20 } ],
     stats: { 'Fighting Ability': 40, Agility: 30, Strength: 50, Endurance: 50, Reason: 20, Intuition: 20, Psyche: 10 },
@@ -1257,6 +1299,7 @@ async function callGM(hero, chapter, log, newPlayerLine, mechanics, healthContex
   const heroSheet = `Name: ${hero.name}
 Alias: ${hero.alias}
 Origin: ${hero.origin}
+Age and build: ${heroBuildText(hero)}
 Powers: ${hero.powers.map(powerLabel).join(', ')}
 Talents: ${(hero.talents && hero.talents.length) ? hero.talents.map(talentLabel).join('; ') : 'None'}
 Stats: ${STAT_NAMES.map(s => `${s} ${hero.stats[s]}`).join(', ')}
@@ -1388,6 +1431,7 @@ async function callOracleRescue(hero, chapter, log){
   const heroSheet = `Name: ${hero.name}
 Alias: ${hero.alias}
 Origin: ${hero.origin}
+Age and build: ${heroBuildText(hero)}
 Powers: ${hero.powers.map(powerLabel).join(', ')}
 Bio: ${hero.bio}`;
 
@@ -1801,10 +1845,11 @@ function render(){
   if(STATE.screen==='AUTH'){
     if(!bg){ bg = document.createElement('div'); bg.id = 'auth-backdrop'; bg.className = 'auth-backdrop'; document.body.prepend(bg); }
   } else if(bg){ bg.remove(); }
-  app.className = (STATE.screen==='HERO_SELECT' || STATE.screen==='ADVENTURE_SELECT' || STATE.screen==='KARMA') ? 'wide' : '';
+  app.className = (STATE.screen==='HERO_SELECT' || STATE.screen==='HERO_DETAIL' || STATE.screen==='ADVENTURE_SELECT' || STATE.screen==='KARMA') ? 'wide' : '';
   if(STATE.screen==='AUTH') return renderAuth();
   if(STATE.screen==='TITLE') return renderTitle();
   if(STATE.screen==='HERO_SELECT') return renderHeroSelect();
+  if(STATE.screen==='HERO_DETAIL') return renderHeroDetail();
   if(STATE.screen==='ADVENTURE_SELECT') return renderAdventureSelect();
   if(STATE.screen==='KARMA') return renderKarma();
   if(STATE.screen==='PLAY') return renderPlay();
@@ -1980,6 +2025,10 @@ function renderTitle(){
   };
 }
 
+function heroBuildText(h){
+  const parts = (h.build || []).map(b => (b.label ? b.label + ': ' : '') + [b.height, b.weight].filter(Boolean).join(', '));
+  return ['Age ' + h.age].concat(parts).join('; ');
+}
 function heroOriginTag(h){
   return String(h.origin || '').split('.')[0].trim();
 }
@@ -2050,13 +2099,97 @@ function renderHeroSelect(isRefresh){
   document.querySelectorAll('.use-hero').forEach(el=>{
     el.onclick = ()=>{
       const hero = PREMADE_HEROES.find(h=>h.id===el.getAttribute('data-hero'));
-      if(hero) openAdventureSelect(hero);
+      if(hero) openHeroDetail(hero);
     };
   });
   if(!isRefresh) refreshRosterInfo();
 }
 
 /* ---------- Adventure choice (per hero) ---------- */
+function openHeroDetail(hero){
+  STATE.detailHero = hero;
+  STATE.screen = 'HERO_DETAIL';
+  render();
+  window.scrollTo(0, 0);
+}
+function renderHeroDetail(){
+  const h = STATE.detailHero;
+  if(!h){ STATE.screen = 'HERO_SELECT'; return render(); }
+  const p = (STATE.rosterInfo || {})[h.id];
+  const done = p ? p.done : 0;
+  const going = p ? Math.max(0, p.saves - p.done) : 0;
+  const history = [
+    done ? `<span class="badge done">✓ ${done} completed</span>` : '',
+    going ? `<span class="badge">${going} in progress</span>` : ''
+  ].join('');
+  const facts = [
+    ['Age', String(h.age)],
+    ['Occupation', h.occupation]
+  ];
+  (h.build || []).forEach(b => {
+    const label = b.label || '';
+    facts.push([label ? label : 'Height', b.height]);
+    if(b.weight) facts.push([label ? label + ' weight' : 'Weight', b.weight]);
+  });
+  const factsHtml = facts.map(f => `<div class="fact${f[1].length > 16 ? ' wide' : ''}"><span class="fact-k">${escapeHtml(f[0])}</span><span class="fact-v">${escapeHtml(f[1])}</span></div>`).join('');
+  const statsHtml = STAT_NAMES.map(n => {
+    const v = h.stats[n];
+    return `<div class="stat-row"><span class="stat-name">${escapeHtml(n)}</span>
+      <span class="stat-bar"><span style="width:${Math.min(100, v)}%"></span></span>
+      <span class="stat-val">${escapeHtml(rankNameForNumber(v))} <b>${v}</b></span></div>`;
+  }).join('');
+  const powersHtml = h.powers.map(pw => `<li><b>${escapeHtml(powerName(pw))}</b>${typeof pw === 'object' ? ` — ${escapeHtml(rankNameForNumber(pw.rank))} (${pw.rank})` : ''}</li>`).join('');
+  const talentsHtml = (h.talents || []).map(t => `<li><b>${escapeHtml(t.name)}</b> — ${escapeHtml(t.effect)}</li>`).join('');
+  const contactsHtml = (h.contacts || []).map(c => `<li>${escapeHtml(c)}</li>`).join('');
+  app.innerHTML = `
+    <div class="panel menu-panel hero-detail">
+      ${accountBar()}
+      <div class="detail-top">
+        <div class="detail-portrait">
+          <div class="portrait-fallback">${escapeHtml(initials(h.alias))}</div>
+          ${lookupImg('portraits/'+h.id, h.alias)}
+        </div>
+        <div class="detail-head">
+          <div class="chapter-eyebrow display" style="color:var(--hero-red); font-size:0.8rem;">Hero profile</div>
+          <h2 class="display menu-title" style="margin:2px 0 0;">${escapeHtml(h.alias)}</h2>
+          <div class="tag" style="margin-bottom:10px;">${escapeHtml(h.name)}</div>
+          <div class="chips">
+            <span class="chip">Health ${maxHealth(h)}</span>
+            <span class="chip">Karma ${maxKarma(h)}</span>
+            ${(h.stats.Strength >= 40) ? `<span class="chip strength">${escapeHtml(rankNameForNumber(h.stats.Strength))} Strength</span>` : ''}
+            ${heroOriginTag(h) ? `<span class="chip origin">${escapeHtml(heroOriginTag(h))}</span>` : ''}
+          </div>
+          <div class="facts">${factsHtml}</div>
+          ${history ? `<div class="badges" style="margin-top:10px;">${history}</div>` : ''}
+        </div>
+      </div>
+      <div class="detail-actions">
+        <button id="btn-detail-play" class="play-btn">Play as ${escapeHtml(h.alias)}</button>
+        <button id="btn-detail-back" class="secondary">← Back to roster</button>
+      </div>
+      <div class="detail-grid">
+        <section class="detail-sec"><h3>FASERIP Stats</h3>${statsHtml}</section>
+        <section class="detail-sec"><h3>Powers</h3><ul>${powersHtml}</ul><h3 style="margin-top:14px;">Talents</h3><ul>${talentsHtml || '<li>None</li>'}</ul></section>
+      </div>
+      <section class="detail-sec"><h3>Origin</h3><p>${escapeHtml(h.origin)}</p></section>
+      <section class="detail-sec"><h3>Bio</h3><p>${escapeHtml(h.bio)}</p></section>
+      <section class="detail-sec"><h3>Appearance</h3><p>${escapeHtml(h.appearance)}</p></section>
+      ${contactsHtml ? `<section class="detail-sec"><h3>Contacts</h3><ul>${contactsHtml}</ul></section>` : ''}
+      <div class="detail-actions">
+        <button id="btn-detail-play2" class="play-btn">Play as ${escapeHtml(h.alias)}</button>
+        <button id="btn-detail-back2" class="secondary">← Back to roster</button>
+      </div>
+    </div>
+  `;
+  wireAccountBar();
+  ['btn-detail-back', 'btn-detail-back2'].forEach(id => {
+    document.getElementById(id).onclick = ()=>{ STATE.screen = 'HERO_SELECT'; STATE.error = null; render(); window.scrollTo(0, 0); };
+  });
+  ['btn-detail-play', 'btn-detail-play2'].forEach(id => {
+    document.getElementById(id).onclick = ()=> openAdventureSelect(h);
+  });
+}
+
 async function openAdventureSelect(hero){
   STATE.activeHero = hero;
   STATE.restartArmed = null;
