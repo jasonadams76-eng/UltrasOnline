@@ -266,9 +266,24 @@
     .adv-card{ grid-template-columns:1fr; }
     .adv-cover{ min-height:0; aspect-ratio:16/8; border-right:none; border-bottom:3px solid var(--ink); }
   }
+  @media (max-width:640px){ .title-screen{ padding:0 0 22px; } .title-screen .menu-grid{ padding:0 16px; } }
   @media (max-width:380px){ .hero-grid{ grid-template-columns:1fr; } }
   .title-screen .sub{ color:#4a4f63; }
   @media (prefers-reduced-motion:reduce){ *{ animation:none !important; transition:none !important; } }
+
+  /* ---- Title banner + login backdrop ---- */
+  .title-screen{ padding:0 0 34px; overflow:hidden; }
+  .title-banner{ margin:-1px -1px 0; line-height:0; border-bottom:3px solid var(--ink); }
+  .title-banner img{ width:100%; height:auto; display:block; aspect-ratio:3/2; background:var(--ink); }
+  .title-fallback{ display:none; padding-top:50px; }
+  .title-screen.no-banner .title-banner{ display:none; }
+  .title-screen.no-banner .title-fallback{ display:block; }
+  .title-screen .sub{ margin:18px 0 20px; }
+  .auth-backdrop{
+    position:fixed; inset:-20px; z-index:-1; pointer-events:none;
+    background:url('images/title-banner.jpg') center/cover no-repeat;
+    filter:blur(7px) brightness(0.38) saturate(1.1);
+  }
 </style>
 </head>
 <body>
@@ -2035,6 +2050,10 @@ function generateEntryImage(entry, sceneText, hero){
 const app = document.getElementById('app');
 
 function render(){
+  let bg = document.getElementById('auth-backdrop');
+  if(STATE.screen==='AUTH'){
+    if(!bg){ bg = document.createElement('div'); bg.id = 'auth-backdrop'; bg.className = 'auth-backdrop'; document.body.prepend(bg); }
+  } else if(bg){ bg.remove(); }
   app.className = (STATE.screen==='HERO_SELECT' || STATE.screen==='ADVENTURE_SELECT' || STATE.screen==='KARMA') ? 'wide' : '';
   if(STATE.screen==='AUTH') return renderAuth();
   if(STATE.screen==='TITLE') return renderTitle();
@@ -2190,8 +2209,11 @@ async function afterLogin(){
 function renderTitle(){
   app.innerHTML = `
     <div class="panel title-screen">
-      <img class="title-logo" src="${ULTRAS_LOGO_DATA_URI}" alt="The Ultras logo">
-      <h1>The Ultras</h1>
+      <div class="title-banner"><img src="images/title-banner.jpg" alt="The Ultras" decoding="async" onerror="this.closest('.title-screen').classList.add('no-banner')"></div>
+      <div class="title-fallback">
+        <img class="title-logo" src="${ULTRAS_LOGO_DATA_URI}" alt="The Ultras logo">
+        <h1>The Ultras</h1>
+      </div>
       <div class="sub">Solo Superhero Chronicles</div>
       <div class="menu-grid">
         <button id="btn-start">${AUTH.token ? 'Continue' : 'Begin'}</button>
