@@ -1,0 +1,292 @@
+{
+  "id": "the_last_patient",
+  "title": "The Last Patient",
+  "tagline": "The miracle is real. The price is something else.",
+  "blurb": "Patients at a New York City hospital are recovering from catastrophic injuries with impossible speed. Doctors are calling the recoveries miraculous, but the patients share disturbing dreams, display unexplained biological changes, and seem connected in ways that defy medical science. When a worried nurse asks the hero to look closer, the trail leads to an unauthorized experiment, and the hero must uncover the truth, with ORACLE's help, before the next stage begins.",
+  "chapters": [
+    {
+      "id": "the_miracle_ward",
+      "title": "The Miracle Ward",
+      "eyebrow": "Chapter One — Recovery Beyond Explanation",
+      "opening": [
+        "The story is all over the local news.",
+        "A New York City hospital has reported several extraordinary recoveries. Patients who suffered devastating injuries are walking again. Internal injuries have healed. Severe burns have faded. One patient who was expected to remain unconscious for weeks has awakened and begun speaking normally.",
+        "The hospital is calling the results unprecedented.",
+        "But there is something unusual about the patients.",
+        "They all describe the same dream.",
+        "And none of them can explain why.",
+        "",
+        "That evening, a nurse from the ward finds you.",
+        "Her name tag reads Renata Cole. Her hands are shaking.",
+        "\"Please,\" she says. \"Someone has to look at what's happening in there. Nobody will listen to me.\""
+      ],
+      "gmInstructions": [
+        "This chapter introduces the central mystery. The hero becomes aware of a series of impossible medical recoveries at a New York City hospital.",
+        "The recoveries involve patients with different injuries and medical histories. Their improvement cannot be explained by ordinary treatment.",
+        "The hospital has attracted media attention. Administrators are celebrating the results, while some medical personnel are privately concerned about the circumstances.",
+        "The patients share a recurring dream. They describe a bright white room, a low mechanical humming, and the feeling that someone is watching them. Some describe hearing a voice, but none can identify the speaker.",
+        "The hero may investigate through public reporting, hospital staff, patients, or direct observation. Do not require a particular power or talent.",
+        "One patient, Marcus Webb, a construction worker admitted four days ago after a fall from scaffolding, becomes distressed when asked about the dream and insists that something is still inside him. He is the most recently admitted patient in the program, the last one enrolled (the hero can learn this from Renata or the ward board). He cannot explain what he means. Marcus is the \"last patient\" of the title: keep him present and sympathetic throughout the adventure.",
+        "Renata Cole, a night-shift nurse, privately asks the hero to investigate. She has noticed that the recoveries are too fast and the patients are frightened, and she fears speaking up to hospital administration. She is sincere, nervous and not part of any conspiracy. Do not introduce Victor Cross or ORACLE in this chapter; ORACLE first appears in Chapter Four.",
+        "The chapter should establish that the recoveries are real, but something about the patients' condition is not normal."
+      ],
+      "imagePrompt": "A modern New York City hospital room at night. A patient sits upright in bed despite having suffered severe injuries, looking confused and frightened. Medical monitors show unusual readings while a nurse watches from the doorway. A quiet, unsettling medical thriller atmosphere, realistic cinematic comic-book concept art, no text."
+    },
+    {
+      "id": "shared_dreams",
+      "title": "Shared Dreams",
+      "eyebrow": "Chapter Two — Something Connects Them",
+      "opening": [
+        "The first patient describes a white room.",
+        "The second describes the humming.",
+        "The third remembers a voice telling them to remain still.",
+        "When you speak to another patient, the description is almost identical.",
+        "They have never met. They were admitted on different days, for different reasons, and treated by different medical teams.",
+        "Yet they all remember the same place.",
+        "One patient finally looks directly at you.",
+        "\"It wasn't a dream. We were all there.\""
+      ],
+      "gmInstructions": [
+        "The hero investigates the patients' shared experiences. The similarities are too specific to be coincidence.",
+        "Keep this chapter on the patients' experiences and bodies, not on paperwork; the paper trail belongs to the next chapter. Marcus Webb remembers the dream most clearly, and his doctors note that his physical changes are the least advanced of any patient.",
+        "The patients do not know one another and have no obvious connection before entering the hospital.",
+        "Their descriptions consistently include a white clinical room, a mechanical humming, and a sensation of being observed. Some recall brief images of other patients.",
+        "A patient may recognize another patient's voice despite never having met them. This suggests a connection that goes beyond ordinary shared memories.",
+        "The patients also display subtle physical changes. Their body temperature, healing patterns, reflexes, or other biological measurements may differ from normal expectations.",
+        "Hospital staff are divided. Some believe they are witnessing a medical breakthrough, while others are concerned that the patients are being subjected to an unknown treatment.",
+        "The hero can obtain information by interviewing patients, speaking with staff, reviewing accessible records, or observing the patients.",
+        "Avoid making every hospital employee complicit. Most are ordinary medical professionals who do not understand what is happening.",
+        "The hero discovers that all of the affected patients were assigned to a particular treatment program shortly after admission.",
+        "The chapter ends with the discovery of an unusual set of treatment records that do not appear in the hospital's normal medical documentation."
+      ],
+      "imagePrompt": "Several hospital patients in separate beds appear to be experiencing the same unsettling dream. Their eyes are closed, but faint reflections of the same sterile white room appear in the glass and medical equipment around them. Surreal psychological medical thriller, realistic comic-book illustration, no text."
+    },
+    {
+      "id": "the_missing_records",
+      "title": "The Missing Records",
+      "eyebrow": "Chapter Three — A Treatment Without a Name",
+      "opening": [
+        "The hospital's official records tell one story.",
+        "The patients' memories tell another.",
+        "There are gaps in the documentation. Certain procedures appear in handwritten notes but not in the electronic medical records. Medication entries have been amended, and several treatment schedules have been altered after the fact.",
+        "Someone has been careful to keep the unusual treatments out of the ordinary records.",
+        "The question is no longer whether something happened.",
+        "The question is who authorized it."
+      ],
+      "gmInstructions": [
+        "The hero investigates the hospital's records and the treatment program associated with the patients.",
+        "Keep this chapter on the paper trail, not on more patient interviews.",
+        "The missing documentation is deliberate, but access to the information should require investigation rather than a single automatic discovery.",
+        "Possible approaches include questioning staff, examining available records, using investigative talents, accessing computer systems, or following physical evidence.",
+        "Midway through the investigation, the hero encounters Kyle Dunn, a frightened research technician who is trying to shred and remove the handwritten treatment notes before anyone finds them. Play this as a short, tense chase or standoff in the records room, stairwells or parking structure. Kyle is scared, not a villain, and should not be killed or seriously harmed. If caught or talked down, he admits that Mercer told him the notes had to disappear and points the hero toward Mercer's restricted research area. If he escapes, the shredded or abandoned pages still lead to the same conclusion.",
+        "The records show that the affected patients received an experimental treatment not listed in their normal care plans.",
+        "The treatment was administered by a small group operating under a special research authorization. The authorization appears legitimate at first glance, but its supporting documentation is incomplete.",
+        "The treatment has no established public name. Staff who administered it refer to it informally as the regenerative protocol.",
+        "The hero may discover that some patients were selected because their injuries were severe enough that conventional recovery would be uncertain or prolonged.",
+        "The patients were not all treated by the same attending physician, but their treatment records lead to the same research supervisor.",
+        "The hospital's administrators may be unaware of the full scope of the experiment. Some may have approved a research program without understanding what was actually being done.",
+        "The chapter ends with the hero identifying Dr. Nathaniel Mercer as the physician overseeing the experimental program and learning that Mercer has restricted access to a separate research area."
+      ],
+      "imagePrompt": "A dim hospital records room filled with filing cabinets and computer terminals. A desk holds medical charts with sections blacked out and handwritten annotations. A single monitor displays an unusual patient treatment schedule. Dark investigative medical thriller aesthetic, cinematic realistic comic-book art, no readable text."
+    },
+    {
+      "id": "oracle_consultation",
+      "title": "ORACLE Consultation",
+      "eyebrow": "Chapter Four — The Biology of a Miracle",
+      "opening": [
+        "You bring what you have found to ORACLE. Victor Cross reviews the evidence in silence.",
+        "When he finally looks up, his expression has changed.",
+        "\"I want this examined by people who understand the science. People who can tell us whether we're dealing with a medical breakthrough or something much more dangerous.\"",
+        "At ORACLE, Adrian Blackwell and Evelyn Stone are already waiting.",
+        "Blackwell studies the patient data while Stone examines the treatment records.",
+        "After several minutes, Blackwell looks up.",
+        "\"This isn't simply accelerating healing. Whatever they're doing is changing the underlying biology.\""
+      ],
+      "gmInstructions": [
+        "This is ORACLE's first appearance in the adventure. ORACLE has not been involved until now; it becomes involved because of what the hero found.",
+        "Victor Cross brings Adrian Blackwell and Evelyn Stone into the investigation as ORACLE scientific consultants.",
+        "Both consultants are former Genesis Alliance leaders who now work with ORACLE under an agreement. The heroes know their history and have legitimate reasons to be cautious about trusting them.",
+        "Blackwell examines the experimental process and its engineering. Stone studies the biological results and the unusual similarities among the patients.",
+        "Their initial conclusion is that the treatment is doing more than repairing damaged tissue. It appears to be altering the body's normal biological processes.",
+        "The changes are not identical in every patient. Some show accelerated tissue repair, while others demonstrate changes in reflexes, sensory responses, or other physical functions.",
+        "The consultants cannot yet determine the treatment's ultimate purpose. The available data is incomplete, and neither should claim certainty.",
+        "They identify evidence that the treatment is being administered in stages. The initial recoveries may represent only the first phase.",
+        "Blackwell is intrigued by the possibilities of the technology and finds the method elegant, then catches himself for saying so. Stone is more concerned about the patients and the risks of continuing the treatment, and quietly admits that it looks like exactly the kind of shortcut the Genesis Alliance would have taken, which unsettles her. This is a personal reaction only: Mercer has no connection to the Genesis Alliance.",
+        "Victor makes clear that the priority is protecting the patients and determining who is responsible. ORACLE does not authorize the consultants to conduct their own experiments on the affected individuals.",
+        "The chapter ends when Stone identifies a pattern in the patients' medical readings. Their biological changes appear to be synchronized, as though the patients are responding to a common stimulus."
+      ],
+      "imagePrompt": "An ORACLE scientific briefing room. Victor Cross stands in his tan trench coat while Adrian Blackwell and Evelyn Stone examine patient scans and biological data on large displays. Blackwell looks intensely curious, while Stone appears concerned. Cinematic realistic superhero science-thriller concept art, no text."
+    },
+    {
+      "id": "the_second_phase",
+      "title": "The Second Phase",
+      "eyebrow": "Chapter Five — The Experiment Isn't Finished",
+      "opening": [
+        "The next incident happens without warning.",
+        "A patient who had been recovering comfortably suddenly becomes violently ill. Their heart rate spikes, their muscles contract, and the medical equipment around the bed begins malfunctioning.",
+        "Then, just as suddenly, everything stops.",
+        "The patient opens their eyes.",
+        "\"It's time,\" they whisper.",
+        "Across the hospital, several other patients begin saying the same thing."
+      ],
+      "gmInstructions": [
+        "The synchronized biological changes have reached a new stage. The affected patients are responding to a stimulus that has not yet been identified.",
+        "The episode should be frightening but should not automatically make the patients hostile. They are frightened, confused, and not in control of what is happening.",
+        "Marcus Webb is the only patient who stays awake and aware throughout the episode. He asks the hero not to let anyone take him back to the chamber.",
+        "Medical staff attempt to stabilize the patients. The hero may help protect them, prevent equipment-related hazards, or calm the situation.",
+        "The patients begin experiencing brief periods of unusual coordination. They may speak similar phrases, react simultaneously, or describe sensations they could not ordinarily share.",
+        "Blackwell and Stone analyze the event. They believe the treatment has established some kind of biological synchronization among the patients, but they cannot yet explain how it works.",
+        "The hero discovers that the episodes occur at predictable intervals. The pattern suggests that the treatment's second phase is being activated remotely or through a system outside the hospital.",
+        "Dr. Nathaniel Mercer has recently accessed a restricted area of the hospital that is not part of normal patient care.",
+        "The hero may discover evidence that the next phase will involve every patient who received the experimental treatment.",
+        "The chapter ends with a warning that the next activation is imminent. The patients may be in danger if the process continues."
+      ],
+      "imagePrompt": "A tense hospital ward during a mysterious medical emergency. Several patients experience synchronized reactions as monitors flicker and medical equipment malfunctions. Nurses and doctors rush to help while an unsettling glow reflects across the room. Cinematic realistic superhero thriller art, no text."
+    },
+    {
+      "id": "the_hidden_facility",
+      "title": "The Hidden Facility",
+      "eyebrow": "Chapter Six — Behind the Hospital Walls",
+      "opening": [
+        "Dr. Nathaniel Mercer has disappeared from the hospital's public-facing offices.",
+        "The restricted research area is still active.",
+        "Behind a secured door, you find a facility that looks nothing like an ordinary hospital laboratory.",
+        "There are sealed treatment chambers, specialized monitoring equipment, and rows of data terminals.",
+        "The equipment is connected to the patient program.",
+        "And someone has been preparing for the next phase."
+      ],
+      "gmInstructions": [
+        "The hero locates a concealed research facility associated with the hospital's experimental treatment program.",
+        "The facility may be accessed through investigation, surveillance, security bypass, persuasion, or direct confrontation. Avoid making a particular power mandatory.",
+        "The laboratory contains treatment equipment, biological monitoring systems, patient records, and research notes.",
+        "The records show the larger activation was scheduled to begin once the last enrolled patient, Marcus Webb, completed the first stage, which has now happened.",
+        "Marcus Webb has been moved into one of the treatment chambers here, despite having asked not to be taken back.",
+        "The records reveal that Dr. Nathaniel Mercer intends to move beyond accelerated healing. His larger goal is to fundamentally alter human biology and create a form of human adaptation that he believes will overcome the limitations of ordinary physiology.",
+        "Mercer considers the initial patient recoveries proof that his process works. He views the patients' shared dreams and synchronized reactions as expected developmental effects rather than warning signs.",
+        "Mercer's research is unauthorized and has placed the patients at risk. The hero should discover that the next phase may be irreversible.",
+        "The facility contains evidence that Mercer has been preparing a larger activation involving all remaining patients who received the treatment.",
+        "Mercer is an adventure-specific antagonist. He has no established connection to the Genesis Alliance, Infinity Codex, or any other established ULTRAS villain or storyline. He will not be part of the larger villain canon.",
+        "Security may be present, but the laboratory is primarily a scientific facility. Not every employee is a combatant or willing participant.",
+        "The chapter ends when the hero discovers that Mercer intends to begin the next phase very soon, regardless of the patients' condition."
+      ],
+      "imagePrompt": "A concealed medical research laboratory behind a hospital's restricted doors. Rows of advanced treatment chambers, biological monitoring equipment, computers, and clinical workstations fill the sterile room. Research data glows on monitors while Dr. Nathaniel Mercer stands near the main control station. Dark cinematic science-fiction comic-book art, no text."
+    },
+    {
+      "id": "the_doctors_choice",
+      "title": "The Doctor's Choice",
+      "eyebrow": "Chapter Seven — A Cure or a Transformation",
+      "opening": [
+        "Dr. Nathaniel Mercer is waiting.",
+        "There is no attempt to run. No obvious panic. Only the confidence of someone who believes the work is too important to abandon.",
+        "\"You don't understand what we've accomplished,\" Mercer says. \"These people were broken. Their bodies were failing them. Now they're stronger than they have ever been.\"",
+        "Mercer gestures toward the treatment chambers.",
+        "\"We're not making people sick. We're giving them a chance to become something better.\"",
+        "Behind the glass, Marcus Webb, the last patient to enter the program, begins pounding on the chamber door."
+      ],
+      "gmInstructions": [
+        "This chapter brings the hero into direct confrontation with Dr. Nathaniel Mercer, the physician responsible for the experimental program.",
+        "Mercer is brilliant, confident, idealistic, and increasingly obsessive. He genuinely believes his research could transform humanity for the better.",
+        "Mercer views ordinary biological limitations as problems that can and should be overcome. He believes his regenerative treatment represents the next stage of human development.",
+        "Mercer refers to Marcus Webb as \"my last patient\" and the one who proves the process works.",
+        "Mercer does not consider the patients' experiences evidence of failure. Instead, he believes the shared dreams and synchronized reactions are signs that the treatment is progressing.",
+        "Mercer may argue that the patients volunteered for experimental treatment or that the hospital approved the research. Whether the patients understood the full risks should remain an important question.",
+        "The hero can challenge Mercer through conversation, evidence, intimidation, or force. The scene should allow the player to make a meaningful choice about how to handle the confrontation.",
+        "Mercer reveals that the next activation will push the patients into the final stage of the process. Once initiated, the changes may be impossible to reverse.",
+        "Mercer may attempt to activate the system if convinced that the hero intends to destroy the research.",
+        "Mercer has no superpowers. The laboratory's systems and his scientific knowledge create the danger during a confrontation. Do not turn him into a superpowered opponent.",
+        "Mercer is a standalone antagonist created for The Last Patient. He is not part of the larger ULTRAS villain canon and will not be treated as a recurring villain.",
+        "The chapter ends when the next phase begins, either because Mercer activates it or because the hero's intervention triggers an emergency response from the system."
+      ],
+      "imagePrompt": "A dramatic confrontation inside a sterile experimental laboratory. Dr. Nathaniel Mercer, a determined physician, stands beside a bank of advanced medical control systems while a frightened patient struggles inside a glass treatment chamber. A superhero faces Mercer across the room. Cinematic realistic comic-book medical thriller art, no text."
+    },
+    {
+      "id": "the_patient_network",
+      "title": "The Patient Network",
+      "eyebrow": "Chapter Eight — One Mind, Many Bodies",
+      "opening": [
+        "The hospital begins to change.",
+        "Patients sit upright in their beds. Monitors register simultaneous spikes. Across the research facility, treatment chambers unlock and relock without anyone touching the controls.",
+        "The patients begin speaking.",
+        "Not one at a time.",
+        "Together.",
+        "Their voices overlap, repeating the same words in the same rhythm.",
+        "\"We can hear you.\"",
+        "For the first time, Mercer looks afraid."
+      ],
+      "gmInstructions": [
+        "The final stage of the treatment has created a dangerous synchronization among the affected patients.",
+        "The patients are not necessarily a conventional hive mind. The exact nature of the connection is uncertain, even to Mercer. It may involve shared sensory impressions, synchronized biological responses, or some other effect of the experimental process.",
+        "The patients are frightened and confused. They should not automatically be treated as villains or enemies.",
+        "Marcus Webb, whose chamber is the last to unlock, is the only patient who still seems able to respond to the hero individually; he can act as a bridge to the others.",
+        "The synchronization creates hazards throughout the facility. Doors may unlock, equipment may activate, and patients may respond simultaneously to events occurring elsewhere in the building.",
+        "The hero must protect the patients and prevent the process from progressing further.",
+        "Blackwell and Stone communicate with the hero through ORACLE. Blackwell believes the central control system is maintaining the synchronization. Stone warns that abruptly shutting it down could cause serious harm to the patients.",
+        "The consultants disagree about the safest way to proceed. Blackwell favors interrupting the system's control mechanism, while Stone believes a controlled reduction in the treatment's activity may be safer.",
+        "Neither solution is guaranteed. The hero must use the available information and make decisions under pressure.",
+        "Mercer may cooperate if the situation becomes clearly dangerous, or may continue trying to preserve the experiment.",
+        "The chapter ends when the hero reaches the central treatment controls and discovers that the process is approaching an irreversible threshold."
+      ],
+      "imagePrompt": "A dramatic hospital research ward where multiple patients sit upright in separate treatment chambers, all looking in the same direction. Medical monitors display synchronized readings, overhead lights flicker, and automated doors open in the background. An unsettling science-fiction medical thriller scene, realistic comic-book art, no text."
+    },
+    {
+      "id": "the_final_treatment",
+      "title": "The Final Treatment",
+      "eyebrow": "Chapter Nine — The Choice That Cannot Wait",
+      "opening": [
+        "The central system is reaching its limit.",
+        "The patients are connected. Their biological readings are rising together, and the treatment chambers are beginning to overload.",
+        "Mercer insists there is still time to complete the process.",
+        "Stone's voice comes through your communications equipment.",
+        "\"Whatever happens next, we need to protect those patients. They are not equipment. They are people.\"",
+        "Blackwell follows with a different warning.",
+        "\"If that system reaches its threshold, we may lose control of the entire process.\"",
+        "You have a decision to make. What do you do?"
+      ],
+      "gmInstructions": [
+        "This is the climax of the adventure. The hero must stop the final treatment phase and protect the patients.",
+        "The central control system is the source of the synchronization. The hero must find a way to interrupt or safely shut down the process.",
+        "There are several possible approaches. The hero might disable the power supply, use the control system to reverse the treatment sequence, isolate the patients from the synchronization, or devise another solution.",
+        "Blackwell can provide engineering advice, while Stone can explain the risks to the patients. Their advice should be useful but not infallible.",
+        "The hero's established powers and talents should create meaningful options. Silver Star may use speed or light manipulation to reach and disrupt equipment; Steel Talon may use flight or air control to navigate the facility; Thunder Bolt may interact with the system through energy generation; TraumaHawk may assist injured patients and communicate with Aetheris; Tungsten Titan may withstand hazards or physically protect people; Bones may track, investigate, and use defensive abilities to keep others safe.",
+        "No single hero power should be required to complete the adventure. Allow creative approaches and meaningful FEATs based on the player's chosen method.",
+        "Mercer may attempt one final intervention, but he remains an ordinary human. His threat comes from his scientific knowledge, access to the research facility, and willingness to push the experiment too far. The danger comes from the experimental system and its consequences.",
+        "The patients' condition should be central to the resolution. A successful outcome means preventing the irreversible transformation while giving the patients a chance to recover.",
+        "The hero may have to make difficult choices about the equipment and the research. Destroying the system may prevent further experimentation but could also eliminate information needed to understand the patients' condition.",
+        "Marcus Webb's chamber is the last to reach the threshold, which gives the hero a personal, time-pressured reason to act. Mercer may insist that Marcus proves it works.",
+        "OUTCOMES (adjudicate honestly from the hero's method, and never let one bad roll create an unwinnable ending): A controlled wind-down, as Stone recommends, is safest for the patients but slow, so the hero must also physically protect people from overload hazards while it runs. An abrupt shutdown, as Blackwell recommends, works quickly but some patients suffer lasting, non-fatal harm. If the hero stalls or fails, the system reaches its threshold and some patients complete a partial transformation and will need ORACLE monitoring. No patient dies because of the system unless the player's own actions clearly cause it. In every case the chapter still ends with the system shut down or brought under control, whether by the hero, by ORACLE's emergency override, or by a final desperate action.",
+        "The chapter ends when the system is shut down or otherwise brought under control."
+      ],
+      "imagePrompt": "A climactic superhero scene in a medical research laboratory. A central experimental treatment machine overloads with electrical sparks and glowing energy while a hero works to shut it down. Behind glass, patients are visible in treatment chambers as emergency lights flash. Dramatic cinematic comic-book art, no text."
+    },
+    {
+      "id": "the_last_patient",
+      "title": "The Last Patient",
+      "eyebrow": "Chapter Ten — The Miracle's Aftermath",
+      "opening": [
+        "The humming has stopped.",
+        "The monitors return to normal. The treatment chambers unlock, and the patients are finally free of the system that connected them.",
+        "Hospital staff begin the difficult work of stabilizing everyone and determining what has happened to their bodies.",
+        "Victor Cross arrives with an ORACLE recovery team.",
+        "\"You did the right thing,\" he says. \"Now we find out how much damage was done.\"",
+        "For the moment, the patients are alive.",
+        "But there is one more thing you need to see."
+      ],
+      "gmInstructions": [
+        "This chapter resolves the adventure and establishes the consequences of the hero's decisions.",
+        "ORACLE secures the research facility and assists with the patients' recovery. Victor Cross remains responsible for coordinating the response.",
+        "Adrian Blackwell and Evelyn Stone help assess the remaining equipment and research records. Their involvement should not imply that ORACLE endorses the original experiment.",
+        "Adapt the aftermath to how the climax ended: a controlled wind-down leaves the patients stable and recovering; an abrupt shutdown leaves some with lasting but non-fatal effects; a stalled or failed shutdown leaves some partially transformed and under ORACLE observation. Marcus Webb, the last patient, must be present in the closing scene. The patients survive in every outcome unless the player's own actions clearly caused otherwise. Their biological changes may not disappear immediately, and some may require continued observation.",
+        "The shared dreams and synchronized experiences should gradually cease, although the hero may encounter patients who remember fragments of the experience.",
+        "Dr. Nathaniel Mercer's fate depends on the hero's actions. He may be detained, cooperate with ORACLE, or face legal consequences. His story concludes with this adventure. He is not part of the larger ULTRAS villain canon and should not be introduced as a recurring antagonist.",
+        "The hospital must address the unauthorized research and the harm caused to its patients. Some medical personnel may be relieved, while others struggle with the fact that they failed to recognize what was happening.",
+        "Closure for the people the hero met: Renata Cole is relieved and shaken, and thanks the hero for listening when no one else would. Kyle Dunn, if the hero treated him fairly, comes forward as a witness against the program; if not, he is found by ORACLE and questioned.",
+        "The hero should receive appropriate recognition from Victor, but ORACLE may keep some details confidential to protect the patients.",
+        "If the hero preserved the research, ORACLE can secure it for further analysis. If the system was destroyed, the remaining evidence may be incomplete.",
+        "For the closing scene, Marcus Webb asks the hero a troubling question: \"Did you hear them after it stopped?\"",
+        "Marcus explains that, just before the connection ended, they heard something that did not sound like any of the other patients.",
+        "Leave the meaning of this final detail unresolved. It is an optional mystery for a future adventure, not confirmation of a new established entity, villain, or connection to existing ULTRAS lore."
+      ],
+      "imagePrompt": "A quiet hospital room in the early morning after a crisis. A recovering patient sits beside the window looking out over New York City. A doctor checks the patient's chart while Victor Cross stands in the hallway speaking with ORACLE personnel. The atmosphere is hopeful but carries a subtle sense of mystery. Cinematic realistic comic-book art, no text."
+    }
+  ]
+}
