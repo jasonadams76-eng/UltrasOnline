@@ -2538,8 +2538,10 @@ function renderPlay(){
     }
   }
 
-  const backBtn = document.getElementById('btn-menu') || document.getElementById('btn-menu-2');
-  if(backBtn) backBtn.onclick = ()=>{ STATE.busy = false; STATE.pendingAdvance = null; STATE.screen='HERO_SELECT'; STATE.error=null; render(); };
+  ['btn-menu', 'btn-menu-2'].forEach(id => {
+    const backBtn = document.getElementById(id);
+    if(backBtn) backBtn.onclick = ()=>{ STATE.busy = false; STATE.pendingAdvance = null; STATE.screen='HERO_SELECT'; STATE.error=null; render(); };
+  });
 
   const printBtn = document.getElementById('btn-print');
   if(printBtn) printBtn.onclick = ()=> printAdventure();
