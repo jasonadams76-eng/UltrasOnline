@@ -1,0 +1,266 @@
+{
+  "id": "the_hollow_mile",
+  "title": "The Hollow Mile",
+  "tagline": "Somewhere beneath the city, a train is still running.",
+  "blurb": "When a New York subway train vanishes with twenty-three passengers and its operator aboard, ORACLE discovers evidence of an experimental transit project that has opened a passage into a distorted version of New York City. With the help of an unreliable informant and two brilliant but distrusted scientific consultants, the hero must find the missing commuters, uncover the truth behind the experiment, and prevent two versions of the city from occupying the same space.",
+  "chapters": [
+    {
+      "id": "the_empty_train",
+      "title": "The Empty Train",
+      "eyebrow": "A Disappearance Below the Streets",
+      "opening": [
+        "The subway system never really sleeps. Even in the early hours of the morning, trains rumble beneath the streets, carrying workers, travelers, and people who simply have nowhere else to go.",
+        "Tonight, one of those trains never reached its destination.",
+        "A northbound train disappeared between two stations. There was no derailment, no explosion, and no emergency braking. The signal system recorded the train entering the tunnel, but nothing recorded it leaving.",
+        "Twenty-three passengers and the train operator are missing.",
+        "Before long, your phone receives a secure ORACLE communication. Victor Cross is on the other end.",
+        "\"We have a situation beneath the city. A train has disappeared, and I don't believe this is a mechanical failure. I need you at the location immediately.\""
+      ],
+      "gmInstructions": [
+        "This chapter introduces the mystery and establishes ORACLE's involvement. Victor Cross is the hero's primary contact and should be calm, authoritative, and direct.",
+        "The disappearance occurred on a section of subway track where the train entered a tunnel but never emerged. There is no evidence of a collision or conventional accident.",
+        "At the scene, the hero can examine the tracks, signal equipment, surveillance footage, and maintenance records. Encourage different investigative approaches rather than requiring one specific power or talent.",
+        "The most unusual discovery is a second set of wheel marks on the track bed. They appear briefly alongside the normal rails before abruptly ending.",
+        "A recovered recording from the train's communications system contains a few seconds of static followed by a distorted announcement: \"Approaching Platform Zero.\" No such platform exists on the subway map.",
+        "Victor has arranged for ORACLE personnel to secure the immediate area, but he does not yet know what happened.",
+        "The chapter should end with the hero discovering that the disappearance was not random. Something beneath the city was activated at the exact moment the train vanished."
+      ],
+      "imagePrompt": "A cinematic superhero mystery scene inside a dark New York subway tunnel. Empty tracks disappear into unnatural darkness, faint blue-white electrical distortions shimmer in the air, and abandoned maintenance equipment lies beside the rails. Atmospheric, realistic comic-book concept art, dramatic lighting, no visible superheroes, no text."
+    },
+    {
+      "id": "a_favor_for_frankie",
+      "title": "A Favor for Frankie",
+      "eyebrow": "Information Has a Price",
+      "opening": [
+        "Victor Cross has a name for you.",
+        "Frankie Vega.",
+        "Frankie knows the people who operate beneath the city. He knows who buys stolen equipment, who pays for access to restricted locations, and who asks questions that nobody should be asking.",
+        "Victor makes no effort to hide his opinion of the man.",
+        "\"He's not trustworthy. But he hears things that our people don't. Find out what he knows, and be careful what you promise him.\"",
+        "Frankie agrees to meet you, though he makes it clear that his time is not free."
+      ],
+      "gmInstructions": [
+        "Frankie Vega is an established ORACLE informant. He is funny, likable, wary, and transactional. He helps when it benefits him, not because he has suddenly developed a heroic conscience.",
+        "Frankie has heard that a private contractor has been paying people to gain after-hours access to sealed subway infrastructure. The payments are unusually generous, and the work is being handled quietly.",
+        "Frankie does not know the ultimate purpose of the operation. He has no reason to understand the science behind it.",
+        "Frankie wants something in return for the information. He may ask for cash, a favor, or for the hero to overlook a relatively minor matter. Let the player negotiate.",
+        "Frankie provides a useful lead: a storage facility near Calder Street where equipment and personnel have been moving in and out at unusual hours.",
+        "If the hero threatens Frankie, he may become evasive or withhold details. If treated fairly, he can provide a warning that the people involved are nervous and have recently increased security.",
+        "Do not invent additional history for Frankie or establish him as secretly connected to the experiment. His role is that of an underworld source who knows enough to point the hero in the right direction.",
+        "The chapter should end with the hero heading to the Calder Street location."
+      ],
+      "imagePrompt": "A cinematic comic-book illustration of a lean, weathered middle-aged informant with slicked-back dark hair and stubble, wearing a black button-up shirt and charcoal wool coat. He sits in a dimly lit New York diner booth, looking cautious but faintly amused. Rain streaks the window behind him. Realistic superhero crime-drama art, no text."
+    },
+    {
+      "id": "below_calder_street",
+      "title": "Below Calder Street",
+      "eyebrow": "The Station That Doesn't Exist",
+      "opening": [
+        "The storage facility looks ordinary from the street.",
+        "A faded sign hangs above the entrance. The windows are dark, and a chain-link fence surrounds the loading area.",
+        "But there is movement inside.",
+        "Through a gap in the fencing, you see workers unloading heavy equipment. One of them checks a handheld device before directing the others toward a service entrance.",
+        "Somewhere beneath this building, the subway system has a secret."
+      ],
+      "gmInstructions": [
+        "The Calder Street facility is being used as a staging area for an unauthorized experimental transit project. Its connection to the missing train is not immediately obvious.",
+        "The building contains hired security personnel and workers. Most know only that they are protecting an expensive project. They are not all aware of what the equipment actually does.",
+        "The hero can enter through stealth, persuasion, intimidation, a direct confrontation, or an inventive use of powers.",
+        "Inside, the hero discovers equipment being transported down a service elevator. The elevator leads to an abandoned underground spur connected to an obsolete subway maintenance platform.",
+        "The platform is marked with a faded number zero. This is the location referenced in the train recording.",
+        "The underground area contains unusual electrical equipment, portable generators, sensor arrays, and computer terminals bearing the label New York Transit Research.",
+        "A series of spatial readings show that the platform has been experiencing brief distortions. Objects recorded by the sensors appear to shift position without physically moving.",
+        "The hero may find notes or computer records indicating that a train-sized object disappeared from the platform during the experiment.",
+        "Do not reveal the full explanation yet. The important discovery is that the missing train was involved in a deliberate experiment, not an accident.",
+        "If the hero is captured or overwhelmed, ORACLE agents can intervene in accordance with the established game rules."
+      ],
+      "imagePrompt": "A hidden abandoned subway platform beneath New York, converted into a secret experimental research site. Portable generators, scientific equipment, cables, sensor arrays, and industrial lights surround a platform with a faded number zero marking. A few security guards stand watch. Dark atmospheric realistic comic-book concept art, no text."
+    },
+    {
+      "id": "the_oracle_briefing",
+      "title": "The ORACLE Briefing",
+      "eyebrow": "Science Has Its Limits",
+      "opening": [
+        "The evidence from Calder Street is enough to convince Victor Cross that this is beyond an ordinary criminal investigation.",
+        "At ORACLE headquarters, two familiar faces are waiting.",
+        "Adrian Blackwell and Evelyn Stone have been reviewing the recovered equipment and sensor readings.",
+        "Neither looks particularly pleased to see you.",
+        "Blackwell studies the data while Stone brings up a series of overlapping images on a monitor.",
+        "\"This isn't teleportation,\" Blackwell says. \"At least, not in the conventional sense.\"",
+        "Stone looks toward you. \"Something has caused two locations to occupy the same space. And I don't think the experiment is finished.\""
+      ],
+      "gmInstructions": [
+        "This chapter introduces Adrian Blackwell and Evelyn Stone as ORACLE scientific consultants. Both are former members and co-leaders of the Genesis Alliance. They now work with ORACLE under an agreement that keeps them out of prison.",
+        "The hero should understand that Blackwell and Stone are highly capable but not fully trusted. Their history is known to the Ultras, and their cooperation does not erase it.",
+        "Blackwell focuses on the engineering and physical mechanics of the experiment. Stone focuses on the data, patterns, and safer ways to analyze the phenomenon.",
+        "Their initial conclusion is that the project has forced two locations to occupy the same physical space. The missing train appears to have crossed into another spatial layer.",
+        "The consultants cannot explain every detail. They are working from incomplete data, and their conclusions should remain provisional.",
+        "They discover that the equipment at Calder Street was not designed merely to open a passage. It was also designed to stabilize that passage long enough for a large object to cross.",
+        "A second activation appears possible. If it occurs without proper control, the spatial overlap could expand.",
+        "Victor Cross assigns the hero to locate the project's primary control equipment and determine whether the missing train and passengers can be recovered.",
+        "Do not connect this project to the Infinity Codex or establish any relationship between the experiment and the Genesis Alliance beyond the consultants' existing history.",
+        "The chapter ends when ORACLE detects a new signal coming from the city's transit communication network."
+      ],
+      "imagePrompt": "An advanced ORACLE research briefing room. Adrian Blackwell, a middle-aged male scientist with swept-back dark hair graying at the temples, a mustache and gray goatee, wears a white lab coat and studies a holographic spatial model. Evelyn Stone, a woman with shoulder-length brown wavy hair wearing a white lab coat over a teal shirt, examines digital readings. Victor Cross stands nearby in a tan trench coat. Realistic cinematic superhero concept art, no text."
+    },
+    {
+      "id": "a_voice_from_nowhere",
+      "title": "A Voice from Nowhere",
+      "eyebrow": "A Message Through the Static",
+      "opening": [
+        "The first transmission comes through a subway announcement speaker.",
+        "It is followed by another, this time through a digital advertising display.",
+        "Then your phone begins to vibrate.",
+        "The same distorted voice is coming from every device connected to the city's transit communication network.",
+        "\"If anyone can hear this, we need help. We're alive. The train is still here. But we can't find our way back.\"",
+        "The transmission breaks into static.",
+        "Then, barely audible, comes one final sentence.",
+        "\"Something else is here with us.\""
+      ],
+      "gmInstructions": [
+        "The transmission is coming from the missing train's operator or another unnamed member of the experimental test team. Do not establish a permanent new character unless the user later chooses to develop one.",
+        "The message confirms that the train and its passengers survived the disappearance. They are trapped somewhere beyond the original platform.",
+        "The voice describes a distorted environment with recognizable buildings, streets, and subway infrastructure. The surroundings appear familiar but do not line up correctly.",
+        "The final warning about something else being present is genuine. A large spatial disturbance has been detected near the missing train.",
+        "Blackwell and Stone work with ORACLE technicians to isolate the signal. They believe the original passage can be reopened if the equipment is properly synchronized.",
+        "The hero can investigate the signal's source, search transit infrastructure, or help the consultants refine the receiver.",
+        "The transmission provides a partial location reference, pointing ORACLE toward a research annex associated with New York Transit Research.",
+        "The chapter should establish urgency. The passengers are alive, but the conditions on the other side may not remain stable.",
+        "Avoid revealing the exact nature or origin of the disturbance. It is a threat created by the unstable spatial overlap, not an established villain from the ULTRAS universe."
+      ],
+      "imagePrompt": "A dark subway station at night with an old public-address speaker crackling with electricity. Digital advertising screens flicker with distorted images of an alternate city. A faint ghostly silhouette of a subway train appears reflected in a dark window. Atmospheric cinematic superhero mystery art, no text."
+    },
+    {
+      "id": "the_man_at_the_controls",
+      "title": "The Man at the Controls",
+      "eyebrow": "The People Behind the Experiment",
+      "opening": [
+        "ORACLE traces a shipment of specialized power regulators to a research annex operated by New York Transit Research.",
+        "The facility is located in an industrial section of the city, away from the public subway system.",
+        "Victor Cross gives you the assignment.",
+        "\"Find out who's running this project. Secure the equipment if you can. We need to know how to bring that train home.\"",
+        "As you approach the annex, you can see that the facility is still active.",
+        "Someone inside knows the experiment is not over."
+      ],
+      "gmInstructions": [
+        "This chapter brings the hero into direct contact with the people responsible for the experiment.",
+        "The research annex contains the primary control equipment, additional power regulators, and the systems needed to reopen the passage.",
+        "The project is overseen by an unnamed director who is not an established ULTRAS villain. This character is specific to this adventure and should not automatically become a recurring antagonist.",
+        "The director's motivation is to recover the missing test team and demonstrate that the technology works. The director believes the project can still be controlled, despite mounting evidence to the contrary.",
+        "The director may attempt to persuade the hero that shutting down the project permanently will strand the missing passengers. This is not necessarily a lie.",
+        "Security personnel protect the facility. Some may be loyal employees, while others are hired guards who know little about the experiment.",
+        "The hero can obtain information through investigation, questioning personnel, accessing computers, or confronting the director.",
+        "The director reveals that the project was designed to create a temporary spatial passage. The missing train was part of a controlled test that went wrong.",
+        "The control systems are damaged or unstable. The director believes they can be used again, but doing so may worsen the situation.",
+        "The chapter ends with the hero gaining access to the primary control system and the means to attempt a passage into the other spatial layer."
+      ],
+      "imagePrompt": "A secret industrial research annex filled with experimental power regulators, heavy electrical machinery, large control consoles, and glowing spatial instruments. A worried middle-aged project director stands before the equipment while security personnel watch the entrance. Realistic cinematic comic-book concept art, no text."
+    },
+    {
+      "id": "the_other_side",
+      "title": "The Other Side",
+      "eyebrow": "A City That Shouldn't Exist",
+      "opening": [
+        "The equipment begins to hum.",
+        "Lights flicker across the control room as the spatial readings climb. A section of the air in front of you begins to ripple, bending the walls and floor behind it.",
+        "Then the passage opens.",
+        "Beyond it is New York City.",
+        "Or something that looks like New York City.",
+        "The streets are familiar, but the buildings seem subtly wrong. Lights glow in windows where no buildings should stand. The subway tracks continue into a darkness that seems to stretch much farther than the tunnel itself.",
+        "Somewhere in that impossible city, the missing train is waiting."
+      ],
+      "gmInstructions": [
+        "The hero enters a parallel spatial layer that the ORACLE team informally calls the Grey Layer. This is a descriptive label for this adventure, not an established permanent feature of the ULTRAS universe.",
+        "The environment resembles New York City, but the geography is inconsistent. Familiar streets may lead to unfamiliar locations, and buildings may appear distorted or incomplete.",
+        "The hero should feel disoriented, but the location is still physically navigable. Powers such as flight, speed, tracking, and enhanced physical abilities should have meaningful applications.",
+        "The missing train can be located by following its electrical signature, physical tracks, or remnants of the original spatial passage.",
+        "The train is intact, and the passengers are alive. They have been sheltering inside and around the train while trying to understand their surroundings.",
+        "A large spatial disturbance is moving through the area. It may distort the environment, interfere with movement, or threaten the stability of the passage.",
+        "Do not assign the disturbance a permanent name, origin, intelligence, or connection to an established villain. Its nature is not yet understood.",
+        "The hero must locate the train and establish a safe route back to the passage.",
+        "The chapter ends when the hero finds the train and realizes that getting everyone home will be more difficult than simply reopening the passage."
+      ],
+      "imagePrompt": "A surreal alternate version of New York City at night, viewed from an empty subway platform. Buildings are subtly distorted, streetlights glow through unnatural fog, and subway tracks curve into impossible darkness. A stranded subway train is visible in the distance. Cinematic realistic superhero science-fiction concept art, no text."
+    },
+    {
+      "id": "the_closing_window",
+      "title": "The Closing Window",
+      "eyebrow": "Twenty-Four Lives",
+      "opening": [
+        "The train is still there.",
+        "The passengers are frightened, exhausted, and desperate to return home. Some have been trying to contact loved ones, while others have simply been waiting for someone to find them.",
+        "The train operator approaches you.",
+        "\"We heard your message. We knew somebody was trying to reach us. Please tell me you can get us out of here.\"",
+        "Behind the train, the distorted city shifts.",
+        "The disturbance is getting closer.",
+        "And the passage home is beginning to collapse."
+      ],
+      "gmInstructions": [
+        "The immediate objective is to escort the train's operator and twenty-three passengers back to the passage. There are twenty-four civilians in total.",
+        "The passengers are ordinary people. They should not be expected to fight, navigate the Grey Layer, or withstand prolonged exposure to the spatial disturbance.",
+        "The hero must organize the evacuation, keep the group together, and prevent panic.",
+        "Victor Cross remains in contact through the ORACLE communications equipment. He can provide updates on the condition of the passage and coordinate the recovery team.",
+        "Blackwell and Stone provide technical advice from the control side. Blackwell focuses on keeping the passage energized, while Stone looks for a way to reduce instability during the evacuation.",
+        "The disturbance approaches as the group moves. It should create environmental hazards rather than simply functioning as a conventional monster encounter.",
+        "Use the hero's actual powers and talents to create opportunities. Silver Star's speed and light manipulation, Steel Talon's flight and air control, Thunder Bolt's energy generation, TraumaHawk's healing and communication with Aetheris, Tungsten Titan's durability and strength, and Bones' tracking and investigative abilities can all contribute in different ways.",
+        "Do not require a particular hero power to solve the evacuation. Every hero should have a reasonable way to contribute.",
+        "The chapter should end when the civilians reach the passage, but the disturbance reaches the area just as the final people are about to cross."
+      ],
+      "imagePrompt": "A dramatic superhero rescue scene in a distorted alternate subway station. A group of frightened civilians gathers beside a damaged subway train while an unnatural spatial distortion approaches through the tunnel. A glowing portal back to the real city flickers nearby. Cinematic comic-book action art, no text."
+    },
+    {
+      "id": "the_city_between",
+      "title": "The City Between",
+      "eyebrow": "When Two Worlds Collide",
+      "opening": [
+        "The first passengers make it through.",
+        "Then the next group.",
+       "The passage flickers as the spatial disturbance reaches the station. For a moment, the world on the other side becomes visible through the tunnel walls.",
+        "You can see the real city.",
+        "But it is no longer entirely separate from the place you are standing.",
+        "The experiment has begun to affect both sides."
+      ],
+      "gmInstructions": [
+        "The spatial overlap is now expanding beyond the original underground platform. The Grey Layer and real New York City are beginning to intersect.",
+        "The hero must reach the primary field controls or otherwise help stabilize the passage before the overlap expands further.",
+        "The environment may shift between the two versions of the city. Objects may appear in the wrong locations, passages may open into unexpected spaces, and familiar surroundings may briefly become distorted.",
+        "Blackwell suggests interrupting the power-routing sequence to weaken the overlap. Stone believes a safer shutdown sequence may be possible if the equipment can be kept stable long enough.",
+        "Neither consultant has complete certainty. Their recommendations are based on incomplete readings, and the hero must decide how to proceed.",
+        "The project director may still be present. If so, the director may attempt to preserve the experiment or assist in shutting it down, depending on how the previous confrontation unfolded.",
+        "The hero should have multiple ways to reach and operate the controls. Physical strength, scientific knowledge, speed, flight, energy manipulation, or investigative skill may all be useful.",
+        "The disturbance remains a consequence of the unstable spatial overlap. Do not turn it into a newly established ULTRAS villain.",
+        "The chapter ends when the hero reaches the field controls and begins the final shutdown process."
+      ],
+      "imagePrompt": "A dramatic city intersection where two versions of New York City overlap. Subway infrastructure rises through the street, buildings appear doubled and distorted, traffic lights flicker, and strange spatial ripples bend the surrounding environment. A superhero approaches a large experimental control device. Cinematic comic-book science-fiction art, no text."
+    },
+    {
+      "id": "the_last_train_home",
+      "title": "The Last Train Home",
+      "eyebrow": "One Final Journey",
+      "opening": [
+        "The control system is unstable.",
+        "The passage is still open, but it is shrinking. Every second matters.",
+        "Behind you, the last of the passengers are making their way back into the real city.",
+        "Victor Cross's voice comes through your communications equipment.",
+        "\"We're almost there. Get everyone through. Then shut it down.\"",
+        "The equipment begins to overload.",
+        "There may be only one chance to end this."
+      ],
+      "gmInstructions": [
+        "This is the climax of the adventure. The hero must complete the rescue, prevent the experiment from restarting, and close the spatial passage.",
+        "The primary objective is to ensure that the train operator and all twenty-three passengers return safely.",
+        "The secondary objective is to prevent the project director or anyone else from restarting the system while the passage remains unstable.",
+        "The final shutdown can involve interrupting power, following Stone's suggested sequence, using Blackwell's engineering analysis, or developing another solution through the hero's own abilities.",
+        "The hero should be allowed to combine powers, talents, and creative problem-solving. Avoid making one specific skill or power mandatory.",
+        "If the director is present, the final confrontation may be physical, intellectual, or verbal. The director's goal is tied to the experiment and the missing test team, not an established villainous agenda.",
+        "The spatial disturbance may create one final hazard as the passage collapses. It should be dangerous enough to make the final moments tense, but the hero should have a meaningful opportunity to succeed.",
+        "Once the passage closes, the two spatial layers separate. The experimental equipment becomes inert or damaged beyond immediate use.",
+        "ORACLE personnel secure the site and begin the recovery operation. Victor Cross acknowledges the hero's work and confirms that the missing civilians have been recovered.",
+        "Frankie Vega may contact the hero later to collect on whatever bargain was made. Keep this consistent with the player's interaction with him.",
+        "The adventure should conclude without creating a new permanent villain or establishing unexplained connections to other ULTRAS lore.",
+        "For an optional closing mystery, a subway station clock loses exactly one minute after the passage closes. Later, an empty train briefly appears on a station camera at a platform that does not exist. This is an unresolved incident, not a confirmed new threat."
+      ],
+      "imagePrompt": "A climactic superhero scene in an experimental underground transit facility. A glowing spatial portal collapses as electrical arcs and distorted fragments of an alternate city disappear into it. The rescued passengers are safe in the background while a hero stands near the failing control equipment. Cinematic dramatic comic-book art, no text."
+    }
+  ]
+}
