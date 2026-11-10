@@ -217,6 +217,9 @@
   .adv-in{ width:80px; }
   .adv-line{ margin-top:10px; padding:8px 12px; border:2px solid var(--hero-red); border-radius:8px; display:inline-block; font-weight:700; }
   .hist-vol{ margin:22px 0 8px; }
+  .top-back{ float:right; margin:4px 0 8px 12px; }
+  .top-back button{ padding:6px 12px; font-size:0.8rem; }
+  @media (max-width:640px){ .top-back{ float:none; margin:0 0 10px; } }
   .coming-soon-badge{ background:var(--hero-red); color:#fff; padding:1px 7px; border:2px solid var(--ink); letter-spacing:.06em; }
   .hist-banner{ position:relative; min-height:120px; background:var(--ink); border:3px solid var(--ink); box-shadow:5px 5px 0 rgba(10,31,68,0.85); overflow:hidden; display:flex; align-items:flex-end; }
   .hist-banner img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:1; }
@@ -2445,6 +2448,7 @@ function renderHistory(){
   const threads = HISTORY.openThreads.length ? `<div class="hist-sub">Open Threads</div>${HISTORY.openThreads.map(t=>`<div class="hist-thread"><b>${escapeHtml(t.title)}</b><div>${escapeHtml(t.text)}</div></div>`).join('')}` : '';
   app.innerHTML = `<div class="panel menu-panel">
     ${accountBar()}
+    <div class="top-back"><button class="secondary" id="btn-top-back">← Back to roster</button></div>
     <div class="chapter-eyebrow display" style="color:var(--hero-red); font-size:0.8rem;">The Ultras</div>
     <h2 class="display menu-title">Ultras History</h2>
     ${vols}${threads}
@@ -2452,6 +2456,7 @@ function renderHistory(){
   </div>`;
   wireAccountBar();
   document.getElementById('btn-hist-back').onclick = ()=>{ STATE.screen='HERO_SELECT'; render(); window.scrollTo(0,0); };
+  document.getElementById('btn-top-back').onclick = ()=>document.getElementById('btn-hist-back').click();
   document.querySelectorAll('.read-mission').forEach(b=>{
     b.onclick = ()=>{ STATE.historyMission = { vol: +b.getAttribute('data-vol'), mis: +b.getAttribute('data-mis') }; STATE.screen='HISTORY_MISSION'; render(); window.scrollTo(0,0); };
   });
@@ -2466,6 +2471,7 @@ function renderHistoryMission(){
   const prev = hm.mis > 0, next = hm.mis < v.missions.length-1;
   app.innerHTML = `<div class="panel menu-panel">
     ${accountBar()}
+    <div class="top-back"><button class="secondary" id="btn-top-back">← Ultras History</button></div>
     <div class="chapter-eyebrow display" style="color:var(--hero-red); font-size:0.8rem;">${escapeHtml(v.title)} · Mission ${hm.mis+1} of ${v.missions.length}</div>
     <h2 class="display menu-title">${escapeHtml(m.title)}</h2>
     <div class="adv-cover" style="display:none; min-height:0; aspect-ratio:16/6; margin:10px 0 14px; border:3px solid var(--ink);">${lookupImg('images/history/'+m.id, m.title).replace('<img ','<img onload="this.parentNode.style.display=\'block\'" ')}</div>
@@ -2478,6 +2484,7 @@ function renderHistoryMission(){
     </div></div>`;
   wireAccountBar();
   document.getElementById('btn-hm-back').onclick = ()=>{ STATE.screen='HISTORY'; render(); window.scrollTo(0,0); };
+  document.getElementById('btn-top-back').onclick = ()=>document.getElementById('btn-hm-back').click();
   const go = d => { STATE.historyMission = { vol: hm.vol, mis: hm.mis + d }; render(); window.scrollTo(0,0); };
   if(prev) document.getElementById('btn-hm-prev').onclick = ()=>go(-1);
   if(next) document.getElementById('btn-hm-next').onclick = ()=>go(1);
@@ -2617,6 +2624,7 @@ function renderPlayers(){
   app.innerHTML = `
     <div class="panel">
       ${accountBar()}
+      <div class="top-back"><button class="secondary" id="btn-top-back">← Back to roster</button></div>
       <div class="chapter-eyebrow display" style="color:var(--hero-red); font-size:0.8rem;">Admin</div>
       <h2 class="display" style="margin-top:2px;">Player Roster</h2>
       ${pd.msg ? `<div class="notice-box">${escapeHtml(pd.msg)}</div>` : ''}
@@ -2624,7 +2632,8 @@ function renderPlayers(){
       <div style="margin-top:18px;"><button class="secondary" id="btn-players-back">Back to roster</button></div>
     </div>`;
   wireAccountBar();
-  document.getElementById('btn-players-back').onclick = ()=>{ STATE.screen='HERO_SELECT'; render(); };
+  document.getElementById('btn-players-back').onclick = ()=>{ STATE.screen='HERO_SELECT'; render(); window.scrollTo(0,0); };
+  document.getElementById('btn-top-back').onclick = ()=>document.getElementById('btn-players-back').click();
   const search = document.getElementById('pl-search');
   if(search) search.oninput = ()=>{
     pd.filter = search.value; const pos = search.selectionStart; render();
@@ -2868,6 +2877,7 @@ function renderAdventureSelect(){
   app.innerHTML = `
     <div class="panel menu-panel">
       ${accountBar()}
+      <div class="top-back"><button class="secondary" id="btn-top-back">← Back to roster</button></div>
       <div class="adv-hero">
         <div class="adv-hero-pic">
           <div class="portrait-fallback small">${escapeHtml(initials(hero.alias))}</div>
@@ -2887,7 +2897,8 @@ function renderAdventureSelect(){
   `;
   wireAccountBar();
 
-  document.getElementById('btn-back-adv').onclick = ()=>{ STATE.screen='HERO_SELECT'; STATE.error=null; render(); };
+  document.getElementById('btn-back-adv').onclick = ()=>{ STATE.screen='HERO_SELECT'; STATE.error=null; render(); window.scrollTo(0,0); };
+  document.getElementById('btn-top-back').onclick = ()=>document.getElementById('btn-back-adv').click();
   document.querySelectorAll('.arm-restart').forEach(btn=>{
     btn.onclick = ()=>{ STATE.restartArmed = btn.getAttribute('data-adventure'); render(); };
   });
@@ -3050,6 +3061,7 @@ function renderKarma(){
   app.innerHTML = `
     <div class="panel">
       ${accountBar()}
+      <div class="top-back"><button class="secondary" id="btn-top-back">← Back to roster</button></div>
       <div class="chapter-eyebrow display" style="color:var(--hero-red); font-size:0.8rem;">Record</div>
       <h2 class="display" style="margin-top:2px;">Karma Record${byPlayer ? ' — all players' : ''}</h2>
       <div style="display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 16px;">
@@ -3061,7 +3073,8 @@ function renderKarma(){
     </div>
   `;
   wireAccountBar();
-  document.getElementById('btn-karma-back').onclick = ()=>{ STATE.screen='HERO_SELECT'; render(); };
+  document.getElementById('btn-karma-back').onclick = ()=>{ STATE.screen='HERO_SELECT'; render(); window.scrollTo(0,0); };
+  document.getElementById('btn-top-back').onclick = ()=>document.getElementById('btn-karma-back').click();
   const toggle = document.getElementById('btn-karma-toggle');
   if(toggle) toggle.onclick = ()=>loadKarmaView(byPlayer ? 'mine' : 'all');
   const copy = document.getElementById('btn-karma-copy');
