@@ -221,6 +221,7 @@
   .top-back button{ padding:6px 12px; font-size:0.8rem; }
   @media (max-width:640px){ .top-back{ float:none; margin:0 0 10px; } }
   .tr-story .text{ white-space:pre-wrap; }
+  .rescore-box{ border:2px dashed var(--ink); padding:12px; margin-top:6px; }
   .coming-soon-badge{ background:var(--hero-red); color:#fff; padding:1px 7px; border:2px solid var(--ink); letter-spacing:.06em; }
   .hist-banner{ position:relative; min-height:120px; background:var(--ink); border:3px solid var(--ink); box-shadow:5px 5px 0 rgba(10,31,68,0.85); overflow:hidden; display:flex; align-items:flex-end; }
   .hist-banner img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:1; }
@@ -1372,40 +1373,115 @@ function buildKarmaTranscript(hero){
   return out;
 }
 
-/* Sends the full adventure transcript to the GM model once, at the
-   epilogue, and asks it to apply the FASERIP Karma Awards table against
-   what actually happened in the story. This is inherently a judgment
-   call — same as a human GM applying these rules — so results should be
-   read as a good-faith, transcript-grounded estimate, not an exact score.
-   Returns {awards: [{category, points, note}], total} or throws. */
-async function callKarmaReview(hero, chapter){
-  // The Gemini flash-lite models in use here comfortably handle context far
-  // larger than a single adventure's transcript (a full 10-chapter chronicle
-  // like Shadows of the Eclipse runs ~73k characters / ~18k tokens). This cap
-  // exists only as a backstop against a truly pathological save, not to trim
-  // normal play — a low cap here silently drops entire later chapters from
-  // the review, which is why prior versions under-counted Karma for anything
-  // that happened after roughly Chapter 3.
-  const transcript = buildKarmaTranscript(hero).slice(0, 100000);
+/* ---- Karma review ------------------------------------------------------
+   The model only FINDS events in the story (category + a quote); this code
+   looks up the points from the Karma table, enforces the caps, and applies
+   the "five or more Rescues" bonus, so the values are always exact. */
+const KARMA_TABLE = (()=>{
+  const t = {};
+  KARMA_AWARD_RULES.split('\n').forEach(line=>{
+    const m = line.match(/^([^:]+): (-?\d+)(?: to (\d+))?/);
+    if(!m) return;
+    // Keep "(Stop or Prevent)", "(Arrest)" and "(in one adventure)" as part of the name; drop descriptive parentheses.
+    let name = m[1].trim();
+    const pm = name.match(/^(.*?)\s*\(([^)]*)\)$/);
+    if(pm && !/^(Stop or Prevent|Arrest|in one adventure)$/.test(pm[2])) name = pm[1].trim();
+    t[name.toLowerCase()] = m[3] ? {name, min:+m[2], max:+m[3]} : {name, points:+m[2]};
+  });
+  return t;
+})();
+const KARMA_CAPS = {'Humor':5, 'Role-Playing':5, 'Showing Off':2};   // most moments that can be rewarded in one story
+const KARMA_MASS_RESCUE = 'Five or more Rescues (in one adventure)';
+const KARMA_MAX_AWARDS = 60;
 
-  const prompt = `You are reviewing a completed MARVEL SUPER HEROES (FASERIP) tabletop adventure to award Karma per the official rules below. Read the transcript and identify every award category that clearly applies, citing what actually happened. Do not award a category unless the transcript actually supports it — when in doubt, leave it out. Respond with ONLY a raw JSON object, no markdown, no commentary.
+const KARMA_GUIDE = `HOW TO RECOGNIZE EACH AWARD IN THE STORY (read the whole transcript once for each group below):
+- Crimes, Conspiracies and Offenses: the hero stops/prevents the crime or plot before it succeeds ("Stop or Prevent"), or captures/turns in the criminals ("Arrest"). A villain attack on a city, a bomb plot, a heist and a murder are examples.
+- Rescue: the hero protects people from imminent danger: pulling someone out of a fire, shielding a crowd, stopping a villain who was about to destroy a building, a city or a crowd (the people in danger are the ones rescued). Report one "Rescue" event for each separate rescue and give "people_saved", the number of people whose lives were saved (use your best estimate; 1 for one person, 5 or more for a crowd, a building, a city, a hostage group).
+- Defeating Powerful Foe: the hero defeats, captures or drives off a dangerous opponent. Give "points" from 30 to 100 by how dangerous the foe was (a street thug is not a Powerful Foe; a super-powered villain who threatened a city is 70 to 100).
+- Role-Playing: a clever, in-character, memorable decision or line (a smart plan, a persuasive bluff, staying true to the hero's personality and motives). Be generous: report each distinct moment.
+- Showing Off: the hero uses powers flashily or heroically in front of a crowd or witnesses.
+- Humor: ANY joke, quip, pun, wisecrack or funny line the PLAYER'S HERO says or does. Humor is subjective, so award it when the line was clearly meant to be funny. Report each distinct moment.
+- Personal Commitment / Act of Charity: the hero fulfills a stated personal goal / gives time, money or help freely to people in need.
+- Negative awards: only when the HERO clearly commits or allows the wrongdoing, or loses in front of witnesses/in private. Do not penalize the hero for things the villains did that the hero could not stop.
+When the hero's actions plausibly fit a category, include it and quote the moment. Do not invent events that are not in the transcript.`;
 
-KARMA AWARD RULES:
+function karmaEntriesToText(entries, alias){
+  let last, out = '';
+  entries.forEach(e=>{
+    if(e.chapterId !== last){ last = e.chapterId; out += `\n=== ${e.chapterTitle || ''} ===\n`; }
+    out += `${e.who === 'gm' ? 'GM' : alias}: ${e.text}\n`;
+  });
+  return out;
+}
+
+/* Turns the model's list of events into awards. Pure function (testable). */
+function applyKarmaEvents(events){
+  if(!Array.isArray(events)) events = [];
+  const counts = {}, awards = [], rescues = [];
+  let rescueAt = -1;
+  events.slice(0, 200).forEach(ev=>{
+    if(!ev || typeof ev.category !== 'string') return;
+    const cat = KARMA_TABLE[ev.category.trim().toLowerCase()];
+    if(!cat) return;
+    const note = String(ev.note || ev.quote || '').slice(0, 300);
+    if(cat.name === 'Rescue' || cat.name === KARMA_MASS_RESCUE){
+      if(rescueAt < 0) rescueAt = awards.length;
+      const n = Math.max(1, Math.floor(Number(ev.people_saved) || 1));
+      rescues.push({note, saved: cat.name === KARMA_MASS_RESCUE ? Math.max(5, n) : n});
+      return;
+    }
+    if(KARMA_CAPS[cat.name]){
+      counts[cat.name] = (counts[cat.name] || 0) + 1;
+      if(counts[cat.name] > KARMA_CAPS[cat.name]) return;
+    }
+    let points = cat.points;
+    if(cat.max != null){
+      const p = Math.round(Number(ev.points));
+      points = Math.min(cat.max, Math.max(cat.min, Number.isFinite(p) ? p : cat.min));
+    }
+    awards.push({category: cat.name, points, note});
+  });
+  if(rescues.length){
+    const totalSaved = rescues.reduce((n,r)=>n + r.saved, 0);
+    const mass = rescues.some(r=>r.saved >= 5) || totalSaved >= 5;
+    const block = mass
+      ? [{category: KARMA_MASS_RESCUE, points: KARMA_TABLE[KARMA_MASS_RESCUE.toLowerCase()].points,
+          note: `Saved ${totalSaved} or more people. ` + rescues.map(r=>r.note).filter(Boolean).join(' ').slice(0, 260)}]
+      : rescues.map(r=>({category:'Rescue', points: KARMA_TABLE['rescue'].points, note: r.note}));
+    awards.splice(rescueAt, 0, ...block);
+  }
+  const capped = awards.slice(0, KARMA_MAX_AWARDS);
+  return { awards: capped, total: capped.reduce((n,a)=>n + a.points, 0) };
+}
+
+/* Sends a completed adventure's transcript to the GM model and returns
+   {awards:[{category,points,note}], total}. Used at the epilogue and by the
+   admin "Re-run Karma review" tool. Throws on a connection/format failure. */
+async function reviewKarmaText(heroDesc, transcript){
+  // A full 10-chapter chronicle is ~73k characters; this cap is only a backstop against a pathological save.
+  transcript = transcript.slice(0, 100000);
+  const names = Object.values(KARMA_TABLE).map(c=>c.name).filter(n=>n !== KARMA_MASS_RESCUE).join('; ');
+  const prompt = `You are the referee reviewing a completed MARVEL SUPER HEROES (FASERIP) tabletop adventure to award Karma. Read the transcript and list every moment where the hero earned or lost Karma. The code that receives your answer looks up the points, so do NOT add up points yourself.
+
+${KARMA_GUIDE}
+
+ALLOWED CATEGORY NAMES (use these exactly): ${names}
+
+REFERENCE TABLE (for your understanding only):
 ${KARMA_AWARD_RULES}
 
-HERO: ${hero.alias} (${hero.name})
+HERO: ${heroDesc}
 
 ADVENTURE TRANSCRIPT:
 ${transcript}
 
-Return exactly: {"awards": [{"category": "...", "points": integer, "note": "one short sentence citing the specific moment"}]}
-Only include categories that genuinely occurred. Points must exactly match the rules above (for ranged categories like "Defeating Powerful Foe" or "Act of Charity", pick a value within the given range appropriate to what happened). Negative categories use negative point values.`;
+Respond with ONLY a raw JSON object, no markdown, no commentary:
+{"events": [{"category": "<allowed name>", "quote": "short quote or paraphrase of the moment", "note": "one short sentence", "points": <only for Defeating Powerful Foe and Act of Charity>, "people_saved": <only for Rescue>}]}`;
 
   const response = await fetchGeminiWithFallback({
     contents: [{ role: "user", parts: [{ text: prompt }] }],
-    generationConfig: { temperature: 0.3, maxOutputTokens: 2000 }
+    generationConfig: { temperature: 0.2, maxOutputTokens: 8000 }
   });
-
   if(!response.ok) throw new Error(`Karma review connection failed (${response.status} from ${response.usedModel})`);
   const data = await response.json();
   let text = data.candidates?.[0]?.content?.parts?.map(p=>p.text).join('').trim();
@@ -1414,13 +1490,10 @@ Only include categories that genuinely occurred. Points must exactly match the r
   let parsed;
   try{ parsed = JSON.parse(text); }
   catch(e){ throw new Error('Karma review returned malformed JSON'); }
-
-  const awards = Array.isArray(parsed.awards) ? parsed.awards
-    .filter(a => a && typeof a.category === 'string' && typeof a.points === 'number')
-    .map(a => ({ category: a.category, points: Math.round(a.points), note: typeof a.note === 'string' ? a.note : '' }))
-    : [];
-  const total = awards.reduce((sum, a) => sum + a.points, 0);
-  return { awards, total };
+  return applyKarmaEvents(parsed.events || parsed.awards);
+}
+async function callKarmaReview(hero){
+  return reviewKarmaText(`${hero.alias} (${hero.name})`, buildKarmaTranscript(hero));
 }
 
 /* Fire-and-forget, mirrors ensureOpeningImage()'s pattern: kicks off the
@@ -2571,8 +2644,8 @@ async function loadPlayers(){
   if(STATE.screen==='PLAYERS') render();
 }
 /* ---------- Mission transcript (admin) ---------- */
-async function openTranscript(userId, heroId, advId, run){
-  STATE.transcript = { loading:true, error:null, data:null, userId, heroId, advId, run };
+async function openTranscript(userId, heroId, advId, run, msg){
+  STATE.transcript = { loading:true, error:null, data:null, userId, heroId, advId, run, msg: msg || null, review: null };
   STATE.screen = 'TRANSCRIPT';
   render(); window.scrollTo(0,0);
   try{
@@ -2593,6 +2666,25 @@ function transcriptToText(d){
     out += `\nKarma earned: ${d.total}\n` + d.awards.map(a=>`${a.points>=0?'+':''}${a.points} ${a.category}${a.note?' — '+a.note:''}`).join('\n') + '\n';
   }
   return out;
+}
+function rescorePanel(tr, d){
+  const rv = tr.review;
+  let inner;
+  if(!rv){
+    inner = `<div class="tag" style="margin-bottom:8px;">Re-read this story with the current Karma rules and compare. Nothing changes until you apply it.</div>
+      <button class="secondary small" id="btn-tr-rescore">Re-run Karma review</button>`;
+  } else if(rv.loading){
+    inner = '<div class="thinking">Re-reading the story…</div>';
+  } else if(rv.error){
+    inner = `<div class="error-box">${escapeHtml(rv.error)}</div><button class="secondary small" id="btn-tr-rescore">Try again</button>`;
+  } else {
+    const r = rv.result, delta = r.total - d.total;
+    inner = `<div class="tag" style="margin-bottom:6px;"><b>Current ${d.total} → proposed ${r.total}</b> (${delta>=0?'+':''}${delta})</div>
+      ${r.awards.length ? `<ul class="karma-awards">${r.awards.map(a=>`<li>${escapeHtml(signed(a.points))} ${escapeHtml(a.category)}${a.note ? ' — '+escapeHtml(a.note) : ''}</li>`).join('')}</ul>` : '<div class="tag">No awards found.</div>'}
+      <div class="tag" style="margin:8px 0;">Applying replaces this mission's awards and total. If this player is the official player for ${escapeHtml(heroLabel(d.hero_id))}, their Advancement Karma changes by the same ${delta>=0?'+':''}${delta}.</div>
+      <div class="adv-actions"><button class="small" id="btn-tr-apply">Apply new score</button> <button class="secondary small" id="btn-tr-dismiss">Dismiss</button></div>`;
+  }
+  return `<div class="hist-sub">Karma review</div><div class="rescore-box">${inner}</div>`;
 }
 function renderTranscript(){
   const tr = STATE.transcript || {};
@@ -2617,8 +2709,10 @@ function renderTranscript(){
         <button class="secondary small" id="btn-tr-print">Print</button>
         ${d.run==='previous' ? '<button class="secondary small" id="btn-tr-cur">View latest run</button>' : (d.has_previous ? '<button class="secondary small" id="btn-tr-prev">View earlier run</button>' : '')}
       </div>
+      ${tr.msg ? `<div class="notice-box">${escapeHtml(tr.msg)}</div>` : ''}
       <div class="tr-story">${story}</div>
-      ${awards}`;
+      ${awards}
+      ${d.run==='current' && d.total!=null ? rescorePanel(tr, d) : ''}`;
   }
   const title = d ? `${heroLabel(d.hero_id)} — ${adventureLabel(d.adventure_id)}` : 'Transcript';
   app.innerHTML = `<div class="panel">
@@ -2648,6 +2742,28 @@ function renderTranscript(){
   if(prev) prev.onclick = ()=>openTranscript(tr.userId, tr.heroId, tr.advId, 'previous');
   const cur = document.getElementById('btn-tr-cur');
   if(cur) cur.onclick = ()=>openTranscript(tr.userId, tr.heroId, tr.advId, 'current');
+  const rs = document.getElementById('btn-tr-rescore');
+  if(rs) rs.onclick = async ()=>{
+    tr.review = { loading:true }; render();
+    try{
+      const ph = PREMADE_HEROES.find(h=>h.id===d.hero_id);
+      const alias = heroLabel(d.hero_id);
+      const result = await reviewKarmaText(ph ? `${ph.alias} (${ph.name})` : alias, karmaEntriesToText(d.entries, alias));
+      tr.review = { result };
+    }catch(e){ tr.review = { error: e.message || 'The review could not be completed.' }; }
+    if(STATE.screen==='TRANSCRIPT') render();
+  };
+  const dis = document.getElementById('btn-tr-dismiss');
+  if(dis) dis.onclick = ()=>{ tr.review = null; render(); };
+  const ap = document.getElementById('btn-tr-apply');
+  if(ap) ap.onclick = async ()=>{
+    ap.disabled = true;
+    try{
+      const r = await apiCall('POST', '/api/admin/karma/rescore', {user_id: tr.userId, hero_id: tr.heroId, adventure_id: tr.advId, awards: tr.review.result.awards});
+      await openTranscript(tr.userId, tr.heroId, tr.advId, 'current', `Re-scored: ${r.old_total} → ${r.new_total} Karma.${r.advancement_updated ? ' Advancement Karma updated.' : ''}`);
+      if(STATE.playersData) loadPlayers();
+    }catch(e){ tr.review = { error: e.message || 'Could not apply the new score.' }; render(); }
+  };
 }
 function playerLastActivity(p){
   const times = [p.last_login, p.created_at].concat((p.missions||[]).map(m=>m.last_played), (p.missions||[]).map(m=>m.completed_at)).filter(Boolean);
