@@ -738,6 +738,38 @@ function enemyMaxHealth(statRanks){
   return ['Fighting Ability','Agility','Strength','Endurance']
     .reduce((sum,s)=>sum + rankNumberForName(statRanks[s]), 0);
 }
+/* Named enemies with fixed sheets. When the rules check names one of these
+   (case-insensitive), the game uses this sheet instead of inventing one, so
+   they play the same every run and for every hero. Add new entries here. */
+const NAMED_ENEMIES = {
+  'warden ash': {
+    name: 'Warden Ash',
+    aliases: ['ash', 'the warden'],
+    stats: { 'Fighting Ability':'Excellent', Agility:'Excellent', Strength:'Good', Endurance:'Excellent', Reason:'Remarkable', Intuition:'Excellent', Psyche:'Excellent' },
+    powers: [
+      { name: 'Ceramic Plate Armor', rank: 'Excellent' },
+      { name: 'Arc Baton', rank: 'Excellent' },
+      { name: 'Signal Jammer', rank: 'Good' },
+      { name: 'Remote Charges', rank: 'Incredible' }
+    ],
+    note: 'Only the Arc Baton is used to attack. The Remote Charges are the substation explosives (a story device, never swung at the hero), the Signal Jammer only disrupts radios and phones, and the Ceramic Plate Armor is purely defensive.'
+  }
+};
+function namedEnemyFor(name){
+  const key = String(name || '').trim().toLowerCase();
+  if(NAMED_ENEMIES[key]) return NAMED_ENEMIES[key];
+  for(const k of Object.keys(NAMED_ENEMIES)){
+    if((NAMED_ENEMIES[k].aliases || []).includes(key)) return NAMED_ENEMIES[k];
+  }
+  return null;
+}
+function namedEnemiesPromptText(){
+  const lines = Object.keys(NAMED_ENEMIES).map(k => {
+    const e = NAMED_ENEMIES[k];
+    return `- "${e.name}": enemyTier "super"; powers (use these EXACT names for enemyPowerUsed): ${e.powers.map(p => p.name + ' (' + p.rank + ')').join(', ')}. ${e.note}`;
+  });
+  return lines.length ? 'NAMED ENEMIES WITH FIXED SHEETS (use the exact label given, and for these enemies the game supplies the stats and powers itself):\n' + lines.join('\n') + '\n\n' : '';
+}
 /* Looks up (or creates) a tracked enemy/threat for this session. Enemies
    persist by name within a chapter so repeated hits accumulate damage
    toward a knockout instead of resetting each turn. `details` (only used
@@ -746,10 +778,15 @@ function enemyMaxHealth(statRanks){
    {stats, powers} sheet for a named supervillain. */
 function getOrCreateEnemy(name, details){
   if(!STATE.enemies) STATE.enemies = {};
-  const key = String(name).trim().toLowerCase();
+  const named = namedEnemyFor(name);
+  const key = named ? named.name.toLowerCase() : String(name).trim().toLowerCase();
   if(!STATE.enemies[key]){
     let stats, powers = [];
-    if(details && details.tier === 'super' && details.stats){
+    if(named){
+      stats = Object.assign({}, named.stats);
+      powers = named.powers.map(p => Object.assign({}, p));
+      name = named.name;
+    } else if(details && details.tier === 'super' && details.stats){
       stats = details.stats;
       powers = details.powers || [];
     } else {
@@ -1631,7 +1668,7 @@ Determine:
 12. "enemyPowerUsed" — ONLY when enemyTier is "super" and the enemy is attacking with one of their listed enemyPowers this turn: that power's exact name as given in enemyPowers. Null otherwise.
 13. "targetsEnemy" — boolean, true ONLY when the hero is the one attacking/pressuring a specific enemy (used to track that enemy's Health toward a knockout). False if the hero is just defending, dodging, or not engaging an enemy directly.
 
-Return exactly: {"requiresFeat":bool,"heroIsTarget":bool,"powerUsed":"..."|null,"ability":"...","actionType":"...","columnShift":int,"intensity":"..."|null,"enemyName":"..."|null,"enemyTier":"..."|null,"enemyStats":{...}|null,"enemyPowers":[...],"enemyWeapon":"..."|null,"enemyPowerUsed":"..."|null,"targetsEnemy":bool}`;
+${namedEnemiesPromptText()}Return exactly: {"requiresFeat":bool,"heroIsTarget":bool,"powerUsed":"..."|null,"ability":"...","actionType":"...","columnShift":int,"intensity":"..."|null,"enemyName":"..."|null,"enemyTier":"..."|null,"enemyStats":{...}|null,"enemyPowers":[...],"enemyWeapon":"..."|null,"enemyPowerUsed":"..."|null,"targetsEnemy":bool}`;
 
   const response = await fetchGeminiWithFallback({
     contents: [{ role:"user", parts:[{text: prompt}] }],
@@ -1722,7 +1759,9 @@ async function resolveMechanics(hero, chapter, log, playerLine){
     if(classification.enemyWeapon && WEAPON_DAMAGE_RANK[classification.enemyWeapon]){
       attackerRankNumber = rankNumberForName(WEAPON_DAMAGE_RANK[classification.enemyWeapon]);
     } else if(enemy && classification.enemyPowerUsed){
-      const usedPowerEntry = enemy.powers.find(p => p.name.toLowerCase() === classification.enemyPowerUsed.toLowerCase());
+      const wantedPower = String(classification.enemyPowerUsed).toLowerCase();
+      const usedPowerEntry = enemy.powers.find(p => p.name.toLowerCase() === wantedPower)
+        || enemy.powers.find(p => p.name.toLowerCase().includes(wantedPower) || wantedPower.includes(p.name.toLowerCase()));
       if(usedPowerEntry) attackerRankNumber = rankNumberForName(usedPowerEntry.rank);
     } else if(enemy){
       const meleeStat = classification.actionType === 'edged' || classification.actionType === 'blunt' || classification.actionType === 'charge'
