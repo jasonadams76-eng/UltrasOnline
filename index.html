@@ -188,6 +188,87 @@
   .karma-row{ padding:6px 0; border-top:1px solid rgba(0,0,0,0.2); }
   .karma-row .tag{ font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:#444; }
   .karma-awards{ margin:6px 0 0 18px; padding:0; font-size:0.9rem; }
+
+  /* ---- Polished menus ---- */
+  #app.wide{ max-width:1180px; }
+  .title-screen{ animation:fadeUp .5s ease both; background:
+      radial-gradient(ellipse at 50% 0%, rgba(232,167,46,0.22), transparent 60%), var(--paper); }
+  @keyframes fadeUp{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
+  .menu-panel{ animation:fadeUp .35s ease both; }
+  .menu-head{ display:flex; justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap; margin:4px 0 18px; }
+  .menu-title{ margin:2px 0 0; font-size:clamp(1.6rem,4vw,2.3rem); }
+
+  .hero-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:18px; }
+  .hero-tile{
+    display:flex; flex-direction:column; cursor:pointer;
+    border:3px solid var(--ink); background:var(--paper-dim);
+    box-shadow:5px 5px 0 rgba(11,18,38,0.85);
+    transition:transform .15s ease, box-shadow .15s ease;
+    overflow:hidden;
+  }
+  .hero-tile:hover, .hero-tile:focus-within{ transform:translate(-3px,-3px); box-shadow:9px 9px 0 rgba(11,18,38,0.85); }
+  .hero-portrait{ position:relative; aspect-ratio:4/5; overflow:hidden; background:var(--ink); border-bottom:3px solid var(--ink); }
+  .hero-portrait img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 30%; transition:transform .4s ease; }
+  .hero-tile:hover .hero-portrait img{ transform:scale(1.05); }
+  .portrait-fallback{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-family:'Anton',sans-serif; font-size:4.5rem; letter-spacing:2px; color:rgba(243,236,218,0.85);
+    background:linear-gradient(160deg, #1b2a55 0%, #0B1226 70%);
+  }
+  .portrait-fallback.small{ font-size:1.1rem; text-align:center; padding:10px; text-transform:uppercase; }
+  .portrait-name{
+    position:absolute; left:0; right:0; bottom:0; padding:30px 14px 10px;
+    background:linear-gradient(to top, rgba(11,18,38,0.92), rgba(11,18,38,0));
+    color:var(--paper); display:flex; flex-direction:column; z-index:2;
+  }
+  .portrait-name .alias{ font-family:'Anton',sans-serif; font-size:1.6rem; text-transform:uppercase; letter-spacing:1px; line-height:1.05; text-shadow:2px 2px 0 rgba(0,0,0,0.6); }
+  .portrait-name .real{ font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:var(--paper-dim); }
+  .hero-info{ padding:12px 14px 14px; display:flex; flex-direction:column; gap:8px; flex:1; }
+  .chips{ display:flex; flex-wrap:wrap; gap:6px; }
+  .chip{ font-family:'JetBrains Mono',monospace; font-size:0.7rem; padding:2px 8px; border:1.5px solid var(--ink); background:var(--paper); }
+  .chip.origin{ background:var(--ink); color:var(--paper); }
+  .power-line{ font-family:'JetBrains Mono',monospace; font-size:0.74rem; color:#333; line-height:1.4; flex:1; }
+  .badges{ display:flex; flex-wrap:wrap; gap:6px; }
+  .badge{ font-family:'JetBrains Mono',monospace; font-size:0.68rem; padding:1px 8px; border:1.5px solid #444; }
+  .badge.done{ background:#2c6b3f; border-color:#2c6b3f; color:#fff; }
+  .play-btn{ width:100%; margin-top:4px; }
+
+  .adv-hero{ display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+  .adv-hero-pic{ position:relative; width:78px; height:78px; flex:none; border:3px solid var(--ink); border-radius:50%; overflow:hidden; background:var(--ink); }
+  .adv-hero-pic img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 14%; transform:scale(1.6); transform-origin:50% 14%; z-index:2; }
+  .adv-hero-pic .portrait-fallback{ font-size:1.6rem; }
+  .adv-list{ display:grid; gap:16px; }
+  .adv-card{
+    display:grid; grid-template-columns:minmax(200px, 38%) 1fr; border:3px solid var(--ink); background:var(--paper-dim);
+    box-shadow:5px 5px 0 rgba(11,18,38,0.85); overflow:hidden;
+  }
+  .adv-cover{ position:relative; min-height:170px; background:var(--ink); border-right:3px solid var(--ink); }
+  .adv-cover img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:2; }
+  .adv-body{ padding:14px 16px; display:flex; flex-direction:column; }
+  .adv-title{ font-family:'Anton',sans-serif; font-size:1.4rem; text-transform:uppercase; letter-spacing:0.5px; }
+  .adv-blurb{ font-size:0.95rem; line-height:1.45; }
+  .adv-actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:auto; padding-top:12px; }
+
+  .account-bar{ background:var(--ink); color:var(--paper); margin:-22px -24px 16px; padding:10px 24px; border-bottom:3px solid var(--ink); }
+  .account-bar button.secondary{ background:var(--paper); }
+
+  @media (max-width:640px){
+    #app{ padding:14px 10px 40px; }
+    .panel{ padding:16px 14px; }
+    .account-bar{ margin:-16px -14px 14px; padding:10px 14px; }
+    .hero-grid{ grid-template-columns:1fr 1fr; gap:12px; }
+    .portrait-name{ padding:26px 10px 8px; }
+    .portrait-name .alias{ font-size:1.02rem; overflow-wrap:anywhere; }
+    .portrait-name .real{ font-size:0.62rem; }
+    .hero-info{ padding:8px 10px 10px; }
+    .power-line{ display:none; }
+    .play-btn{ font-size:0.85rem; padding:10px 8px; }
+    .adv-card{ grid-template-columns:1fr; }
+    .adv-cover{ min-height:0; aspect-ratio:16/8; border-right:none; border-bottom:3px solid var(--ink); }
+  }
+  @media (max-width:380px){ .hero-grid{ grid-template-columns:1fr; } }
+  .title-screen .sub{ color:#4a4f63; }
+  @media (prefers-reduced-motion:reduce){ *{ animation:none !important; transition:none !important; } }
 </style>
 </head>
 <body>
@@ -229,6 +310,7 @@ const STATE = {
   advInfo: null,       // {saves:Set, done:Set} for the active hero on the adventure screen
   restartArmed: null,  // adventure id showing "start over?" confirmation
   karmaData: null,     // {view:'mine'|'all', rows, error} for the Karma Record screen
+  rosterInfo: null,    // {heroId:{saves, done}} for roster progress badges
 };
 
 /* ---------- Story content ---------- */
@@ -1953,6 +2035,7 @@ function generateEntryImage(entry, sceneText, hero){
 const app = document.getElementById('app');
 
 function render(){
+  app.className = (STATE.screen==='HERO_SELECT' || STATE.screen==='ADVENTURE_SELECT' || STATE.screen==='KARMA') ? 'wide' : '';
   if(STATE.screen==='AUTH') return renderAuth();
   if(STATE.screen==='TITLE') return renderTitle();
   if(STATE.screen==='HERO_SELECT') return renderHeroSelect();
@@ -1962,6 +2045,25 @@ function render(){
 }
 
 /* ---------- Small shared helpers ---------- */
+/* Pictures are looked up by base name and tried as .jpg, .jpeg, .png, .webp.
+   If none exist the picture is removed and the styled fallback underneath shows. */
+const IMG_EXTS = ['jpg','jpeg','png','webp'];
+function imgFallback(img){
+  const i = parseInt(img.dataset.try || '0', 10) + 1;
+  if(i < IMG_EXTS.length){
+    img.dataset.try = String(i);
+    img.src = img.dataset.base + '.' + IMG_EXTS[i];
+    return;
+  }
+  img.onerror = null;
+  img.remove();
+}
+function lookupImg(base, alt, cls){
+  return `<img class="${cls||''}" src="${base}.jpg" data-base="${base}" data-try="0" alt="${escapeHtml(alt)}" loading="lazy" decoding="async" onerror="imgFallback(this)">`;
+}
+function initials(name){
+  return String(name).split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+}
 function heroLabel(id){
   const h = PREMADE_HEROES.find(x=>x.id===id);
   return h ? h.alias : id;
@@ -2092,7 +2194,7 @@ function renderTitle(){
       <h1>The Ultras</h1>
       <div class="sub">Solo Superhero Chronicles</div>
       <div class="menu-grid">
-        <button id="btn-start">Begin</button>
+        <button id="btn-start">${AUTH.token ? 'Continue' : 'Begin'}</button>
       </div>
     </div>
   `;
@@ -2109,38 +2211,79 @@ function renderTitle(){
   };
 }
 
-function renderHeroSelect(){
-  const premadeRows = PREMADE_HEROES.map(h=>`
-    <div class="hero-card">
-      <div>
-        <div class="name">${escapeHtml(h.alias)} <span class="tag">(${escapeHtml(h.name)})</span></div>
-        <div class="tag">${h.powers.slice(0,2).map(powerName).map(escapeHtml).join(' · ')}</div>
+function heroOriginTag(h){
+  return String(h.origin || '').split('.')[0].trim();
+}
+
+/* Progress per hero for the roster badges; refreshed in the background. */
+async function refreshRosterInfo(){
+  try{
+    const [games, karma] = await Promise.all([ apiCall('GET','/api/games'), apiCall('GET','/api/karma') ]);
+    const info = {};
+    for(const g of (games.games||[])){ (info[g.hero_id] = info[g.hero_id] || {saves:0, done:0}).saves++; }
+    for(const k of (karma.ledger||[])){ (info[k.hero_id] = info[k.hero_id] || {saves:0, done:0}).done++; }
+    STATE.rosterInfo = info;
+    if(STATE.screen==='HERO_SELECT') renderHeroSelect(true);
+  }catch(e){ /* badges are optional */ }
+}
+
+function renderHeroSelect(isRefresh){
+  const info = STATE.rosterInfo || {};
+  const tiles = PREMADE_HEROES.map(h=>{
+    const p = info[h.id];
+    const done = p ? p.done : 0;
+    const going = p ? Math.max(0, p.saves - p.done) : 0;
+    const badges = [
+      done ? `<span class="badge done">✓ ${done} completed</span>` : '',
+      going ? `<span class="badge">${going} in progress</span>` : ''
+    ].join('');
+    const powers = h.powers.slice(0,3).map(powerName).map(escapeHtml).join(' · ');
+    return `
+    <article class="hero-tile use-hero" data-hero="${h.id}">
+      <div class="hero-portrait">
+        <div class="portrait-fallback">${escapeHtml(initials(h.alias))}</div>
+        ${lookupImg('portraits/'+h.id, h.alias)}
+        <div class="portrait-name">
+          <span class="alias">${escapeHtml(h.alias)}</span>
+          <span class="real">${escapeHtml(h.name)}</span>
+        </div>
       </div>
-      <button data-hero="${h.id}" class="use-hero secondary">Play</button>
-    </div>
-  `).join('');
+      <div class="hero-info">
+        <div class="chips">
+          <span class="chip">Health ${maxHealth(h)}</span>
+          <span class="chip">Karma ${maxKarma(h)}</span>
+          ${heroOriginTag(h) ? `<span class="chip origin">${escapeHtml(heroOriginTag(h))}</span>` : ''}
+        </div>
+        <div class="power-line">${powers}</div>
+        ${badges ? `<div class="badges">${badges}</div>` : ''}
+        <button class="play-btn" type="button">Play ${escapeHtml(h.alias)}</button>
+      </div>
+    </article>`;
+  }).join('');
 
   app.innerHTML = `
-    <div class="panel">
+    <div class="panel menu-panel">
       ${accountBar()}
       ${STATE.notice ? `<div class="notice-box">${escapeHtml(STATE.notice)}</div>` : ''}
-      <div class="chapter-eyebrow display" style="color:var(--hero-red); font-size:0.8rem;">Roster</div>
-      <h2 class="display" style="margin-top:2px;">Choose your hero</h2>
-
-      <button id="btn-karma" class="secondary" style="margin-bottom:18px;">Karma Record</button>
-
-      <label>Premade heroes</label>
-      ${premadeRows}
+      <div class="menu-head">
+        <div>
+          <div class="chapter-eyebrow display" style="color:var(--hero-red); font-size:0.8rem;">The Ultras</div>
+          <h2 class="display menu-title">Choose your hero</h2>
+        </div>
+        <button id="btn-karma" class="secondary">Karma Record</button>
+      </div>
+      <div class="hero-grid">${tiles}</div>
     </div>
   `;
   wireAccountBar();
   document.getElementById('btn-karma').onclick = ()=>openKarma();
-  document.querySelectorAll('.use-hero').forEach(btn=>{
-    btn.onclick = ()=>{
-      const hero = PREMADE_HEROES.find(h=>h.id===btn.getAttribute('data-hero'));
+  document.querySelectorAll('.use-hero').forEach(el=>{
+    el.onclick = ()=>{
+      const hero = PREMADE_HEROES.find(h=>h.id===el.getAttribute('data-hero'));
       if(hero) openAdventureSelect(hero);
     };
   });
+  if(!isRefresh) refreshRosterInfo();
 }
 
 /* ---------- Adventure choice (per hero) ---------- */
@@ -2190,34 +2333,48 @@ function renderAdventureSelect(){
     const armed = STATE.restartArmed === a.id;
     let buttons;
     if(!has){
-      buttons = `<button data-adventure="${a.id}" class="start-adventure secondary">Play</button>`;
+      buttons = `<button data-adventure="${a.id}" class="start-adventure">Play</button>`;
     } else if(armed){
       buttons = `<button data-adventure="${a.id}" class="start-adventure danger">Yes, start over</button>
                  <button data-adventure="${a.id}" class="cancel-restart secondary">Cancel</button>`;
     } else {
-      buttons = `<button data-adventure="${a.id}" class="continue-adventure secondary">Continue</button>
+      buttons = `<button data-adventure="${a.id}" class="continue-adventure">Continue</button>
                  <button data-adventure="${a.id}" class="arm-restart secondary">Start over</button>`;
     }
     const status = done ? '<span class="status-tag done">Completed</span>' : (has ? '<span class="status-tag">In progress</span>' : '');
+    const coverId = a.chapters[0].id;
     return `
-    <div class="hero-card" style="align-items:flex-start;">
-      <div>
-        <div class="name">${escapeHtml(a.title)} ${status}</div>
-        <div class="tag" style="margin-bottom:6px;">${escapeHtml(a.tagline)}</div>
-        <div class="tag" style="white-space:normal; max-width:520px;">${escapeHtml(a.blurb)}</div>
-        ${armed ? '<div class="tag" style="color:var(--hero-red); margin-top:6px;">This replaces your saved progress for this hero and adventure. Karma you already earned stays on your record until the new run finishes.</div>' : ''}
+    <div class="adv-card">
+      <div class="adv-cover">
+        <div class="portrait-fallback small">${escapeHtml(a.title)}</div>
+        ${lookupImg('images/'+coverId, a.title)}
       </div>
-      <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">${buttons}</div>
+      <div class="adv-body">
+        <div class="adv-title">${escapeHtml(a.title)} ${status}</div>
+        <div class="tag" style="margin-bottom:6px;">${escapeHtml(a.tagline)}</div>
+        <div class="adv-blurb">${escapeHtml(a.blurb)}</div>
+        ${armed ? '<div class="tag" style="color:var(--hero-red); margin-top:8px;">This replaces your saved progress for this hero and adventure. Karma you already earned stays on your record until the new run finishes.</div>' : ''}
+        <div class="adv-actions">${buttons}</div>
+      </div>
     </div>`;
   }).join('');
 
   app.innerHTML = `
-    <div class="panel">
+    <div class="panel menu-panel">
       ${accountBar()}
-      <div class="chapter-eyebrow display" style="color:var(--hero-red); font-size:0.8rem;">Choose a chronicle</div>
-      <h2 class="display" style="margin-top:2px;">Which story does ${escapeHtml(hero.alias)} step into?</h2>
+      <div class="adv-hero">
+        <div class="adv-hero-pic">
+          <div class="portrait-fallback small">${escapeHtml(initials(hero.alias))}</div>
+          ${lookupImg('portraits/'+hero.id, hero.alias)}
+        </div>
+        <div>
+          <div class="chapter-eyebrow display" style="color:var(--hero-red); font-size:0.8rem;">Choose a chronicle</div>
+          <h2 class="display menu-title" style="margin:2px 0 0;">${escapeHtml(hero.alias)}</h2>
+          <div class="tag">${escapeHtml(hero.name)}</div>
+        </div>
+      </div>
       ${STATE.error ? `<div class="error-box">${escapeHtml(STATE.error)}</div>` : ''}
-      ${cards}
+      <div class="adv-list">${cards}</div>
       <div style="margin-top:18px;"><button class="secondary" id="btn-back-adv">Back to roster</button></div>
     </div>
   `;
