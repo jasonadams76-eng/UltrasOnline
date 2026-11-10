@@ -8,25 +8,29 @@
      Netlify hosting facts for this site: static/SSR served via Netlify Edge. -->
 <title>The Ultras — Solo adventures</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0A1F44">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#0B1226;
-    --ink-2:#141C36;
-    --paper:#F3ECDA;
-    --paper-dim:#E6DCC3;
-    --hero-red:#D8342A;
+    --ink:#0A1F44;
+    --ink-2:#12295C;
+    --paper:#FFFFFF;
+    --paper-dim:#E9EFFA;
+    --hero-red:#D32F2F;
+    --blue:#1565C0;
+    --blue-dark:#0D47A1;
+    --blue-light:#4F9BE8;
     --hero-gold:#E8A72E;
-    --hero-cyan:#4FC7D8;
-    --line:#0B1226;
-    --shadow: 6px 6px 0 rgba(11,18,38,0.9);
+    --hero-cyan:#4F9BE8;
+    --line:#0A1F44;
+    --shadow: 6px 6px 0 #1565C0;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;height:100%;}
   body{
     background:
-      radial-gradient(circle at 1px 1px, rgba(243,236,218,0.06) 1px, transparent 1px) 0 0/14px 14px,
+      radial-gradient(circle at 1px 1px, rgba(255,255,255,0.06) 1px, transparent 1px) 0 0/14px 14px,
       var(--ink);
     color:var(--paper);
     font-family:'Spectral', serif;
@@ -49,7 +53,7 @@
   .panel::before{
     content:"";
     position:absolute; inset:6px;
-    border:1px solid rgba(11,18,38,0.15);
+    border:1px solid rgba(10,31,68,0.15);
     pointer-events:none;
   }
 
@@ -57,7 +61,7 @@
   .title-logo{
     width:180px; height:180px; margin:0 auto 10px;
     display:block;
-    filter:drop-shadow(4px 4px 0 rgba(11,18,38,0.9));
+    filter:drop-shadow(4px 4px 0 rgba(10,31,68,0.9));
   }
   .title-screen h1{
     font-size:clamp(2.6rem, 8vw, 4.6rem);
@@ -121,7 +125,7 @@
   .story-header h2{ font-family:'Anton',sans-serif; margin:2px 0 0; font-size:1.7rem; }
 
   .log{ max-height:52vh; overflow-y:auto; padding-right:4px; }
-  .entry{ margin-bottom:16px; padding-bottom:14px; border-bottom:1px dashed rgba(11,18,38,0.25); }
+  .entry{ margin-bottom:16px; padding-bottom:14px; border-bottom:1px dashed rgba(10,31,68,0.25); }
   .entry:last-child{ border-bottom:none; }
   .entry .who{ font-family:'JetBrains Mono',monospace; font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
   .entry.gm .who{ color:var(--hero-red); }
@@ -157,10 +161,10 @@
   ::-webkit-scrollbar-thumb{background:var(--ink); }
 
   .scene-image-wrap{ margin:0 0 14px; }
-  .scene-image{ display:block; width:100%; height:auto; border:2px solid var(--ink); box-shadow:4px 4px 0 rgba(11,18,38,0.35); }
+  .scene-image{ display:block; width:100%; height:auto; border:2px solid var(--ink); box-shadow:4px 4px 0 rgba(10,31,68,0.35); }
   .scene-image-loading{
     display:flex; align-items:center; justify-content:center;
-    width:100%; aspect-ratio:16/9; border:2px dashed rgba(11,18,38,0.4); background:rgba(11,18,38,0.03);
+    width:100%; aspect-ratio:16/9; border:2px dashed rgba(10,31,68,0.4); background:rgba(10,31,68,0.03);
     font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:#666;
     animation:pulseFade 1.6s ease-in-out infinite;
   }
@@ -192,7 +196,7 @@
   /* ---- Polished menus ---- */
   #app.wide{ max-width:1180px; }
   .title-screen{ animation:fadeUp .5s ease both; background:
-      radial-gradient(ellipse at 50% 0%, rgba(232,167,46,0.22), transparent 60%), var(--paper); }
+      radial-gradient(ellipse at 50% 0%, rgba(21,101,192,0.18), transparent 60%), var(--paper); }
   @keyframes fadeUp{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
   .menu-panel{ animation:fadeUp .35s ease both; }
   .menu-head{ display:flex; justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap; margin:4px 0 18px; }
@@ -202,23 +206,23 @@
   .hero-tile{
     display:flex; flex-direction:column; cursor:pointer;
     border:3px solid var(--ink); background:var(--paper-dim);
-    box-shadow:5px 5px 0 rgba(11,18,38,0.85);
+    box-shadow:5px 5px 0 rgba(10,31,68,0.85);
     transition:transform .15s ease, box-shadow .15s ease;
     overflow:hidden;
   }
-  .hero-tile:hover, .hero-tile:focus-within{ transform:translate(-3px,-3px); box-shadow:9px 9px 0 rgba(11,18,38,0.85); }
+  .hero-tile:hover, .hero-tile:focus-within{ transform:translate(-3px,-3px); box-shadow:9px 9px 0 rgba(10,31,68,0.85); }
   .hero-portrait{ position:relative; aspect-ratio:4/5; overflow:hidden; background:var(--ink); border-bottom:3px solid var(--ink); }
   .hero-portrait img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 30%; transition:transform .4s ease; }
   .hero-tile:hover .hero-portrait img{ transform:scale(1.05); }
   .portrait-fallback{
     position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-    font-family:'Anton',sans-serif; font-size:4.5rem; letter-spacing:2px; color:rgba(243,236,218,0.85);
-    background:linear-gradient(160deg, #1b2a55 0%, #0B1226 70%);
+    font-family:'Anton',sans-serif; font-size:4.5rem; letter-spacing:2px; color:rgba(255,255,255,0.85);
+    background:linear-gradient(160deg, #1565C0 0%, #0A1F44 70%);
   }
   .portrait-fallback.small{ font-size:1.1rem; text-align:center; padding:10px; text-transform:uppercase; }
   .portrait-name{
     position:absolute; left:0; right:0; bottom:0; padding:30px 14px 10px;
-    background:linear-gradient(to top, rgba(11,18,38,0.92), rgba(11,18,38,0));
+    background:linear-gradient(to top, rgba(10,31,68,0.92), rgba(10,31,68,0));
     color:var(--paper); display:flex; flex-direction:column; z-index:2;
   }
   .portrait-name .alias{ font-family:'Anton',sans-serif; font-size:1.6rem; text-transform:uppercase; letter-spacing:1px; line-height:1.05; text-shadow:2px 2px 0 rgba(0,0,0,0.6); }
@@ -241,7 +245,7 @@
   .adv-list{ display:grid; gap:16px; }
   .adv-card{
     display:grid; grid-template-columns:minmax(200px, 38%) 1fr; border:3px solid var(--ink); background:var(--paper-dim);
-    box-shadow:5px 5px 0 rgba(11,18,38,0.85); overflow:hidden;
+    box-shadow:5px 5px 0 rgba(10,31,68,0.85); overflow:hidden;
   }
   .adv-cover{ position:relative; min-height:170px; background:var(--ink); border-right:3px solid var(--ink); }
   .adv-cover img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:2; }
@@ -285,6 +289,37 @@
     background:url('images/title-banner.jpg') center/cover no-repeat;
     filter:blur(7px) brightness(0.38) saturate(1.1);
   }
+
+  /* ---- Ultras theme: red, blue and white ---- */
+  html{
+    min-height:100%;
+    background:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><path d='M40 0 L70 0 L52 50 L78 50 L30 130 L44 70 L20 70 Z' fill='%231565C0' fill-opacity='0.2'/><path d='M170 110 L200 110 L182 160 L208 160 L160 240 L174 180 L150 180 Z' fill='%231565C0' fill-opacity='0.2'/></svg>") 0 0/240px 240px,
+      linear-gradient(180deg, #0D2A5E 0%, #0A1F44 65%);
+    background-color:#0A1F44;
+    background-attachment:fixed;
+  }
+  body{ background:none; min-height:100vh; height:auto; }
+  button{ background:var(--hero-red); color:#fff; border-color:var(--ink); box-shadow:4px 4px 0 rgba(10,31,68,0.55); }
+  button:hover{ background:#E53935; box-shadow:6px 6px 0 rgba(10,31,68,0.55); }
+  button.secondary{ background:#fff; color:var(--blue-dark); border-color:var(--blue-dark); }
+  button.secondary:hover{ background:#EAF2FF; }
+  button.danger{ background:#8E1B1B; color:#fff; border-color:var(--ink); }
+  button.danger:hover{ background:#A32222; }
+  button:disabled{ opacity:0.45; cursor:not-allowed; box-shadow:none; transform:none; }
+  button.linkbtn{ background:none; color:var(--blue-dark); box-shadow:none; border:none; }
+  button.linkbtn:hover{ background:none; box-shadow:none; color:var(--hero-red); }
+  button:focus-visible{ outline:3px solid #fff; outline-offset:2px; box-shadow:0 0 0 6px var(--blue); }
+  input:focus, textarea:focus, select:focus{ outline:3px solid rgba(21,101,192,0.4); outline-offset:1px; border-color:var(--blue-dark); }
+  ::-webkit-scrollbar-thumb{ background:var(--blue-dark); }
+  .account-bar{ background:var(--blue); color:#fff; border-bottom-color:var(--ink); }
+  .account-bar b{ color:#fff; }
+  .chip.origin{ background:var(--blue); color:#fff; border-color:var(--blue); }
+  .chip.strength{ background:var(--hero-red); color:#fff; border-color:var(--hero-red); }
+  .status-tag, .badge{ border-color:var(--blue-dark); color:var(--blue-dark); }
+  .status-tag.done, .badge.done{ background:#2c6b3f; border-color:#2c6b3f; color:#fff; }
+  .title-screen .sub{ color:var(--blue-dark); }
+  .hero-tile, .adv-card, .karma-hero{ border-color:var(--ink); }
 </style>
 </head>
 <body>
@@ -2742,7 +2777,7 @@ function renderPlay(){
           if(!kr.awards.length) return `<div class="hero-sheet-mini">No specific Karma awards were identified for this adventure.</div>`;
           const rows = kr.awards.map(a => `
             <div style="display:flex; justify-content:space-between; gap:12px; padding:4px 0; border-bottom:1px solid #eee;">
-              <div><strong>${escapeHtml(a.category)}</strong><br><span style="font-size:0.85rem; color:var(--paper-dim);">${escapeHtml(a.note)}</span></div>
+              <div><strong>${escapeHtml(a.category)}</strong><br><span style="font-size:0.85rem; color:#4a5570;">${escapeHtml(a.note)}</span></div>
               <div style="white-space:nowrap; font-weight:bold; color:${a.points>=0?'#1b6e2b':'#a11'};">${a.points>=0?'+':''}${a.points}</div>
             </div>
           `).join('');
