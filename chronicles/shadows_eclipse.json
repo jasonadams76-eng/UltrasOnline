@@ -1,0 +1,180 @@
+{
+  "id": "shadows_eclipse",
+  "title": "Shadows of the Eclipse",
+  "tagline": "A Superhero Chronicle — 10 Chapters",
+  "blurb": "A city-wide blackout unravels into a secret organization, a shattered dimensional prison, and an ancient entity of pure darkness clawing its way back into the world.",
+  "chapters": [
+    {
+      "id": "ecl1",
+      "title": "The Silent Blackout",
+      "eyebrow": "Chapter One — Act I: The Mystery",
+      "opening": [
+        "It happens in an instant: six square blocks of the city go dark at once. Cars stall mid-intersection. Phones die in pockets. Electronic locks disengage with a chorus of soft clicks, and somewhere nearby an alarm that should be screaming simply isn't. Witnesses on the street swear they saw a thread of black lightning leap from rooftop to rooftop just before the lights failed — gone too fast to be sure they saw it at all.",
+        "",
+        "The city will call it a grid failure by morning. You already know better. What do you do?"
+      ],
+      "gmInstructions": [
+        "SETTING: A sudden, total blackout across several city blocks, caused not by any ordinary grid failure but by an act of deliberate sabotage/theft involving strange technology. Witnesses report \"black lightning\" — actually the signature of an unknown crystalline energy source being moved/activated nearby. In the blacked-out zone, small drifting patches of living shadow-energy called Shades (mindless, hostile, non-verbal constructs of pure dark energy — think living smoke with claws, roughly Good-to-Excellent physical stats, no weapons, attacks are shadow-tendril swipes) have begun manifesting and menacing trapped civilians. At the epicenter of the blackout, mostly buried in rubble from a small transformer explosion, is a fist-sized black crystal, faintly warm and pulsing with a slow inner light — the actual object whoever caused this blackout was testing/retrieving and dropped or hasn't yet recovered.",
+        "GOALS FOR THIS CHAPTER: The player must (1) help civilians trapped or endangered by the blackout and the Shades (a stalled elevator, a fire started by the transformer explosion, people cut off from exits by drifting Shades) in a way that reflects their stats and powers, and (2) locate and recover the black crystal before whoever dropped it comes back for it.",
+        "GM GUIDANCE: Open with chaos and confusion rather than a clear villain to punch — this is a mystery chapter, and the Shades should feel eerie and alien rather than a straightforward mob of mooks (they don't speak, don't seem to loot or plan, and dissipate into smoke rather than dying normally when defeated). Let the player's powers and stats meaningfully shape how the rescues go. Seed at least one small detail that doesn't add up yet (a scorched handprint too large to be human, a hooded figure glimpsed retreating down an alley just as the hero arrives, a Shade that flinches away from the crystal rather than toward it) as a loose thread for later chapters — don't explain it. Chapter is complete once civilians are safe and the hero has the black crystal in hand.",
+        "TONE: Tense, atmospheric, mystery-forward — the sense that something has gone quietly, deeply wrong beneath an ordinary night."
+      ],
+      "imagePrompt": "A dense downtown city at night with six full blocks completely dark: no streetlights, no lit windows. Cars stopped dead in a wide intersection with headlights off, small groups of people standing on the sidewalk looking up at the rooftops. One thin jagged streak of black lightning arcs across the dim blue-gray sky above the buildings. Wet asphalt, eerie quiet."
+    },
+    {
+      "id": "ecl2",
+      "title": "Ghosts in the Machine",
+      "eyebrow": "Chapter Two — Act I: The Mystery",
+      "opening": [
+        "ORACLE made the call before you'd even left the blackout zone: Victor Cross knows a physicist who's handled strange-materials cases for the agency before, someone he trusts to keep her mouth shut and her lab off the books. Three sleepless days later, Dr. Amara Voss is turning the crystal under a desk lamp when you arrive, its light pulsing slow as a heartbeat. \"It isn't drawing energy from anywhere I can find,\" she tells you. \"It's radiating something that isn't on any spectrum I know how to measure. Whoever made this wasn't building a battery. They were building a key.\"",
+        "",
+        "Her phone buzzes — a security alert from downstairs. Someone else wants this crystal, and they seem to already know exactly where to find it. What do you do?"
+      ],
+      "gmInstructions": [
+        "SETTING: A university physics lab (or comparable small research facility) belonging to Dr. Amara Voss, a genuine and sympathetic scientist NPC referred to the hero by ORACLE/Victor Cross as a trusted contact for analyzing anomalous materials — this is their first meeting, but she already knows why the hero is there and has been analyzing the crystal from Chapter One for three days. Her preliminary findings: the crystal's energy signature doesn't match anything known, and it seems to be \"unlocking\" or resonating with something rather than simply storing power. Mid-analysis, the lab comes under attack — first a reconnaissance drone probing the perimeter, then (if the drone isn't dealt with quietly) a strike team of well-equipped mercenaries in matching dark tactical gear with a stylized eclipsed-sun emblem, sent to seize the crystal and silence anyone who's studied it. These mercenaries are professionals (Good-Excellent combat stats, armed with rifles/submachine guns per the standard weapon table) but not supers — they retreat or surrender if clearly overwhelmed rather than fighting to the death.",
+        "GOALS FOR THIS CHAPTER: The player must (1) protect Dr. Voss and the lab from the attack, and (2) walk away knowing the name of the organization behind it — either by capturing/interrogating a mercenary, recovering an insignia/badge/tablet with their org name on it, or piecing it together from Dr. Voss's own research contacts. That organization is the Eclipse Collective, a secretive, well-funded group whose goals are still unclear at this point beyond \"they want every one of these crystals, and they'll kill to keep their research quiet.\"",
+        "GM GUIDANCE: Play up the \"someone is watching\" tension — the mercenaries arrive with unnerving precision, as if they knew the crystal's exact location and Dr. Voss's schedule, which should read as ominous rather than be explained yet. Let the player's approach (stealthy interception, open confrontation, protecting Voss first vs. going on the offensive) matter and shape how the fight unfolds. Dr. Voss is not a fighter and should be an active concern during the scene — a smart player protecting her should be rewarded narratively. Chapter is complete once the immediate attack is repelled/resolved and the player has learned the Eclipse Collective's name.",
+        "TONE: Escalating dread — a quiet, cerebral scene curdling fast into a home invasion by very capable, very calm professionals."
+      ],
+      "imagePrompt": "A cluttered university physics lab at night, a woman scientist in a lab coat at a desk lit by a single desk lamp, holding up a faceted black crystal that glows with a slow pulsing violet light, monitors and oscilloscopes around her, a dark hallway visible through the open door."
+    },
+    {
+      "id": "ecl3",
+      "title": "Into the Underground",
+      "eyebrow": "Chapter Three — Act I: The Mystery",
+      "opening": [
+        "A captured mercenary's confiscated tablet holds one useful thing: a set of transit maps for subway tunnels that were sealed and abandoned decades ago, annotated in a clipped shorthand that reads like a supply schedule. Someone has been quietly moving people and equipment through the old Meridian Ave. line for months.",
+        "",
+        "The access hatch groans open onto a service ladder disappearing into the dark, stale air rising to meet you, carrying the faint copper smell of old blood. What do you do?"
+      ],
+      "gmInstructions": [
+        "SETTING: A converted stretch of abandoned subway tunnels, now a hidden Eclipse Collective research facility studying/experimenting on the crystals — and on people. Deep inside, the hero will find evidence of \"crystal exposure\" experiments performed on abducted test subjects, most of whom are gone, transformed, or worse. A handful of surviving prisoners, frightened but alive, are held in a holding block partway through the facility. Security includes patrolling guards (trained-tier mercenaries) and automated systems (motion sensors, a sealable blast door, drone turrets) appropriate to a black-site lab. The facility's mini-boss is Project Revenant — a former test subject warped by prolonged crystal exposure into something part-human, part-living-shadow (Remarkable-Incredible physical stats, a shadow-based melee/reach power, and an unsettling tendency to briefly regenerate from apparent defeats before finally going down for good), unstable and violently hostile to anyone who approaches its containment cell/chamber.",
+        "GOALS FOR THIS CHAPTER: The player must (1) make their way through the facility (via stealth, force, hacking, or any approach that suits their sheet) to the prisoner holding block and free the surviving captives, and (2) defeat or otherwise neutralize Project Revenant, who blocks the only way out (or the only way to the prisoners, at the GM's framing).",
+        "GM GUIDANCE: Give this chapter a slow-burn horror-adjacent tension — flickering emergency lighting, half-finished experiment logs, a chamber of failed containment tubes — building toward Revenant as a genuine mini-boss fight (tougher and more dangerous than the mercenaries, with a startling \"getting back up\" beat once during the fight to sell the stakes before it can finally be put down). Let clever, non-lethal approaches to freeing prisoners or bypassing security be rewarded, not just combat. Chapter is complete once the prisoners are freed and Revenant is dealt with.",
+        "TONE: Claustrophobic, unsettling, techno-horror creeping into pulp-adventure — the Collective's first real monster."
+      ],
+      "imagePrompt": "An open steel hatch in a city street leading down to a rusted service ladder in an abandoned subway tunnel, peeling tile walls, a single flashlight beam cutting through dust, old track disappearing into darkness."
+    },
+    {
+      "id": "ecl4",
+      "title": "The Broken Sky",
+      "eyebrow": "Chapter Four — Act II: Escalating Threat",
+      "opening": [
+        "The freed prisoners are barely out of the tunnels when the sky itself seems to stutter. Streetlights flicker violet. For one heartbeat, the office tower three blocks over simply isn't there — then it is again, and everyone on the sidewalk who saw it go is staring up in silence. Gravity hiccups underfoot like a dropped elevator.",
+        "",
+        "The news is calling it \"atmospheric anomalies.\" Dr. Voss, ashen over the phone, calls it something else: the barrier between this world and somewhere else is coming apart, and it's happening at three locations across the city at once. What do you do?"
+      ],
+      "gmInstructions": [
+        "SETTING: City-wide reality distortions have begun — purple lightning, patches of altered/failing gravity, buildings and blocks briefly winking out of existence — all radiating from three physical \"dimensional anchors\" the Eclipse Collective has planted at separate city locations (pick three evocative sites: a bridge, a stadium, a subway interchange, a rooftop water tower district — whatever suits the city as established). Each anchor is a crystal-powered device warping local reality outward from itself, guarded by a mix of mercenaries and small dimensional-hazard manifestations (disorienting gravity wells, brief tears that spit out disoriented, snarling shadow-creatures). If left long enough, the anomalies compound and threaten to consume entire blocks.",
+        "GOALS FOR THIS CHAPTER: The player must (1) reach and destroy all three dimensional anchors before the compounding instability becomes irreversible, racing the clock across the city, and (2) rescue civilians caught in each anomaly zone along the way (someone stuck in a gravity-reversed stairwell, a bus half-swallowed by a flickering rift, and similar).",
+        "GM GUIDANCE: Play this as a race-against-time, three-part chapter — narrate a real sense of urgency and give each anchor site its own flavor of environmental hazard so the pacing doesn't feel repetitive (one might favor Agility/mobility, one Strength/brute force, one Reason/Intuition to actually figure out how to safely disable rather than blow it up). Let a genuinely clever solution at any anchor go faster/cleaner than a purely destructive one, without punishing force-based heroes either. Chapter is complete once all three anchors are down and the immediate anomalies have stopped.",
+        "TONE: Big disaster-movie energy, high stakes, whole-city scale, tinged with the same wrongness established since Chapter One."
+      ],
+      "imagePrompt": "A city street at dusk where the sky has a visible crack-like distortion, streetlights glowing violet, a skyscraper in the distance half faded out as if flickering out of existence, pedestrians on the sidewalk frozen and staring upward."
+    },
+    {
+      "id": "ecl5",
+      "title": "Hunter and Hunted",
+      "eyebrow": "Chapter Five — Act II: Escalating Threat",
+      "opening": [
+        "For the first time since this began, the Eclipse Collective isn't running from you. A message arrives — scrawled on a billboard's electronic display in your own city, visible only to you for the ten seconds it takes to read: WE KNOW WHO YOU ARE. THE HUNTER IS COMING.",
+        "",
+        "That night, a bullet meant for your head instead punches through the water tower behind you. What do you do?"
+      ],
+      "gmInstructions": [
+        "SETTING: The Eclipse Collective has identified the hero as their single remaining obstacle and dispatched a dedicated, highly capable Hunter — a named individual assassin (Remarkable-Incredible combat stats, expert marksman with a signature high-tech rifle plus a close-range power or gadget of your invention fitting a \"hunter\" theme — a cloaking field, tracking darts, a grapple-line rig — treat as a \"super\" tier enemy with a small kit of 1-2 powers) — to stalk and eliminate the hero across the city over the course of the chapter, rather than a single set-piece fight. The Hunter carries an encrypted data drive on their person detailing Eclipse Collective operations.",
+        "GOALS FOR THIS CHAPTER: The player must (1) survive and ultimately defeat the Hunter through a running series of ambushes/chases across the city (rooftop pursuit, a sniper standoff, a close-quarters ambush — pick 2-3 escalating encounters rather than one static fight), and (2) recover the Hunter's encrypted data drive once they're defeated.",
+        "GM GUIDANCE: Make the Hunter feel genuinely dangerous and personal — they should know things about the hero's patterns/haunts that suggest real surveillance, and get at least one genuine \"gotcha\" moment (a well-placed ambush, a called shot) before the hero turns the tables, so the eventual win feels earned. Let the chase span multiple mini-encounters rather than resolving in a single roll; each should escalate in danger. The Hunter should be willing to retreat and re-engage rather than dying outright on a single bad exchange, until finally cornered/defeated for good. Chapter is complete once the Hunter is down and the data drive is in hand.",
+        "TONE: Tense cat-and-mouse thriller energy — the hero on the back foot for once, no safe place to breathe."
+      ],
+      "imagePrompt": "A rooftop at night with a large electronic billboard behind a water tower, a bullet hole punched through the water tower with water streaming out, a lone figure ducking behind a vent, city skyline in the background."
+    },
+    {
+      "id": "ecl6",
+      "title": "Secrets of the Observatory",
+      "eyebrow": "Chapter Six — Act II: Escalating Threat",
+      "opening": [
+        "The decrypted files lead to coordinates in the mountains outside the city: an abandoned astronomical observatory, its dome long dark, officially decommissioned decades ago. The Eclipse Collective's real headquarters, hidden in plain sight.",
+        "",
+        "Beneath the observatory's derelict telescope hall, a stairway that shouldn't exist spirals down into rock far older than the building above it — and at the bottom, an archive chamber humming with the same slow pulse as the crystal in your pocket. What do you do?"
+      ],
+      "gmInstructions": [
+        "SETTING: An abandoned mountain observatory serving as the Eclipse Collective's true headquarters, its surface levels a mundane (if heavily guarded) facility, its depths opening into a genuinely ancient stone archive chamber far predating any modern construction. The archive holds the truth: thousands of years ago, an entity called the Void Emperor — a being of total entropy/dark dimensional power — was defeated and imprisoned between dimensions by an ancient order, using seven crystal fragments (of which the hero's recovered crystal is one) as the literal pieces of the prison's seal. The Eclipse Collective's entire operation has been about recovering and reuniting every fragment in order to shatter that seal and free the Void Emperor, believing (correctly, though the hero shouldn't be sure yet whether to trust this) that its return would grant them power beyond imagining.",
+        "GOALS FOR THIS CHAPTER: The player must (1) fight or sneak their way to the archive chamber past the observatory's guards, and (2) learn the true purpose of the Eclipse Project directly from the archive's ancient inscriptions/data — that the crystals are prison-seal fragments, and the Collective intends to break the seal entirely.",
+        "GM GUIDANCE: This chapter is about revelation more than combat — let the guard encounters on the way down be a real but secondary challenge, and give the archive chamber itself real weight and atmosphere (ancient reliefs depicting the original sealing, a countdown of sorts showing how many fragments the Collective already holds — most of them). Deliver the Void Emperor reveal as a genuine gut-punch turn: this was never just about strange technology, it's an ancient, world-ending threat about to be deliberately unleashed. Chapter is complete once the hero has reached the archive and learned this truth.",
+        "TONE: Awe and dread in equal measure — the pulp mystery cracking open into cosmic stakes."
+      ],
+      "imagePrompt": "An abandoned mountain observatory with a dark dome under a starry sky, a derelict telescope hall inside, a stone stairway spiraling down into rock beneath it, faint violet light pulsing from below."
+    },
+    {
+      "id": "ecl7",
+      "title": "Race Against the Eclipse",
+      "eyebrow": "Chapter Seven — Act II: Escalating Threat",
+      "opening": [
+        "The archive is clear on one point: one fragment remains unaccounted for, hidden inside a sealed temple site the Collective has only just located — and their forces are already moving. If you don't reach it first, they'll hold every piece of the prison's seal by nightfall.",
+        "",
+        "The temple's outer gate has already been blasted open by someone else's charges. You're not the first ones here today, and you may not be the only ones here right now. What do you do?"
+      ],
+      "gmInstructions": [
+        "SETTING: A hidden ancient temple (jungle ruin, submerged sea-cave shrine, desert vault — your call to fit tone) holding the seventh and final Eclipse Crystal fragment, riddled with age-old guardian puzzles/traps built to keep the fragment safe, and currently swarming with competing interests: Eclipse Collective soldiers racing to the same prize, and (for flavor and complication) a band of rival treasure hunters/looters who have no idea what they're actually about to unleash and are just here for what they assume is priceless ancient treasure.",
+        "GOALS FOR THIS CHAPTER: The player must (1) navigate the temple's environmental puzzles/hazards to reach the fragment's inner sanctum, contending with both Eclipse soldiers and the rival treasure hunters along the way (the treasure hunters can be fought, evaded, or even briefly allied with against the Collective, at the player's choice), and (2) attempt to claim the final fragment before the Collective does.",
+        "GM GUIDANCE: Let this chapter feel like a proper pulp-adventure set piece — swinging across a chasm, a pressure-plate gauntlet, a collapsing passage — genuinely testing the hero's stats/powers in ways beyond straight combat. However this chapter MUST end with the Collective's elite soldiers (or their leader in person, if you want a personal touch) claiming the fragment anyway, snatching it away at the last possible moment even if the hero played this chapter well — narrate this as a narrow, earned defeat rather than the hero simply failing; make clear the hero fought hard and smart and still lost this one, to raise the stakes into the finale. Chapter is complete once the fragment is lost to the Collective and the hero is left to regroup.",
+        "TONE: High-adventure spectacle curdling into a genuine gut-punch loss — Empire Strikes Back energy."
+      ],
+      "imagePrompt": "The blasted-open stone gate of an ancient temple in the jungle, scorch marks and rubble from fresh explosive charges, thin smoke rising, tracks of boots in the dust leading inside, dim afternoon light."
+    },
+    {
+      "id": "ecl8",
+      "title": "The Dark Awakening",
+      "eyebrow": "Chapter Eight — Act III: World at Risk",
+      "opening": [
+        "The sky over the city goes the color of a healing bruise. Shadow pours upward from the observatory's dome in a column visible for miles, and within minutes it's spreading — deer running the wrong way through downtown streets, streetlights aging to rust in seconds, ordinary people freezing mid-stride as something vast and cold brushes across the world's mind.",
+        "",
+        "Four immense pillars of dark light have risen across the city, humming in time with the crack spreading across the sky itself. What do you do?"
+      ],
+      "gmInstructions": [
+        "SETTING: The Eclipse Collective's ritual to fully shatter the Void Emperor's prison has begun in earnest. Four massive Shadow Conduits — towering, crystal-cored pylons of dark energy, each guarded by a Shadow Titan (a hulking, city-block-scale manifestation of living darkness; Amazing-Monstrous physical stats, slow but devastating blunt/area attacks, treat as a serious set-piece boss-tier threat per conduit) — have risen at four separate points across the city, visibly worsening reality distortion and civilian panic the longer they stand.",
+        "GOALS FOR THIS CHAPTER: The player must destroy all four Shadow Conduits (and by extension face down or drive off their attendant Shadow Titans) before a hard, dramatically-narrated time limit expires, racing across a city now suffering world-scale disaster-level effects (falling debris, mass evacuations, warped terrain) along the way.",
+        "GM GUIDANCE: This is a full world-at-stake set piece — let the scale and danger feel enormous, and don't be afraid to let the hero improvise wildly creative solutions to each Titan/Conduit given their specific powers. Regardless of how well the player does, the ritual should still PARTIALLY succeed by the end of this chapter — the Void Emperor begins to emerge no matter what, though the hero's efforts (conduits destroyed, Titans driven off, lives saved) should clearly have blunted the worst of it and set up the final confrontation on better footing than if they'd done nothing. Chapter is complete once all four conduits are down/disabled, even as the Emperor's emergence begins regardless.",
+        "TONE: Apocalyptic disaster-movie spectacle, all-out action, with an unavoidable dark turn at the very end."
+      ],
+      "imagePrompt": "A city under a bruise-purple sky, four huge pillars of dark violet light rising from different parts of the skyline, a visible crack across the sky, rust-colored streetlights, people standing frozen in the middle of a street."
+    },
+    {
+      "id": "ecl9",
+      "title": "Through the Rift",
+      "eyebrow": "Chapter Nine — Act III: World at Risk",
+      "opening": [
+        "There's no ground here, not really — just the suggestion of it, tilting and reforming under your feet like the dimension itself is still deciding what it wants to be. Colors that shouldn't exist bleed across a sky with no sun. Somewhere in the shifting geometry ahead, four chains of black light hold something enormous, and growing, in place.",
+        "",
+        "The Void Emperor cannot be reached, not truly, while these Chains of Eternity still bind it to this half-formed place. What do you do?"
+      ],
+      "gmInstructions": [
+        "SETTING: The hero has entered the Void Emperor's dimensional prison directly — a surreal, reality-bending pocket dimension where gravity, geometry, and even memory behave unreliably. Four Chains of Eternity, vast bindings of dark energy, currently anchor and limit the Void Emperor's power; each is guarded not by a physical enemy but by a manifestation of one of the hero's own fears or doubts made real and hostile (pull something fitting from the hero's bio/origin/talents for each — e.g. a echo of a loss they've mentioned, a twisted mirror-double, a scenario preying on a stated weakness), giving this chapter a personal, psychological edge alongside the cosmic stakes. The dimension itself is actively collapsing throughout the chapter, adding a ticking escape clock on top of the Chains themselves.",
+        "GOALS FOR THIS CHAPTER: The player must (1) find and destroy all four Chains of Eternity, each requiring the hero to face down and overcome the fear-manifestation guarding it, and (2) escape the collapsing dimension once the last chain falls, before it seals shut with the hero still inside.",
+        "GM GUIDANCE: Lean hard into the surreal, personal-horror tone here — let the fear-manifestations say/reveal things that land emotionally for this specific hero based on their sheet, without being cruel for cruelty's sake; overcoming each one should feel like a genuine character beat, not just another fight. The escape sequence at the end should be a tense, fast-paced set piece in its own right. Chapter is complete once all four chains are destroyed and the hero escapes back to reality.",
+        "TONE: Surreal, introspective, high-tension — Inception-meets-cosmic-horror inside a body-horror dimension, resolving into a triumphant escape."
+      ],
+      "imagePrompt": "A surreal otherworldly landscape of tilted floating stone platforms under a sky with no sun, four chains of black light stretching across the distance holding a huge dark shape in place, strange colors bleeding across the horizon."
+    },
+    {
+      "id": "ecl10",
+      "title": "Eclipse's End",
+      "eyebrow": "Chapter Ten — Finale",
+      "opening": [
+        "The sky over the observatory has torn wide open, a wound of black light spilling stars that don't belong to this universe. At its center, the leader of the Eclipse Collective stands with arms raised, shadow energy pouring into and through them, already more than human and still changing.",
+        "",
+        "\"You were never supposed to get this far,\" they say, voice layered with something vast and patient stirring behind them. \"But it doesn't matter now. He's almost here.\"",
+        "",
+        "This is the last stand. How do you move?"
+      ],
+      "gmInstructions": [
+        "SETTING: The final battle, staged in three phases atop the observatory as the dimensional gateway tears open overhead. PHASE 1: the Eclipse Collective's leader (a named mastermind, now self-empowered with raw shadow energy from the ritual — Incredible-Amazing stats and 2-3 dark-themed powers of your invention) fights the hero directly, intending to buy time for the Emperor's arrival; this phase should end with the leader willingly sacrificing themselves/being consumed to fully complete the Emperor's awakening, regardless of exactly how the fight against them goes (a clear, earned win against the leader specifically, followed by this forced escalation). PHASE 2: the Void Emperor itself emerges — a Shift X-or-higher, reality-warping cosmic threat where the battlefield itself becomes hostile (illusory terrain, gravity reversals, splitting duplicates) — this should be the hardest, most narratively enormous fight of the whole adventure. PHASE 3: once the Emperor is staggered/weakened through the fight, the hero can use the original black crystal (recovered all the way back in Chapter One and carried since) to overload the dimensional gateway, presenting a final in-fiction choice: destroy the gateway forever (sealing the Emperor away/destroying it, decisive and final), trap the Emperor inside the collapsing prison (a contained, uneasy victory, leaving the possibility it could return), or force a narrow personal escape while the gateway collapses on its own (surviving at the cost of a fully clean resolution). Any of the three is a valid, satisfying ending — let the hero choose.",
+        "GOALS FOR THIS CHAPTER: The player must (1) defeat the empowered Eclipse Collective leader in Phase 1, (2) survive and ultimately overcome the Void Emperor in the reality-warping Phase 2 confrontation, and (3) use the black crystal to resolve the gateway in Phase 3 according to whichever ending the player chooses.",
+        "GM GUIDANCE: This is the climax of the entire chronicle — let every established detail from the hero's sheet and the adventure's prior chapters (their powers, their talents, specific beats from earlier chapters, even the fear-manifestations from Chapter Nine) pay off narratively here. Give the Void Emperor phase real cosmic weight and let the environment itself become a hazard/tool. Once Phase 3's choice is made and narrated to a satisfying conclusion, deliver a full epilogue: power returns to the city, the surviving Eclipse Collective members scatter and vanish, the rescued scientists (including Dr. Voss) begin safely studying whatever crystal fragments remain, and the city hails the hero as its protector — but close on a quiet, ominous final image of a single tiny shard of black crystal, hidden in the ruins below, beginning to glow again. Clearly end the story after this epilogue beat. If the player's own next action responds to that final image (e.g. trying to destroy or secure the shard) rather than starting something new, resolve that action in a short concluding beat and then end the story there instead — do not let a player-initiated response to the epilogue's own closing image leave the chapter open indefinitely.",
+        "TONE: Maximum cinematic stakes — triumphant, cosmic, a little haunting at the very last line, leaving a door open for a future chronicle."
+      ],
+      "imagePrompt": "A torn, glowing black rift in the night sky above a mountain observatory, a robed figure standing at its center with arms raised while streams of shadow energy flow into them, stars visible inside the rift."
+    }
+  ]
+}

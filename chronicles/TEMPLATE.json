@@ -1,0 +1,28 @@
+{
+  "id": "my_adventure",
+  "title": "My Adventure",
+  "tagline": "A Superhero Chronicle",
+  "blurb": "Two or three sentences shown on the adventure card. No spoilers.",
+  "chapters": [
+    {
+      "id": "ma1",
+      "title": "Chapter title",
+      "eyebrow": "Chapter One",
+      "opening": [
+        "First paragraph the player reads when the chapter begins.",
+        "",
+        "Second paragraph. Each array item is one line; an empty string makes a blank line."
+      ],
+      "gmInstructions": [
+        "SETTING: Where and when this chapter happens, who is present, what the player can see.",
+        "",
+        "GOALS FOR THIS CHAPTER: What must happen before the chapter can end.",
+        "",
+        "GM GUIDANCE: Twists, NPC behavior, how to react to likely player choices.",
+        "",
+        "TONE: The mood to aim for."
+      ],
+      "imagePrompt": "Purely visual description of the scene used if no image file exists for this chapter."
+    }
+  ]
+}

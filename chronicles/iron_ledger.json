@@ -1,0 +1,179 @@
+{
+  "id": "iron_ledger",
+  "title": "Iron Ledger",
+  "tagline": "A Superhero Chronicle — 10 Chapters",
+  "blurb": "A string of suspicious fires, a criminal family laundering money through the neighborhoods it claims to serve, and a scheme that puts entire apartment buildings full of families in the crosshairs for an insurance payday.",
+  "chapters": [
+    {
+      "id": "il1",
+      "title": "Working the Scene",
+      "eyebrow": "Chapter One",
+      "opening": [
+        "A three-alarm fire has gutted a check-cashing storefront on a block in Sunset Park, Brooklyn, in the middle of a Tuesday afternoon. Nobody died, but the tenants living above the shop lost everything, and the FDNY marshal on scene is muttering about the burn pattern being \"too clean.\" A block over, a nervous-looking man in a windbreaker is photographing the wreckage from his car — not for the news.",
+        "",
+        "You caught the tail end of the blaze and helped where you could. What do you do now that the smoke's clearing?"
+      ],
+      "gmInstructions": [
+        "SETTING: A deliberately-set fire at a small check-cashing storefront (with residential apartments above) in Sunset Park, Brooklyn — the first of what will turn out to be a string of arsons hitting small, struggling NYC financial storefronts (check-cashers, small credit unions, pawn shops). This is street-level organized crime, not a world-ending threat. A man in a windbreaker is present, photographing the damage — he is a low-level associate of the Corvetti crime family, present to document the loss for an insurance claim (he should be startled/cagey if approached, and will lie badly or flee rather than fight).",
+        "GOALS FOR THIS CHAPTER: The player should (1) help with the immediate aftermath (checking for trapped tenants, aiding the injured, or working with first responders — reflecting their powers and stats), and (2) notice or investigate something that doesn't add up: either the \"too clean\" burn pattern (an accelerant used with unusual precision, suggesting professionals, not vandals) or the windbreaker man's suspicious behavior, which if pursued yields a torn insurance-claim photo or a business card for \"Corvetti Realty Holdings LLC.\"",
+        "GM GUIDANCE: Adjudicate rescue/aid actions honestly using the hero's stats and powers. The windbreaker man is skittish, not dangerous — he'll bolt on foot or bluff weakly if confronted, and if caught or persuaded he'll only give up the smallest thread (the LLC name) before clamming up entirely, since he's more scared of his bosses than of a hero. Let the player also find the clue through investigation of the fire scene itself if they don't chase him. Chapter is complete once the hero has both handled the human cost of the scene AND has a concrete lead: the name \"Corvetti Realty Holdings LLC.\"",
+        "TONE: Grounded, street-level, a little grim underneath the heroics — this is a neighborhood tragedy, not a spectacle."
+      ],
+      "imagePrompt": "A burned-out check-cashing storefront in a Brooklyn street on a gray afternoon, blackened windows and scorched brick, fire marshal in a white helmet examining the wall, firefighters coiling hoses, a man in a windbreaker photographing the wreckage from a parked car down the block."
+    },
+    {
+      "id": "il2",
+      "title": "Paper Trail",
+      "eyebrow": "Chapter Two",
+      "opening": [
+        "Corvetti Realty Holdings LLC turns out to be one of a tangle of shell companies, all filed from the same shabby storefront law office in Bensonhurst. Public records only get you so far — whoever set this up knew how to bury the trail. If you want to know who's really behind it, you'll need someone who knows how the city's underworld actually keeps its books.",
+        "",
+        "Frankie Vega might know something. How do you approach him?"
+      ],
+      "gmInstructions": [
+        "SETTING: The hero is digging into Corvetti Realty Holdings LLC and hits a wall of shell-company paperwork designed to obscure real ownership. This chapter is about the hero reaching out to their contact Frankie Vega for the first time in this adventure.",
+        "GOALS FOR THIS CHAPTER: The player must contact and get information out of Frankie Vega. Remember Vega's characterization: he is a criminal underworld informant who helps just enough to keep himself out of prison, and he never fully trusts the hero — he'll want something in return (cash, a favor, the hero looking the other way on something small and non-lethal he's involved in) or will simply drag his feet and act cagey before giving up real information. He should NOT be an easy, friendly source — make the hero work for it a little, through negotiation, leverage, or a small favor, and have Vega hedge his information (\"I'm not saying it's them, I'm saying I heard a name\"). Once properly engaged, Vega reveals that Corvetti Realty Holdings LLC is tied to the Corvetti family, a mid-tier organized crime outfit that's been quietly buying up struggling check-cashers, pawn shops, and small credit unions across the outer boroughs — and that word on the street is they're setting fires to \"some of their own places\" for reasons nobody low-level understands yet.",
+        "GM GUIDANCE: Let the player attempt the FEAT/roleplay of finding and pressuring or persuading Vega however suits their hero (Reason/Intuition to track him down, Psyche/Intuition or Fighting Ability to lean on him if that fits the hero's style, or a straightforward negotiation). If the player fumbles the approach, Vega can still be reached but is colder and more grudging — don't dead-end the plot on a bad roll. Chapter is complete once the player has confirmed the Corvetti family's involvement and heard about the pattern of fires at their own recently-acquired properties.",
+        "TONE: Noir informant energy — transactional, wary, a little sleazy, with Vega always working an angle of his own."
+      ],
+      "imagePrompt": "A shabby storefront law office on a Brooklyn street at dusk, faded sign and venetian blinds in the window, stacks of paper files visible inside, a man in a trench coat leaning in a doorway across the street."
+    },
+    {
+      "id": "il3",
+      "title": "The Acquisitions",
+      "eyebrow": "Chapter Three",
+      "opening": [
+        "Vega's tip checks out fast: in the last eight months, Corvetti-linked shells have bought no fewer than six small check-cashers and credit unions across Brooklyn and Queens, always for cash, always just above market rate, always from owners who were behind on payments to someone. Two of those six have already burned. A third — a cramped credit union office in Bushwick — is still open for business, tenants living above it same as before.",
+        "",
+        "If the pattern holds, this place could be next. What's your move?"
+      ],
+      "gmInstructions": [
+        "SETTING: The hero has identified a pattern — the Corvetti family has been buying up small, struggling financial storefronts, two of which have already burned. A third location, a small credit union in Bushwick with residential tenants above it (mirroring Chapter One), is a plausible next target.",
+        "GOALS FOR THIS CHAPTER: The player must (1) decide how to respond to the pattern — stake out the Bushwick location, warn the tenants/owner, or investigate further to confirm intent — and (2) either witness or narrowly prevent an arson attempt in progress, encountering a pair of Corvetti arson-crew enforcers (Typical-Good fighting/agility, armed with incendiary devices, more interested in escaping than a prolonged fight) who flee if the hero intervenes, dropping a burner phone or delivery manifest that references a coded meeting location: \"the Ledger drop, Thursday.\"",
+        "GM GUIDANCE: If the player stakes out the location, let them catch the arson crew in the act for a tense but non-lethal confrontation — the crew are low-level muscle, not masterminds, and should be beatable but not trivial (give them a getaway vehicle or a smoke/incendiary distraction to use as an escape tool even if the hero wins the fight, so at least one flees if outright captured feels too easy). If the player instead warns the tenants/owner directly, the arson attempt gets called off/delayed and the hero instead finds evidence of the planned attempt (timer device, accelerant canisters) left behind in a hasty abandonment. Either path should end with the hero having the \"Ledger drop, Thursday\" clue. Chapter complete once that clue is in hand and the immediate site is safe.",
+        "TONE: Tense stakeout-to-action escalation; a real sense that the hero is racing the clock for ordinary people's lives and homes."
+      ],
+      "imagePrompt": "A cramped credit union office on a Bushwick street corner, apartment windows above it with laundry on a fire escape, a dark sedan parked across the street with two men watching the entrance."
+    },
+    {
+      "id": "il4",
+      "title": "The Ledger Drop",
+      "eyebrow": "Chapter Four",
+      "opening": [
+        "\"The Ledger drop\" turns out to be exactly what it sounds like — a physical accounting handoff, low-tech on purpose so it can't be hacked or wiretapped. Thursday night, a nondescript panel van is scheduled to meet a courier behind a shuttered bowling alley in Maspeth, Queens. Whatever's in that ledger, it's important enough that the Corvettis are still doing it the old-fashioned way.",
+        "",
+        "You have a location and a time. How do you play it?"
+      ],
+      "gmInstructions": [
+        "SETTING: A physical handoff of a paper ledger between Corvetti associates behind a shuttered bowling alley in Maspeth, Queens — deliberately low-tech to avoid digital traces. This is a stakeout/infiltration/interception chapter.",
+        "GOALS FOR THIS CHAPTER: The player must get their hands on the ledger (or photograph/memorize its critical contents) by infiltrating, intercepting, or otherwise disrupting the handoff, dealing with 2-4 Corvetti guards/couriers (Typical-Good stats, armed with pistols/blunt weapons, willing to fight to protect the ledger but under orders not to escalate to killing given how much heat a dead vigilante-fight would bring). The ledger reveals the real scheme in coded shorthand: the Corvetti family, through their shell companies, has been fraudulently over-insuring the properties they acquire, then burning the ones with the highest payout-to-value ratio — and the pattern shows they deliberately favor properties with occupied residential units above, because a \"verified structural loss including displaced tenants\" triggers a much larger city disaster-relief insurance payout under a specific municipal program.",
+        "GOALS (continued): unmasking this detail — that they are choosing occupied buildings on purpose to maximize a fraudulent payout, endangering tenants for money — should land as a real gut-punch escalation for the hero.",
+        "GM GUIDANCE: Let the player's approach (stealth, force, misdirection, talking their way in) shape how this plays out; reward cleverness, let failure escalate to a fight rather than dead-end the plot. The ledger's true meaning doesn't have to be spelled out instantly — a receptive player might need a beat of piecing it together, or a hacker/researcher-type ally/contact could help decode the shorthand. Chapter complete once the hero has the ledger (or its key contents) and understands the scheme targets occupied buildings on purpose.",
+        "TONE: Tense infiltration/heist energy tipping into real anger once the scheme's cruelty becomes clear."
+      ],
+      "imagePrompt": "The rear lot behind a shuttered bowling alley in Queens at night, an unmarked panel van parked under a flickering sodium light, a man handing a thick accounting ledger to a courier by the open van door."
+    },
+    {
+      "id": "il5",
+      "title": "Names in the Margins",
+      "eyebrow": "Chapter Five",
+      "opening": [
+        "The ledger's shorthand names a \"Sal,\" a \"the Accountant,\" and a location scrawled in the margin: a floor of an unremarkable Ridgewood office building marked only \"R.F. Group.\" Whoever's really running this isn't the muscle you've been meeting — this is somebody who thinks in spreadsheets, not fists.",
+        "",
+        "Vega might know who \"the Accountant\" is, if you can get him to talk again. What's your approach?"
+      ],
+      "gmInstructions": [
+        "SETTING: The hero needs to identify who \"the Accountant\" is — the financial mastermind behind the insurance-fraud scheme, working out of a legitimate-looking office (\"R.F. Group\") in Ridgewood, Queens. This chapter is the hero's second engagement with Frankie Vega.",
+        "GOALS FOR THIS CHAPTER: The player must return to Frankie Vega for more information. Keep Vega true to form: he's warier this time, since the hero is clearly digging into something that could get dangerous for him too, and he'll only help if there's something in it for him or if the hero leans on their existing relationship/leverage — he still never fully trusts the hero and may lie about a small detail or withhold something petty even while being genuinely useful on the big picture. Vega reveals that \"the Accountant\" is Raymond Fiore, a mid-level Corvetti financial fixer who fronts the scheme through \"R.F. Group\" and has personally structured the insurance fraud — and that Fiore is smart enough to have an exit plan if things go sideways, so time may matter.",
+        "GM GUIDANCE: As before, make the player work for the information through roleplay/negotiation/leverage rather than handing it over for free; if the approach goes poorly, Vega still eventually gives up the name but colder and with an extra jab about the hero owing him now. Chapter complete once the hero has Raymond Fiore's name and the R.F. Group office location.",
+        "TONE: Return-visit informant energy — familiar but still transactional, with an undercurrent that Vega is nervous about how big this is getting."
+      ],
+      "imagePrompt": "A plain office building in Ridgewood, Queens at dusk, a lit third floor window, a directory board in the lobby with the letters R.F. Group, a handwritten margin note in a ledger lying open on a car seat."
+    },
+    {
+      "id": "il6",
+      "title": "R.F. Group",
+      "eyebrow": "Chapter Six",
+      "opening": [
+        "R.F. Group occupies a modest, unremarkable third-floor office suite — the kind of place that could be an accounting firm or an insurance broker, and technically is both. Raymond Fiore is exactly the sort of man this scheme demands: quiet, precise, never once raising his voice above a conference-room murmur even while doing something monstrous.",
+        "",
+        "Getting to him means getting past his security and whatever paperwork he can shred or wipe the moment he suspects trouble. How do you approach?"
+      ],
+      "gmInstructions": [
+        "SETTING: An infiltration/confrontation chapter set in Raymond Fiore's (\"the Accountant\") legitimate-looking office, R.F. Group, in Ridgewood, Queens. Fiore has a small private security detail (2-3 guards, Typical-Good stats, more competent and controlled than the arson crew from Chapter Three — trained but still ultimately hired muscle, not superhuman) and is smart enough to try to destroy evidence (shredder, wiped drives) or flee the moment he realizes he's caught.",
+        "GOALS FOR THIS CHAPTER: The player must get to Fiore before he can destroy the evidence tying him and the Corvetti family to the insurance fraud scheme, dealing with his security detail along the way, and either capture him, force a confession, or seize hard evidence (a hard drive, a secondary set of books) directly from his office.",
+        "GM GUIDANCE: Fiore himself is not a fighter — if directly confronted he'll try to talk his way out, offer a bribe, or stall for time while quietly trying to trigger a destruction failsafe (shredder, remote wipe) rather than physically resist; let a clever or fast player stop this in time, and let a slower approach mean some evidence is lost but not all of it (he can't destroy everything). The security guards should present a genuine but beatable challenge. Chapter complete once the hero has either Fiore himself in custody, a confession, or hard evidence in hand — and either way, learns from what's seized or from Fiore under pressure that the family's overall boss — Corvetti family underboss Dominic \"The Ledger\" Corvetti himself — has personally signed off on the next and biggest target: a large occupied apartment building in Corona, Queens, timed to burn within the next 48 hours for the biggest payout yet.",
+        "TONE: Controlled tension escalating into a fight — Fiore's calm, bloodless menace versus the more physical threat of his security detail."
+      ],
+      "imagePrompt": "A quiet third-floor office suite with beige carpet, filing cabinets, a shredder and a glass-walled conference room, a precise-looking man in a gray suit seated alone at a long table with neat stacks of paper and a laptop."
+    },
+    {
+      "id": "il7",
+      "title": "The Clock Is Running",
+      "eyebrow": "Chapter Seven",
+      "opening": [
+        "Forty-eight hours, and the target isn't some struggling storefront — it's the Alden Court Apartments in Corona, Queens, a full occupied residential building, home to dozens of families. Whoever the Corvettis send this time won't be some jumpy crew with a lookout in a windbreaker. This job is too important to get wrong.",
+        "",
+        "You have a deadline and an address. What do you do with the time you have?"
+      ],
+      "gmInstructions": [
+        "SETTING: A ticking-clock chapter where the hero must prepare to protect a large occupied apartment building (Alden Court Apartments, Corona, Queens) from an imminent, high-stakes arson attempt within 48 story-hours. The building itself, and the dozens of tenant families living there, are the stakes — not the world, just real people's homes and lives.",
+        "GOALS FOR THIS CHAPTER: The player should use the time meaningfully — options include (but aren't limited to) alerting the tenants/building management, coordinating with the NYPD or fire department (being careful this doesn't simply resolve the plot for them — authorities can help with evacuation/security presence but won't stop a determined, well-organized professional crew alone), casing the building for the arsonists' likely entry points, or trying to get ahead of the crew via any remaining leads (Fiore's seized files, a description of the arson team from earlier chapters). The chapter should end with the arson crew arriving to make their attempt — a more serious, professional outfit than Chapter Three's (3-4 members, Good-Excellent stats, better equipment, a getaway coordinator) — and the hero having to stop them in the act.",
+        "GM GUIDANCE: Reward preparation — a well-prepared hero should have real advantages going into the confrontation (tenants already evacuated, a chosen ambush point, allies in position) while an unprepared one faces a messier, more dangerous version of the same fight. This crew should be a genuine step up in competence and coordination from earlier henchmen, but is still ultimately professional criminals, not superpowered threats. Chapter complete once the arson attempt at Alden Court is thwarted and the building/tenants are safe.",
+        "TONE: Ticking-clock thriller tension building to a genuinely dangerous action set-piece protecting ordinary people's homes."
+      ],
+      "imagePrompt": "A five-story apartment building in Corona, Queens in the evening, lit windows with families visible, a stairwell door in the side alley, a hero-eye view from the opposite rooftop, ticking clock on a wristwatch in the foreground."
+    },
+    {
+      "id": "il8",
+      "title": "Rats in the Walls",
+      "eyebrow": "Chapter Eight",
+      "opening": [
+        "Stopping the Alden Court job should have been a win — and it is, but it's also made the Corvetti family very aware of exactly who's been dismantling their operation. Dominic \"The Ledger\" Corvetti doesn't like loose ends, and word is he's decided the hero themselves has become one. Someone's been asking around about you — your patrol patterns, your allies, maybe more.",
+        "",
+        "What do you do about being hunted?"
+      ],
+      "gmInstructions": [
+        "SETTING: The tables turn — the Corvetti family, having lost the Alden Court job, now knows the hero has been the one dismantling their operation and has decided to move against the hero directly (surveillance, an ambush attempt, pressure on an ally or contact, or an attempt to intimidate/bribe the hero off the case — GM's choice of which, or a combination). This should feel like real personal stakes without escalating past street level (no world-ending threat, just serious, personal danger from a determined criminal organization).",
+        "GOALS FOR THIS CHAPTER: The player must recognize and deal with the threat against them or their circle — surviving an ambush, protecting a threatened ally/contact (this is a good moment to potentially involve Frankie Vega again, either as a target of pressure himself since his help has become known/suspected, or as a source of a last warning he grudgingly passes along even though it further exposes his own risk), and ultimately turning the tables to learn Dominic Corvetti's location or next move.",
+        "GM GUIDANCE: If Vega is involved, keep him consistent — self-interested, not heroic, giving only what he must to protect himself, but capable of a genuinely useful warning if it also serves his own survival. The confrontation(s) in this chapter should feel personal and dangerous, testing the hero's resourcefulness under pressure rather than being a straightforward brawl. Chapter complete once the hero has weathered the Corvetti family's move against them and has a solid lead on Dominic Corvetti's location — a warehouse office in Long Island City serving as the family's real operational base.",
+        "TONE: Paranoid thriller tension — the hunter becoming the hunted, with real personal risk."
+      ],
+      "imagePrompt": "A dark rooftop at night in New York, a figure in a hero costume looking across to a fire escape where a man in a dark coat is photographing the scene with a long lens, city lights behind."
+    },
+    {
+      "id": "il9",
+      "title": "The Ledger's Endgame",
+      "eyebrow": "Chapter Nine",
+      "opening": [
+        "The warehouse office in Long Island City is where Dominic \"The Ledger\" Corvetti keeps his real books — and where, it turns out, he's scrambling to salvage what's left of the scheme. With Fiore compromised and the Alden Court job blown, Corvetti's decided to cut every loose end at once: burn the evidence, burn one more property for a final desperate payday, and disappear before any of it lands on him personally.",
+        "",
+        "This is the last chance to stop him before he gets away with all of it. How do you move on the warehouse?"
+      ],
+      "gmInstructions": [
+        "SETTING: Dominic Corvetti's real operational base — a warehouse office in Long Island City — where he is in the process of destroying evidence and preparing one final act (either a last desperate arson at a property still in progress, or simply fleeing with what's left of the operation's money and evidence) before the hero can stop him.",
+        "GOALS FOR THIS CHAPTER: The player must infiltrate or storm the warehouse, deal with Corvetti's remaining security (a step up from prior guards — his most loyal and dangerous remaining crew, Good-Excellent stats, still ultimately normal armed criminals, not superhuman), and prevent Corvetti from either escaping entirely or destroying the last of the evidence needed to fully take him down, setting up a direct confrontation with Corvetti himself as this chapter closes into the finale.",
+        "GM GUIDANCE: This is the penultimate chapter — build real tension and let the hero's actions here (evidence secured, security dealt with, Corvetti cornered or chased down) matter for how the finale plays out, but don't let Corvetti actually escape the story here; he should be cornered, trapped, or otherwise forced into a final confrontation, even if he tries to flee. Chapter complete once Corvetti is cornered/confronted directly, ready for the final showdown.",
+        "TONE: High-tension heist-reversal — the villain scrambling, the hero closing in, real urgency."
+      ],
+      "imagePrompt": "A warehouse office in Long Island City at night, a glass-walled office on a mezzanine with a man in an expensive suit pulling ledgers from a safe into a metal drum, orange flames beginning inside the drum, forklifts and pallets below."
+    },
+    {
+      "id": "il10",
+      "title": "Closing the Books",
+      "eyebrow": "Chapter Ten — Finale",
+      "opening": [
+        "Dominic Corvetti doesn't look like much — mid-fifties, expensive suit, soft hands that have never done real work. But cornered, with everything he's built about to collapse, he's got nothing left to lose, and he's not going down without making that count. Somewhere behind him, a fire door propped open leads to a truck loaded with enough accelerant to make sure nobody ever proves a thing.",
+        "",
+        "This is the end of the line. How do you finish it?"
+      ],
+      "gmInstructions": [
+        "SETTING: The final confrontation with Dominic \"The Ledger\" Corvetti at his Long Island City warehouse base. Corvetti himself is not superpowered, but should NOT be a pushover — he is cunning, ruthless, and cornered: give him a small crew of his most loyal remaining muscle (Good-Excellent stats) fighting alongside him, access to genuinely dangerous environmental hazards fitting the setting (the accelerant-loaded truck, stacks of flammable warehouse inventory, a propped-open fire door, tight corridors that limit the hero's options), and a willingness to use hostages, threats to detonate/ignite the accelerant, or dirty fighting tactics rather than a fair fistfight. The fight should be a genuine challenge scaled to the hero's specific powers and stats — a fast/agile hero might have to chase him through the warehouse while dodging environmental hazards, a strong/tough hero might have to physically push through his crew while he tries to escape or ignite the truck, etc. Tune the intensity/threat level so this is a hard-fought, satisfying capstone fight, not a curb-stomp in either direction.",
+        "GOALS FOR THIS CHAPTER: The player must defeat or capture Dominic Corvetti and his remaining crew, and prevent the warehouse arson/accelerant threat from harming the hero, any hostages present, or the surrounding neighborhood.",
+        "GM GUIDANCE: Let Corvetti talk during the fight — self-justifying, bitter, maybe even offering a genuine bribe or a plea mid-fight as things turn against him, since he's a businessman at heart even now. Once he's defeated/captured and the fire threat is neutralized, deliver a satisfying epilogue: Corvetti and what's left of his organization go down hard thanks to the evidence trail the hero built (Fiore, the ledger, the seized books), the Alden Court tenants and the other affected families get to stay in their homes, the neighborhood breathes easier — and give a small, character-appropriate final beat with Frankie Vega, true to his nature: he's not thanking the hero for saving the day, he's making sure his own name never surfaces in any of it, and maybe grudgingly admits the hero did all right this time, before vanishing back into the city he actually trusts more than any hero. Clearly end the story after this epilogue beat.",
+        "TONE: Grounded, hard-fought street-level finale — personal, consequential, and satisfying without ever tipping into cosmic or world-ending stakes."
+      ],
+      "imagePrompt": "A loading dock behind a warehouse at night, a propped-open fire door spilling yellow light, a truck loaded with red fuel drums behind it, a heavyset man in an expensive suit standing in the doorway with his hands raised, smoke in the air."
+    }
+  ]
+}

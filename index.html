@@ -810,336 +810,74 @@ function tierMeetsRequirement(color, requiredTier){
   return order[color] >= order[requiredTier];
 }
 
-const CHAPTERS_MERIDIAN = [
-  {
-    id: 'ch1',
-    title: 'Ashfall Heights',
-    eyebrow: 'Chapter One',
-    opening: `Midnight, Meridian City. The Ashfall Heights apartment block is burning on the eleventh floor, and the fire department's radios have gone dead the moment they got within two blocks — swallowed by a low electronic hum nobody can place. Tenants are pouring into the street. Somewhere above, a window shatters and a shape moves against the flame that isn't smoke.
+/* ---------- Adventure library ----------
+   Adventures are NOT written in this file. Each one is a single JSON file in
+   the chronicles/ folder, listed in chronicles/index.json. To add an adventure,
+   drop in a new file and add its name to index.json (see chronicles/README.md). */
+let ADVENTURES = [];
+const CHAPTER_IMAGE_PROMPTS = {};
+const ADVENTURE_WARNINGS = [];
 
-What do you do?`,
-    gmInstructions: `SETTING: A burning apartment building, Ashfall Heights, in Meridian City. A jamming signal is killing radios and phones within two blocks — this is a clue that something technological, not natural, is involved (a hidden device planted by the "Cinder Syndicate," a black-market group that deals in stolen tech and controlled arson-for-hire, though the player should NOT be told this name yet).
-GOALS FOR THIS CHAPTER: The player should (1) help evacuate/rescue at least some civilians in a way that reflects their powers and stats, and (2) discover, through investigation or coincidence, a small scorched device (a signal jammer) hidden near the fire's origin point — a clue that this was arson, not accident.
-GM GUIDANCE: Adjudicate the player's stated plan honestly using their Strength/Agility/Intellect/Willpower and stated powers — reward clever, in-character plans, and let poor plans have real but survivable complications (smoke inhalation, a collapsing floor, a rescued civilian panicking). Do not railroad; if the player wants to try something unconventional, let them, and narrate a fair outcome. Introduce a moment of genuine tension (a trapped child, an elderly resident who won't leave without a pet, a support beam giving way) to make the choices matter. Once civilians are safe AND the device has been found or clearly implied to be found, the chapter is complete. If finding the device happens to surface a NEW person still in danger (someone pounding on a locked door, trapped behind debris, etc.), that person must actually be freed and safe before the chapter can end — do not close the chapter on a beat that leaves anyone confirmed still trapped or in danger.
-TONE: Pulpy, cinematic, a little wry, but treat danger and civilians with real weight.`,
-  },
-  {
-    id: 'ch2',
-    title: "The Broker's Ledger",
-    eyebrow: 'Chapter Two',
-    opening: `The device from Ashfall Heights bears a maker's mark: a stylized ember inside a broken ring. A contact (a fence, a cop, a hacker — your call) tells you that mark belongs to the Cinder Syndicate, a crew that's recently been burning down buildings across the city for a client no one will name — and that they're auctioning off "one more job" tonight in the old grain exchange on the docks.
-
-You have a way in. What's your play?`,
-    gmInstructions: `SETTING: The player is investigating the Cinder Syndicate, tracked from the device found in Chapter One, culminating in infiltrating a black-market auction at an old grain exchange on the docks where the Syndicate is selling information about their next arson target to the highest bidder.
-GOALS FOR THIS CHAPTER: The player must (1) get into the auction (via stealth, disguise, force, guile, or their own invented method — honor their approach), and (2) learn the identity or location of the Syndicate's leader, a figure known as "Warden Ash," and their next target: the Meridian City power authority's central relay tower.
-GM GUIDANCE: Populate the scene with a handful of memorable, morally-grey NPCs (a nervous fence, a rival buyer, corrupt security). Let the player's stats and powers meaningfully shape how the infiltration goes — Agility/Intellect heavy characters should find stealth/deception easier, Strength/Willpower heavy characters may prefer confrontation, and either can work. If they're detected, escalate to a tense chase or standoff rather than an instant failure. Gently steer discovery of Warden Ash and the relay tower target even if the player's specific method fails, via an alternate clue (a dropped ledger, an overheard name, a captured henchman) — don't let a single bad roll dead-end the story. Chapter is complete once the player knows the Syndicate's leader is called Warden Ash and that the target is the relay tower.
-TONE: Noir-tinged heist energy — tension, banter, a sense that everyone here has an angle.`,
-  },
-  {
-    id: 'ch3',
-    title: 'Meridian Skyline Showdown',
-    eyebrow: 'Chapter Three — Finale',
-    opening: `The central relay tower rises over Meridian City like a lit match. At its base, Cinder Syndicate crews are wiring the substation to blow — not to destroy it, you realize with a chill, but to black out the entire city grid at once, covering something far bigger than arson. Atop the scaffolding, a figure in a cracked ceramic mask watches you arrive: Warden Ash.
-
-"You put out one fire," the voice through the mask says, almost admiring. "Let's see how you do with the whole city."
-
-This is it. How do you move?`,
-    gmInstructions: `SETTING: Final confrontation at Meridian City's central relay tower. Warden Ash, the Cinder Syndicate's masked leader, intends to trigger a citywide blackout as cover for a much larger heist elsewhere in the city (leave the "larger heist" vague/ominous — a hook for a sequel, not something to resolve here). Ash has a small crew of armed lieutenants and remote-detonation charges on the substation.
-GOALS FOR THIS CHAPTER: The player must (1) confront and overcome Warden Ash (physically, tactically, or through clever use of their powers/stats — combat is not required to "win," clever de-escalation or outmaneuvering counts), and (2) disarm or otherwise neutralize the charges before the blackout is triggered, OR make a compelling in-fiction case for an alternate resolution (e.g., convincing a lieutenant to turn, using the environment).
-GM GUIDANCE: This is the climax — raise the stakes, let the hero's established stats/powers/bio pay off narratively (reference specifics from their sheet). Warden Ash should get one genuine complication or twist in response to the player's first move (reveals a hostage, triggers a partial arm sequence, taunts about the player's specific weakness) before the player can close it out, so the ending feels earned rather than instant. Once the immediate crisis (Ash dealt with, charges stopped) is resolved, deliver a satisfying wrap-up epilogue paragraph and clearly end the story.
-TONE: Big, cinematic, a little triumphant, with a final beat that leaves a door open for "next time."`,
+function joinLines(v){ return Array.isArray(v) ? v.join('\n') : String(v == null ? '' : v); }
+function validateAdventure(doc, fileName){
+  const bad = m => { throw new Error(fileName + ': ' + m); };
+  if(!doc || typeof doc !== 'object') bad('not a valid adventure file');
+  for(const k of ['id','title','tagline','blurb']) if(typeof doc[k] !== 'string' || !doc[k].trim()) bad('missing "' + k + '"');
+  if(!/^[a-z0-9_]+$/.test(doc.id)) bad('id "' + doc.id + '" must use only lowercase letters, numbers and underscores');
+  if(!Array.isArray(doc.chapters) || !doc.chapters.length) bad('needs at least one chapter');
+  const seen = new Set();
+  doc.chapters.forEach((ch, i) => {
+    const n = 'chapter ' + (i + 1);
+    for(const k of ['id','title','eyebrow']) if(typeof ch[k] !== 'string' || !ch[k].trim()) bad(n + ' is missing "' + k + '"');
+    if(!/^[a-z0-9_]+$/.test(ch.id)) bad(n + ' id "' + ch.id + '" must use only lowercase letters, numbers and underscores');
+    if(seen.has(ch.id)) bad('duplicate chapter id "' + ch.id + '"');
+    seen.add(ch.id);
+    if(!joinLines(ch.opening).trim()) bad(n + ' is missing "opening"');
+    if(!joinLines(ch.gmInstructions).trim()) bad(n + ' is missing "gmInstructions"');
+  });
+  return {
+    id: doc.id, title: doc.title, tagline: doc.tagline, blurb: doc.blurb,
+    chapters: doc.chapters.map(ch => ({
+      id: ch.id, title: ch.title, eyebrow: ch.eyebrow,
+      opening: joinLines(ch.opening), gmInstructions: joinLines(ch.gmInstructions),
+      imagePrompt: ch.imagePrompt ? String(ch.imagePrompt) : ''
+    }))
+  };
+}
+async function fetchJson(url){
+  const r = await fetch(url, {cache: 'no-cache'});
+  if(!r.ok) throw new Error('HTTP ' + r.status + ' for ' + url);
+  return r.json();
+}
+async function loadAdventures(){
+  const manifest = await fetchJson('chronicles/index.json');
+  const files = Array.isArray(manifest && manifest.adventures) ? manifest.adventures : [];
+  const loaded = [];
+  ADVENTURE_WARNINGS.length = 0;
+  for(const f of files){
+    try{
+      const adv = validateAdventure(await fetchJson('chronicles/' + f), f);
+      if(loaded.some(x => x.id === adv.id)) throw new Error(f + ': adventure id "' + adv.id + '" is already used by another file');
+      loaded.push(adv);
+    }catch(e){
+      ADVENTURE_WARNINGS.push(e.message);
+      console.warn('Adventure skipped:', e.message);
+    }
   }
-];
-
-
-/* ---------- Third adventure: "Shadows of the Eclipse" ----------
-   A longer, ten-chapter arc: a mystery blackout escalates into an
-   organization hunting reality-warping crystals, then into a
-   dimension-spanning threat and a final battle to keep an ancient,
-   imprisoned entity from breaking free. Chapters are grouped into
-   three acts for pacing/progress-display purposes, reflected directly
-   in each chapter's `eyebrow` string (e.g. "Chapter Four — Act II:
-   Escalating Threat"), but are otherwise structured exactly like the
-   other adventures' chapter objects. */
-const CHAPTERS_ECLIPSE = [
-  {
-    id: 'ecl1',
-    title: 'The Silent Blackout',
-    eyebrow: 'Chapter One — Act I: The Mystery',
-    opening: `It happens in an instant: six square blocks of the city go dark at once. Cars stall mid-intersection. Phones die in pockets. Electronic locks disengage with a chorus of soft clicks, and somewhere nearby an alarm that should be screaming simply isn't. Witnesses on the street swear they saw a thread of black lightning leap from rooftop to rooftop just before the lights failed — gone too fast to be sure they saw it at all.
-
-The city will call it a grid failure by morning. You already know better. What do you do?`,
-    gmInstructions: `SETTING: A sudden, total blackout across several city blocks, caused not by any ordinary grid failure but by an act of deliberate sabotage/theft involving strange technology. Witnesses report "black lightning" — actually the signature of an unknown crystalline energy source being moved/activated nearby. In the blacked-out zone, small drifting patches of living shadow-energy called Shades (mindless, hostile, non-verbal constructs of pure dark energy — think living smoke with claws, roughly Good-to-Excellent physical stats, no weapons, attacks are shadow-tendril swipes) have begun manifesting and menacing trapped civilians. At the epicenter of the blackout, mostly buried in rubble from a small transformer explosion, is a fist-sized black crystal, faintly warm and pulsing with a slow inner light — the actual object whoever caused this blackout was testing/retrieving and dropped or hasn't yet recovered.
-GOALS FOR THIS CHAPTER: The player must (1) help civilians trapped or endangered by the blackout and the Shades (a stalled elevator, a fire started by the transformer explosion, people cut off from exits by drifting Shades) in a way that reflects their stats and powers, and (2) locate and recover the black crystal before whoever dropped it comes back for it.
-GM GUIDANCE: Open with chaos and confusion rather than a clear villain to punch — this is a mystery chapter, and the Shades should feel eerie and alien rather than a straightforward mob of mooks (they don't speak, don't seem to loot or plan, and dissipate into smoke rather than dying normally when defeated). Let the player's powers and stats meaningfully shape how the rescues go. Seed at least one small detail that doesn't add up yet (a scorched handprint too large to be human, a hooded figure glimpsed retreating down an alley just as the hero arrives, a Shade that flinches away from the crystal rather than toward it) as a loose thread for later chapters — don't explain it. Chapter is complete once civilians are safe and the hero has the black crystal in hand.
-TONE: Tense, atmospheric, mystery-forward — the sense that something has gone quietly, deeply wrong beneath an ordinary night.`,
-  },
-  {
-    id: 'ecl2',
-    title: 'Ghosts in the Machine',
-    eyebrow: 'Chapter Two — Act I: The Mystery',
-    opening: `ORACLE made the call before you'd even left the blackout zone: Victor Cross knows a physicist who's handled strange-materials cases for the agency before, someone he trusts to keep her mouth shut and her lab off the books. Three sleepless days later, Dr. Amara Voss is turning the crystal under a desk lamp when you arrive, its light pulsing slow as a heartbeat. "It isn't drawing energy from anywhere I can find," she tells you. "It's radiating something that isn't on any spectrum I know how to measure. Whoever made this wasn't building a battery. They were building a key."
-
-Her phone buzzes — a security alert from downstairs. Someone else wants this crystal, and they seem to already know exactly where to find it. What do you do?`,
-    gmInstructions: `SETTING: A university physics lab (or comparable small research facility) belonging to Dr. Amara Voss, a genuine and sympathetic scientist NPC referred to the hero by ORACLE/Victor Cross as a trusted contact for analyzing anomalous materials — this is their first meeting, but she already knows why the hero is there and has been analyzing the crystal from Chapter One for three days. Her preliminary findings: the crystal's energy signature doesn't match anything known, and it seems to be "unlocking" or resonating with something rather than simply storing power. Mid-analysis, the lab comes under attack — first a reconnaissance drone probing the perimeter, then (if the drone isn't dealt with quietly) a strike team of well-equipped mercenaries in matching dark tactical gear with a stylized eclipsed-sun emblem, sent to seize the crystal and silence anyone who's studied it. These mercenaries are professionals (Good-Excellent combat stats, armed with rifles/submachine guns per the standard weapon table) but not supers — they retreat or surrender if clearly overwhelmed rather than fighting to the death.
-GOALS FOR THIS CHAPTER: The player must (1) protect Dr. Voss and the lab from the attack, and (2) walk away knowing the name of the organization behind it — either by capturing/interrogating a mercenary, recovering an insignia/badge/tablet with their org name on it, or piecing it together from Dr. Voss's own research contacts. That organization is the Eclipse Collective, a secretive, well-funded group whose goals are still unclear at this point beyond "they want every one of these crystals, and they'll kill to keep their research quiet."
-GM GUIDANCE: Play up the "someone is watching" tension — the mercenaries arrive with unnerving precision, as if they knew the crystal's exact location and Dr. Voss's schedule, which should read as ominous rather than be explained yet. Let the player's approach (stealthy interception, open confrontation, protecting Voss first vs. going on the offensive) matter and shape how the fight unfolds. Dr. Voss is not a fighter and should be an active concern during the scene — a smart player protecting her should be rewarded narratively. Chapter is complete once the immediate attack is repelled/resolved and the player has learned the Eclipse Collective's name.
-TONE: Escalating dread — a quiet, cerebral scene curdling fast into a home invasion by very capable, very calm professionals.`,
-  },
-  {
-    id: 'ecl3',
-    title: 'Into the Underground',
-    eyebrow: 'Chapter Three — Act I: The Mystery',
-    opening: `A captured mercenary's confiscated tablet holds one useful thing: a set of transit maps for subway tunnels that were sealed and abandoned decades ago, annotated in a clipped shorthand that reads like a supply schedule. Someone has been quietly moving people and equipment through the old Meridian Ave. line for months.
-
-The access hatch groans open onto a service ladder disappearing into the dark, stale air rising to meet you, carrying the faint copper smell of old blood. What do you do?`,
-    gmInstructions: `SETTING: A converted stretch of abandoned subway tunnels, now a hidden Eclipse Collective research facility studying/experimenting on the crystals — and on people. Deep inside, the hero will find evidence of "crystal exposure" experiments performed on abducted test subjects, most of whom are gone, transformed, or worse. A handful of surviving prisoners, frightened but alive, are held in a holding block partway through the facility. Security includes patrolling guards (trained-tier mercenaries) and automated systems (motion sensors, a sealable blast door, drone turrets) appropriate to a black-site lab. The facility's mini-boss is Project Revenant — a former test subject warped by prolonged crystal exposure into something part-human, part-living-shadow (Remarkable-Incredible physical stats, a shadow-based melee/reach power, and an unsettling tendency to briefly regenerate from apparent defeats before finally going down for good), unstable and violently hostile to anyone who approaches its containment cell/chamber.
-GOALS FOR THIS CHAPTER: The player must (1) make their way through the facility (via stealth, force, hacking, or any approach that suits their sheet) to the prisoner holding block and free the surviving captives, and (2) defeat or otherwise neutralize Project Revenant, who blocks the only way out (or the only way to the prisoners, at the GM's framing).
-GM GUIDANCE: Give this chapter a slow-burn horror-adjacent tension — flickering emergency lighting, half-finished experiment logs, a chamber of failed containment tubes — building toward Revenant as a genuine mini-boss fight (tougher and more dangerous than the mercenaries, with a startling "getting back up" beat once during the fight to sell the stakes before it can finally be put down). Let clever, non-lethal approaches to freeing prisoners or bypassing security be rewarded, not just combat. Chapter is complete once the prisoners are freed and Revenant is dealt with.
-TONE: Claustrophobic, unsettling, techno-horror creeping into pulp-adventure — the Collective's first real monster.`,
-  },
-  {
-    id: 'ecl4',
-    title: 'The Broken Sky',
-    eyebrow: 'Chapter Four — Act II: Escalating Threat',
-    opening: `The freed prisoners are barely out of the tunnels when the sky itself seems to stutter. Streetlights flicker violet. For one heartbeat, the office tower three blocks over simply isn't there — then it is again, and everyone on the sidewalk who saw it go is staring up in silence. Gravity hiccups underfoot like a dropped elevator.
-
-The news is calling it "atmospheric anomalies." Dr. Voss, ashen over the phone, calls it something else: the barrier between this world and somewhere else is coming apart, and it's happening at three locations across the city at once. What do you do?`,
-    gmInstructions: `SETTING: City-wide reality distortions have begun — purple lightning, patches of altered/failing gravity, buildings and blocks briefly winking out of existence — all radiating from three physical "dimensional anchors" the Eclipse Collective has planted at separate city locations (pick three evocative sites: a bridge, a stadium, a subway interchange, a rooftop water tower district — whatever suits the city as established). Each anchor is a crystal-powered device warping local reality outward from itself, guarded by a mix of mercenaries and small dimensional-hazard manifestations (disorienting gravity wells, brief tears that spit out disoriented, snarling shadow-creatures). If left long enough, the anomalies compound and threaten to consume entire blocks.
-GOALS FOR THIS CHAPTER: The player must (1) reach and destroy all three dimensional anchors before the compounding instability becomes irreversible, racing the clock across the city, and (2) rescue civilians caught in each anomaly zone along the way (someone stuck in a gravity-reversed stairwell, a bus half-swallowed by a flickering rift, and similar).
-GM GUIDANCE: Play this as a race-against-time, three-part chapter — narrate a real sense of urgency and give each anchor site its own flavor of environmental hazard so the pacing doesn't feel repetitive (one might favor Agility/mobility, one Strength/brute force, one Reason/Intuition to actually figure out how to safely disable rather than blow it up). Let a genuinely clever solution at any anchor go faster/cleaner than a purely destructive one, without punishing force-based heroes either. Chapter is complete once all three anchors are down and the immediate anomalies have stopped.
-TONE: Big disaster-movie energy, high stakes, whole-city scale, tinged with the same wrongness established since Chapter One.`,
-  },
-  {
-    id: 'ecl5',
-    title: 'Hunter and Hunted',
-    eyebrow: 'Chapter Five — Act II: Escalating Threat',
-    opening: `For the first time since this began, the Eclipse Collective isn't running from you. A message arrives — scrawled on a billboard's electronic display in your own city, visible only to you for the ten seconds it takes to read: WE KNOW WHO YOU ARE. THE HUNTER IS COMING.
-
-That night, a bullet meant for your head instead punches through the water tower behind you. What do you do?`,
-    gmInstructions: `SETTING: The Eclipse Collective has identified the hero as their single remaining obstacle and dispatched a dedicated, highly capable Hunter — a named individual assassin (Remarkable-Incredible combat stats, expert marksman with a signature high-tech rifle plus a close-range power or gadget of your invention fitting a "hunter" theme — a cloaking field, tracking darts, a grapple-line rig — treat as a "super" tier enemy with a small kit of 1-2 powers) — to stalk and eliminate the hero across the city over the course of the chapter, rather than a single set-piece fight. The Hunter carries an encrypted data drive on their person detailing Eclipse Collective operations.
-GOALS FOR THIS CHAPTER: The player must (1) survive and ultimately defeat the Hunter through a running series of ambushes/chases across the city (rooftop pursuit, a sniper standoff, a close-quarters ambush — pick 2-3 escalating encounters rather than one static fight), and (2) recover the Hunter's encrypted data drive once they're defeated.
-GM GUIDANCE: Make the Hunter feel genuinely dangerous and personal — they should know things about the hero's patterns/haunts that suggest real surveillance, and get at least one genuine "gotcha" moment (a well-placed ambush, a called shot) before the hero turns the tables, so the eventual win feels earned. Let the chase span multiple mini-encounters rather than resolving in a single roll; each should escalate in danger. The Hunter should be willing to retreat and re-engage rather than dying outright on a single bad exchange, until finally cornered/defeated for good. Chapter is complete once the Hunter is down and the data drive is in hand.
-TONE: Tense cat-and-mouse thriller energy — the hero on the back foot for once, no safe place to breathe.`,
-  },
-  {
-    id: 'ecl6',
-    title: 'Secrets of the Observatory',
-    eyebrow: 'Chapter Six — Act II: Escalating Threat',
-    opening: `The decrypted files lead to coordinates in the mountains outside the city: an abandoned astronomical observatory, its dome long dark, officially decommissioned decades ago. The Eclipse Collective's real headquarters, hidden in plain sight.
-
-Beneath the observatory's derelict telescope hall, a stairway that shouldn't exist spirals down into rock far older than the building above it — and at the bottom, an archive chamber humming with the same slow pulse as the crystal in your pocket. What do you do?`,
-    gmInstructions: `SETTING: An abandoned mountain observatory serving as the Eclipse Collective's true headquarters, its surface levels a mundane (if heavily guarded) facility, its depths opening into a genuinely ancient stone archive chamber far predating any modern construction. The archive holds the truth: thousands of years ago, an entity called the Void Emperor — a being of total entropy/dark dimensional power — was defeated and imprisoned between dimensions by an ancient order, using seven crystal fragments (of which the hero's recovered crystal is one) as the literal pieces of the prison's seal. The Eclipse Collective's entire operation has been about recovering and reuniting every fragment in order to shatter that seal and free the Void Emperor, believing (correctly, though the hero shouldn't be sure yet whether to trust this) that its return would grant them power beyond imagining.
-GOALS FOR THIS CHAPTER: The player must (1) fight or sneak their way to the archive chamber past the observatory's guards, and (2) learn the true purpose of the Eclipse Project directly from the archive's ancient inscriptions/data — that the crystals are prison-seal fragments, and the Collective intends to break the seal entirely.
-GM GUIDANCE: This chapter is about revelation more than combat — let the guard encounters on the way down be a real but secondary challenge, and give the archive chamber itself real weight and atmosphere (ancient reliefs depicting the original sealing, a countdown of sorts showing how many fragments the Collective already holds — most of them). Deliver the Void Emperor reveal as a genuine gut-punch turn: this was never just about strange technology, it's an ancient, world-ending threat about to be deliberately unleashed. Chapter is complete once the hero has reached the archive and learned this truth.
-TONE: Awe and dread in equal measure — the pulp mystery cracking open into cosmic stakes.`,
-  },
-  {
-    id: 'ecl7',
-    title: 'Race Against the Eclipse',
-    eyebrow: 'Chapter Seven — Act II: Escalating Threat',
-    opening: `The archive is clear on one point: one fragment remains unaccounted for, hidden inside a sealed temple site the Collective has only just located — and their forces are already moving. If you don't reach it first, they'll hold every piece of the prison's seal by nightfall.
-
-The temple's outer gate has already been blasted open by someone else's charges. You're not the first ones here today, and you may not be the only ones here right now. What do you do?`,
-    gmInstructions: `SETTING: A hidden ancient temple (jungle ruin, submerged sea-cave shrine, desert vault — your call to fit tone) holding the seventh and final Eclipse Crystal fragment, riddled with age-old guardian puzzles/traps built to keep the fragment safe, and currently swarming with competing interests: Eclipse Collective soldiers racing to the same prize, and (for flavor and complication) a band of rival treasure hunters/looters who have no idea what they're actually about to unleash and are just here for what they assume is priceless ancient treasure.
-GOALS FOR THIS CHAPTER: The player must (1) navigate the temple's environmental puzzles/hazards to reach the fragment's inner sanctum, contending with both Eclipse soldiers and the rival treasure hunters along the way (the treasure hunters can be fought, evaded, or even briefly allied with against the Collective, at the player's choice), and (2) attempt to claim the final fragment before the Collective does.
-GM GUIDANCE: Let this chapter feel like a proper pulp-adventure set piece — swinging across a chasm, a pressure-plate gauntlet, a collapsing passage — genuinely testing the hero's stats/powers in ways beyond straight combat. However this chapter MUST end with the Collective's elite soldiers (or their leader in person, if you want a personal touch) claiming the fragment anyway, snatching it away at the last possible moment even if the hero played this chapter well — narrate this as a narrow, earned defeat rather than the hero simply failing; make clear the hero fought hard and smart and still lost this one, to raise the stakes into the finale. Chapter is complete once the fragment is lost to the Collective and the hero is left to regroup.
-TONE: High-adventure spectacle curdling into a genuine gut-punch loss — Empire Strikes Back energy.`,
-  },
-  {
-    id: 'ecl8',
-    title: 'The Dark Awakening',
-    eyebrow: 'Chapter Eight — Act III: World at Risk',
-    opening: `The sky over the city goes the color of a healing bruise. Shadow pours upward from the observatory's dome in a column visible for miles, and within minutes it's spreading — deer running the wrong way through downtown streets, streetlights aging to rust in seconds, ordinary people freezing mid-stride as something vast and cold brushes across the world's mind.
-
-Four immense pillars of dark light have risen across the city, humming in time with the crack spreading across the sky itself. What do you do?`,
-    gmInstructions: `SETTING: The Eclipse Collective's ritual to fully shatter the Void Emperor's prison has begun in earnest. Four massive Shadow Conduits — towering, crystal-cored pylons of dark energy, each guarded by a Shadow Titan (a hulking, city-block-scale manifestation of living darkness; Amazing-Monstrous physical stats, slow but devastating blunt/area attacks, treat as a serious set-piece boss-tier threat per conduit) — have risen at four separate points across the city, visibly worsening reality distortion and civilian panic the longer they stand.
-GOALS FOR THIS CHAPTER: The player must destroy all four Shadow Conduits (and by extension face down or drive off their attendant Shadow Titans) before a hard, dramatically-narrated time limit expires, racing across a city now suffering world-scale disaster-level effects (falling debris, mass evacuations, warped terrain) along the way.
-GM GUIDANCE: This is a full world-at-stake set piece — let the scale and danger feel enormous, and don't be afraid to let the hero improvise wildly creative solutions to each Titan/Conduit given their specific powers. Regardless of how well the player does, the ritual should still PARTIALLY succeed by the end of this chapter — the Void Emperor begins to emerge no matter what, though the hero's efforts (conduits destroyed, Titans driven off, lives saved) should clearly have blunted the worst of it and set up the final confrontation on better footing than if they'd done nothing. Chapter is complete once all four conduits are down/disabled, even as the Emperor's emergence begins regardless.
-TONE: Apocalyptic disaster-movie spectacle, all-out action, with an unavoidable dark turn at the very end.`,
-  },
-  {
-    id: 'ecl9',
-    title: 'Through the Rift',
-    eyebrow: 'Chapter Nine — Act III: World at Risk',
-    opening: `There's no ground here, not really — just the suggestion of it, tilting and reforming under your feet like the dimension itself is still deciding what it wants to be. Colors that shouldn't exist bleed across a sky with no sun. Somewhere in the shifting geometry ahead, four chains of black light hold something enormous, and growing, in place.
-
-The Void Emperor cannot be reached, not truly, while these Chains of Eternity still bind it to this half-formed place. What do you do?`,
-    gmInstructions: `SETTING: The hero has entered the Void Emperor's dimensional prison directly — a surreal, reality-bending pocket dimension where gravity, geometry, and even memory behave unreliably. Four Chains of Eternity, vast bindings of dark energy, currently anchor and limit the Void Emperor's power; each is guarded not by a physical enemy but by a manifestation of one of the hero's own fears or doubts made real and hostile (pull something fitting from the hero's bio/origin/talents for each — e.g. a echo of a loss they've mentioned, a twisted mirror-double, a scenario preying on a stated weakness), giving this chapter a personal, psychological edge alongside the cosmic stakes. The dimension itself is actively collapsing throughout the chapter, adding a ticking escape clock on top of the Chains themselves.
-GOALS FOR THIS CHAPTER: The player must (1) find and destroy all four Chains of Eternity, each requiring the hero to face down and overcome the fear-manifestation guarding it, and (2) escape the collapsing dimension once the last chain falls, before it seals shut with the hero still inside.
-GM GUIDANCE: Lean hard into the surreal, personal-horror tone here — let the fear-manifestations say/reveal things that land emotionally for this specific hero based on their sheet, without being cruel for cruelty's sake; overcoming each one should feel like a genuine character beat, not just another fight. The escape sequence at the end should be a tense, fast-paced set piece in its own right. Chapter is complete once all four chains are destroyed and the hero escapes back to reality.
-TONE: Surreal, introspective, high-tension — Inception-meets-cosmic-horror inside a body-horror dimension, resolving into a triumphant escape.`,
-  },
-  {
-    id: 'ecl10',
-    title: "Eclipse's End",
-    eyebrow: 'Chapter Ten — Finale',
-    opening: `The sky over the observatory has torn wide open, a wound of black light spilling stars that don't belong to this universe. At its center, the leader of the Eclipse Collective stands with arms raised, shadow energy pouring into and through them, already more than human and still changing.
-
-"You were never supposed to get this far," they say, voice layered with something vast and patient stirring behind them. "But it doesn't matter now. He's almost here."
-
-This is the last stand. How do you move?`,
-    gmInstructions: `SETTING: The final battle, staged in three phases atop the observatory as the dimensional gateway tears open overhead. PHASE 1: the Eclipse Collective's leader (a named mastermind, now self-empowered with raw shadow energy from the ritual — Incredible-Amazing stats and 2-3 dark-themed powers of your invention) fights the hero directly, intending to buy time for the Emperor's arrival; this phase should end with the leader willingly sacrificing themselves/being consumed to fully complete the Emperor's awakening, regardless of exactly how the fight against them goes (a clear, earned win against the leader specifically, followed by this forced escalation). PHASE 2: the Void Emperor itself emerges — a Shift X-or-higher, reality-warping cosmic threat where the battlefield itself becomes hostile (illusory terrain, gravity reversals, splitting duplicates) — this should be the hardest, most narratively enormous fight of the whole adventure. PHASE 3: once the Emperor is staggered/weakened through the fight, the hero can use the original black crystal (recovered all the way back in Chapter One and carried since) to overload the dimensional gateway, presenting a final in-fiction choice: destroy the gateway forever (sealing the Emperor away/destroying it, decisive and final), trap the Emperor inside the collapsing prison (a contained, uneasy victory, leaving the possibility it could return), or force a narrow personal escape while the gateway collapses on its own (surviving at the cost of a fully clean resolution). Any of the three is a valid, satisfying ending — let the hero choose.
-GOALS FOR THIS CHAPTER: The player must (1) defeat the empowered Eclipse Collective leader in Phase 1, (2) survive and ultimately overcome the Void Emperor in the reality-warping Phase 2 confrontation, and (3) use the black crystal to resolve the gateway in Phase 3 according to whichever ending the player chooses.
-GM GUIDANCE: This is the climax of the entire chronicle — let every established detail from the hero's sheet and the adventure's prior chapters (their powers, their talents, specific beats from earlier chapters, even the fear-manifestations from Chapter Nine) pay off narratively here. Give the Void Emperor phase real cosmic weight and let the environment itself become a hazard/tool. Once Phase 3's choice is made and narrated to a satisfying conclusion, deliver a full epilogue: power returns to the city, the surviving Eclipse Collective members scatter and vanish, the rescued scientists (including Dr. Voss) begin safely studying whatever crystal fragments remain, and the city hails the hero as its protector — but close on a quiet, ominous final image of a single tiny shard of black crystal, hidden in the ruins below, beginning to glow again. Clearly end the story after this epilogue beat. If the player's own next action responds to that final image (e.g. trying to destroy or secure the shard) rather than starting something new, resolve that action in a short concluding beat and then end the story there instead — do not let a player-initiated response to the epilogue's own closing image leave the chapter open indefinitely.
-TONE: Maximum cinematic stakes — triumphant, cosmic, a little haunting at the very last line, leaving a door open for a future chronicle.`,
+  if(!loaded.length) throw new Error('No adventures could be loaded.');
+  const allIds = new Set();
+  for(const adv of loaded){
+    for(const ch of adv.chapters){
+      if(allIds.has(ch.id)){ ADVENTURE_WARNINGS.push(adv.id + ': chapter id "' + ch.id + '" is also used elsewhere'); }
+      allIds.add(ch.id);
+      if(ch.imagePrompt) CHAPTER_IMAGE_PROMPTS[ch.id] = ch.imagePrompt;
+    }
   }
-];
-
-const CHAPTERS_IRONLEDGER = [
-  {
-    id: 'il1',
-    title: 'Working the Scene',
-    eyebrow: 'Chapter One',
-    opening: `A three-alarm fire has gutted a check-cashing storefront on a block in Sunset Park, Brooklyn, in the middle of a Tuesday afternoon. Nobody died, but the tenants living above the shop lost everything, and the FDNY marshal on scene is muttering about the burn pattern being "too clean." A block over, a nervous-looking man in a windbreaker is photographing the wreckage from his car — not for the news.
-
-You caught the tail end of the blaze and helped where you could. What do you do now that the smoke's clearing?`,
-    gmInstructions: `SETTING: A deliberately-set fire at a small check-cashing storefront (with residential apartments above) in Sunset Park, Brooklyn — the first of what will turn out to be a string of arsons hitting small, struggling NYC financial storefronts (check-cashers, small credit unions, pawn shops). This is street-level organized crime, not a world-ending threat. A man in a windbreaker is present, photographing the damage — he is a low-level associate of the Corvetti crime family, present to document the loss for an insurance claim (he should be startled/cagey if approached, and will lie badly or flee rather than fight).
-GOALS FOR THIS CHAPTER: The player should (1) help with the immediate aftermath (checking for trapped tenants, aiding the injured, or working with first responders — reflecting their powers and stats), and (2) notice or investigate something that doesn't add up: either the "too clean" burn pattern (an accelerant used with unusual precision, suggesting professionals, not vandals) or the windbreaker man's suspicious behavior, which if pursued yields a torn insurance-claim photo or a business card for "Corvetti Realty Holdings LLC."
-GM GUIDANCE: Adjudicate rescue/aid actions honestly using the hero's stats and powers. The windbreaker man is skittish, not dangerous — he'll bolt on foot or bluff weakly if confronted, and if caught or persuaded he'll only give up the smallest thread (the LLC name) before clamming up entirely, since he's more scared of his bosses than of a hero. Let the player also find the clue through investigation of the fire scene itself if they don't chase him. Chapter is complete once the hero has both handled the human cost of the scene AND has a concrete lead: the name "Corvetti Realty Holdings LLC."
-TONE: Grounded, street-level, a little grim underneath the heroics — this is a neighborhood tragedy, not a spectacle.`,
-  },
-  {
-    id: 'il2',
-    title: 'Paper Trail',
-    eyebrow: 'Chapter Two',
-    opening: `Corvetti Realty Holdings LLC turns out to be one of a tangle of shell companies, all filed from the same shabby storefront law office in Bensonhurst. Public records only get you so far — whoever set this up knew how to bury the trail. If you want to know who's really behind it, you'll need someone who knows how the city's underworld actually keeps its books.
-
-Frankie Vega might know something. How do you approach him?`,
-    gmInstructions: `SETTING: The hero is digging into Corvetti Realty Holdings LLC and hits a wall of shell-company paperwork designed to obscure real ownership. This chapter is about the hero reaching out to their contact Frankie Vega for the first time in this adventure.
-GOALS FOR THIS CHAPTER: The player must contact and get information out of Frankie Vega. Remember Vega's characterization: he is a criminal underworld informant who helps just enough to keep himself out of prison, and he never fully trusts the hero — he'll want something in return (cash, a favor, the hero looking the other way on something small and non-lethal he's involved in) or will simply drag his feet and act cagey before giving up real information. He should NOT be an easy, friendly source — make the hero work for it a little, through negotiation, leverage, or a small favor, and have Vega hedge his information ("I'm not saying it's them, I'm saying I heard a name"). Once properly engaged, Vega reveals that Corvetti Realty Holdings LLC is tied to the Corvetti family, a mid-tier organized crime outfit that's been quietly buying up struggling check-cashers, pawn shops, and small credit unions across the outer boroughs — and that word on the street is they're setting fires to "some of their own places" for reasons nobody low-level understands yet.
-GM GUIDANCE: Let the player attempt the FEAT/roleplay of finding and pressuring or persuading Vega however suits their hero (Reason/Intuition to track him down, Psyche/Intuition or Fighting Ability to lean on him if that fits the hero's style, or a straightforward negotiation). If the player fumbles the approach, Vega can still be reached but is colder and more grudging — don't dead-end the plot on a bad roll. Chapter is complete once the player has confirmed the Corvetti family's involvement and heard about the pattern of fires at their own recently-acquired properties.
-TONE: Noir informant energy — transactional, wary, a little sleazy, with Vega always working an angle of his own.`,
-  },
-  {
-    id: 'il3',
-    title: 'The Acquisitions',
-    eyebrow: 'Chapter Three',
-    opening: `Vega's tip checks out fast: in the last eight months, Corvetti-linked shells have bought no fewer than six small check-cashers and credit unions across Brooklyn and Queens, always for cash, always just above market rate, always from owners who were behind on payments to someone. Two of those six have already burned. A third — a cramped credit union office in Bushwick — is still open for business, tenants living above it same as before.
-
-If the pattern holds, this place could be next. What's your move?`,
-    gmInstructions: `SETTING: The hero has identified a pattern — the Corvetti family has been buying up small, struggling financial storefronts, two of which have already burned. A third location, a small credit union in Bushwick with residential tenants above it (mirroring Chapter One), is a plausible next target.
-GOALS FOR THIS CHAPTER: The player must (1) decide how to respond to the pattern — stake out the Bushwick location, warn the tenants/owner, or investigate further to confirm intent — and (2) either witness or narrowly prevent an arson attempt in progress, encountering a pair of Corvetti arson-crew enforcers (Typical-Good fighting/agility, armed with incendiary devices, more interested in escaping than a prolonged fight) who flee if the hero intervenes, dropping a burner phone or delivery manifest that references a coded meeting location: "the Ledger drop, Thursday."
-GM GUIDANCE: If the player stakes out the location, let them catch the arson crew in the act for a tense but non-lethal confrontation — the crew are low-level muscle, not masterminds, and should be beatable but not trivial (give them a getaway vehicle or a smoke/incendiary distraction to use as an escape tool even if the hero wins the fight, so at least one flees if outright captured feels too easy). If the player instead warns the tenants/owner directly, the arson attempt gets called off/delayed and the hero instead finds evidence of the planned attempt (timer device, accelerant canisters) left behind in a hasty abandonment. Either path should end with the hero having the "Ledger drop, Thursday" clue. Chapter complete once that clue is in hand and the immediate site is safe.
-TONE: Tense stakeout-to-action escalation; a real sense that the hero is racing the clock for ordinary people's lives and homes.`,
-  },
-  {
-    id: 'il4',
-    title: 'The Ledger Drop',
-    eyebrow: 'Chapter Four',
-    opening: `"The Ledger drop" turns out to be exactly what it sounds like — a physical accounting handoff, low-tech on purpose so it can't be hacked or wiretapped. Thursday night, a nondescript panel van is scheduled to meet a courier behind a shuttered bowling alley in Maspeth, Queens. Whatever's in that ledger, it's important enough that the Corvettis are still doing it the old-fashioned way.
-
-You have a location and a time. How do you play it?`,
-    gmInstructions: `SETTING: A physical handoff of a paper ledger between Corvetti associates behind a shuttered bowling alley in Maspeth, Queens — deliberately low-tech to avoid digital traces. This is a stakeout/infiltration/interception chapter.
-GOALS FOR THIS CHAPTER: The player must get their hands on the ledger (or photograph/memorize its critical contents) by infiltrating, intercepting, or otherwise disrupting the handoff, dealing with 2-4 Corvetti guards/couriers (Typical-Good stats, armed with pistols/blunt weapons, willing to fight to protect the ledger but under orders not to escalate to killing given how much heat a dead vigilante-fight would bring). The ledger reveals the real scheme in coded shorthand: the Corvetti family, through their shell companies, has been fraudulently over-insuring the properties they acquire, then burning the ones with the highest payout-to-value ratio — and the pattern shows they deliberately favor properties with occupied residential units above, because a "verified structural loss including displaced tenants" triggers a much larger city disaster-relief insurance payout under a specific municipal program.
-GOALS (continued): unmasking this detail — that they are choosing occupied buildings on purpose to maximize a fraudulent payout, endangering tenants for money — should land as a real gut-punch escalation for the hero.
-GM GUIDANCE: Let the player's approach (stealth, force, misdirection, talking their way in) shape how this plays out; reward cleverness, let failure escalate to a fight rather than dead-end the plot. The ledger's true meaning doesn't have to be spelled out instantly — a receptive player might need a beat of piecing it together, or a hacker/researcher-type ally/contact could help decode the shorthand. Chapter complete once the hero has the ledger (or its key contents) and understands the scheme targets occupied buildings on purpose.
-TONE: Tense infiltration/heist energy tipping into real anger once the scheme's cruelty becomes clear.`,
-  },
-  {
-    id: 'il5',
-    title: 'Names in the Margins',
-    eyebrow: 'Chapter Five',
-    opening: `The ledger's shorthand names a "Sal," a "the Accountant," and a location scrawled in the margin: a floor of an unremarkable Ridgewood office building marked only "R.F. Group." Whoever's really running this isn't the muscle you've been meeting — this is somebody who thinks in spreadsheets, not fists.
-
-Vega might know who "the Accountant" is, if you can get him to talk again. What's your approach?`,
-    gmInstructions: `SETTING: The hero needs to identify who "the Accountant" is — the financial mastermind behind the insurance-fraud scheme, working out of a legitimate-looking office ("R.F. Group") in Ridgewood, Queens. This chapter is the hero's second engagement with Frankie Vega.
-GOALS FOR THIS CHAPTER: The player must return to Frankie Vega for more information. Keep Vega true to form: he's warier this time, since the hero is clearly digging into something that could get dangerous for him too, and he'll only help if there's something in it for him or if the hero leans on their existing relationship/leverage — he still never fully trusts the hero and may lie about a small detail or withhold something petty even while being genuinely useful on the big picture. Vega reveals that "the Accountant" is Raymond Fiore, a mid-level Corvetti financial fixer who fronts the scheme through "R.F. Group" and has personally structured the insurance fraud — and that Fiore is smart enough to have an exit plan if things go sideways, so time may matter.
-GM GUIDANCE: As before, make the player work for the information through roleplay/negotiation/leverage rather than handing it over for free; if the approach goes poorly, Vega still eventually gives up the name but colder and with an extra jab about the hero owing him now. Chapter complete once the hero has Raymond Fiore's name and the R.F. Group office location.
-TONE: Return-visit informant energy — familiar but still transactional, with an undercurrent that Vega is nervous about how big this is getting.`,
-  },
-  {
-    id: 'il6',
-    title: 'R.F. Group',
-    eyebrow: 'Chapter Six',
-    opening: `R.F. Group occupies a modest, unremarkable third-floor office suite — the kind of place that could be an accounting firm or an insurance broker, and technically is both. Raymond Fiore is exactly the sort of man this scheme demands: quiet, precise, never once raising his voice above a conference-room murmur even while doing something monstrous.
-
-Getting to him means getting past his security and whatever paperwork he can shred or wipe the moment he suspects trouble. How do you approach?`,
-    gmInstructions: `SETTING: An infiltration/confrontation chapter set in Raymond Fiore's ("the Accountant") legitimate-looking office, R.F. Group, in Ridgewood, Queens. Fiore has a small private security detail (2-3 guards, Typical-Good stats, more competent and controlled than the arson crew from Chapter Three — trained but still ultimately hired muscle, not superhuman) and is smart enough to try to destroy evidence (shredder, wiped drives) or flee the moment he realizes he's caught.
-GOALS FOR THIS CHAPTER: The player must get to Fiore before he can destroy the evidence tying him and the Corvetti family to the insurance fraud scheme, dealing with his security detail along the way, and either capture him, force a confession, or seize hard evidence (a hard drive, a secondary set of books) directly from his office.
-GM GUIDANCE: Fiore himself is not a fighter — if directly confronted he'll try to talk his way out, offer a bribe, or stall for time while quietly trying to trigger a destruction failsafe (shredder, remote wipe) rather than physically resist; let a clever or fast player stop this in time, and let a slower approach mean some evidence is lost but not all of it (he can't destroy everything). The security guards should present a genuine but beatable challenge. Chapter complete once the hero has either Fiore himself in custody, a confession, or hard evidence in hand — and either way, learns from what's seized or from Fiore under pressure that the family's overall boss — Corvetti family underboss Dominic "The Ledger" Corvetti himself — has personally signed off on the next and biggest target: a large occupied apartment building in Corona, Queens, timed to burn within the next 48 hours for the biggest payout yet.
-TONE: Controlled tension escalating into a fight — Fiore's calm, bloodless menace versus the more physical threat of his security detail.`,
-  },
-  {
-    id: 'il7',
-    title: 'The Clock Is Running',
-    eyebrow: 'Chapter Seven',
-    opening: `Forty-eight hours, and the target isn't some struggling storefront — it's the Alden Court Apartments in Corona, Queens, a full occupied residential building, home to dozens of families. Whoever the Corvettis send this time won't be some jumpy crew with a lookout in a windbreaker. This job is too important to get wrong.
-
-You have a deadline and an address. What do you do with the time you have?`,
-    gmInstructions: `SETTING: A ticking-clock chapter where the hero must prepare to protect a large occupied apartment building (Alden Court Apartments, Corona, Queens) from an imminent, high-stakes arson attempt within 48 story-hours. The building itself, and the dozens of tenant families living there, are the stakes — not the world, just real people's homes and lives.
-GOALS FOR THIS CHAPTER: The player should use the time meaningfully — options include (but aren't limited to) alerting the tenants/building management, coordinating with the NYPD or fire department (being careful this doesn't simply resolve the plot for them — authorities can help with evacuation/security presence but won't stop a determined, well-organized professional crew alone), casing the building for the arsonists' likely entry points, or trying to get ahead of the crew via any remaining leads (Fiore's seized files, a description of the arson team from earlier chapters). The chapter should end with the arson crew arriving to make their attempt — a more serious, professional outfit than Chapter Three's (3-4 members, Good-Excellent stats, better equipment, a getaway coordinator) — and the hero having to stop them in the act.
-GM GUIDANCE: Reward preparation — a well-prepared hero should have real advantages going into the confrontation (tenants already evacuated, a chosen ambush point, allies in position) while an unprepared one faces a messier, more dangerous version of the same fight. This crew should be a genuine step up in competence and coordination from earlier henchmen, but is still ultimately professional criminals, not superpowered threats. Chapter complete once the arson attempt at Alden Court is thwarted and the building/tenants are safe.
-TONE: Ticking-clock thriller tension building to a genuinely dangerous action set-piece protecting ordinary people's homes.`,
-  },
-  {
-    id: 'il8',
-    title: 'Rats in the Walls',
-    eyebrow: 'Chapter Eight',
-    opening: `Stopping the Alden Court job should have been a win — and it is, but it's also made the Corvetti family very aware of exactly who's been dismantling their operation. Dominic "The Ledger" Corvetti doesn't like loose ends, and word is he's decided the hero themselves has become one. Someone's been asking around about you — your patrol patterns, your allies, maybe more.
-
-What do you do about being hunted?`,
-    gmInstructions: `SETTING: The tables turn — the Corvetti family, having lost the Alden Court job, now knows the hero has been the one dismantling their operation and has decided to move against the hero directly (surveillance, an ambush attempt, pressure on an ally or contact, or an attempt to intimidate/bribe the hero off the case — GM's choice of which, or a combination). This should feel like real personal stakes without escalating past street level (no world-ending threat, just serious, personal danger from a determined criminal organization).
-GOALS FOR THIS CHAPTER: The player must recognize and deal with the threat against them or their circle — surviving an ambush, protecting a threatened ally/contact (this is a good moment to potentially involve Frankie Vega again, either as a target of pressure himself since his help has become known/suspected, or as a source of a last warning he grudgingly passes along even though it further exposes his own risk), and ultimately turning the tables to learn Dominic Corvetti's location or next move.
-GM GUIDANCE: If Vega is involved, keep him consistent — self-interested, not heroic, giving only what he must to protect himself, but capable of a genuinely useful warning if it also serves his own survival. The confrontation(s) in this chapter should feel personal and dangerous, testing the hero's resourcefulness under pressure rather than being a straightforward brawl. Chapter complete once the hero has weathered the Corvetti family's move against them and has a solid lead on Dominic Corvetti's location — a warehouse office in Long Island City serving as the family's real operational base.
-TONE: Paranoid thriller tension — the hunter becoming the hunted, with real personal risk.`,
-  },
-  {
-    id: 'il9',
-    title: "The Ledger's Endgame",
-    eyebrow: 'Chapter Nine',
-    opening: `The warehouse office in Long Island City is where Dominic "The Ledger" Corvetti keeps his real books — and where, it turns out, he's scrambling to salvage what's left of the scheme. With Fiore compromised and the Alden Court job blown, Corvetti's decided to cut every loose end at once: burn the evidence, burn one more property for a final desperate payday, and disappear before any of it lands on him personally.
-
-This is the last chance to stop him before he gets away with all of it. How do you move on the warehouse?`,
-    gmInstructions: `SETTING: Dominic Corvetti's real operational base — a warehouse office in Long Island City — where he is in the process of destroying evidence and preparing one final act (either a last desperate arson at a property still in progress, or simply fleeing with what's left of the operation's money and evidence) before the hero can stop him.
-GOALS FOR THIS CHAPTER: The player must infiltrate or storm the warehouse, deal with Corvetti's remaining security (a step up from prior guards — his most loyal and dangerous remaining crew, Good-Excellent stats, still ultimately normal armed criminals, not superhuman), and prevent Corvetti from either escaping entirely or destroying the last of the evidence needed to fully take him down, setting up a direct confrontation with Corvetti himself as this chapter closes into the finale.
-GM GUIDANCE: This is the penultimate chapter — build real tension and let the hero's actions here (evidence secured, security dealt with, Corvetti cornered or chased down) matter for how the finale plays out, but don't let Corvetti actually escape the story here; he should be cornered, trapped, or otherwise forced into a final confrontation, even if he tries to flee. Chapter complete once Corvetti is cornered/confronted directly, ready for the final showdown.
-TONE: High-tension heist-reversal — the villain scrambling, the hero closing in, real urgency.`,
-  },
-  {
-    id: 'il10',
-    title: 'Closing the Books',
-    eyebrow: 'Chapter Ten — Finale',
-    opening: `Dominic Corvetti doesn't look like much — mid-fifties, expensive suit, soft hands that have never done real work. But cornered, with everything he's built about to collapse, he's got nothing left to lose, and he's not going down without making that count. Somewhere behind him, a fire door propped open leads to a truck loaded with enough accelerant to make sure nobody ever proves a thing.
-
-This is the end of the line. How do you finish it?`,
-    gmInstructions: `SETTING: The final confrontation with Dominic "The Ledger" Corvetti at his Long Island City warehouse base. Corvetti himself is not superpowered, but should NOT be a pushover — he is cunning, ruthless, and cornered: give him a small crew of his most loyal remaining muscle (Good-Excellent stats) fighting alongside him, access to genuinely dangerous environmental hazards fitting the setting (the accelerant-loaded truck, stacks of flammable warehouse inventory, a propped-open fire door, tight corridors that limit the hero's options), and a willingness to use hostages, threats to detonate/ignite the accelerant, or dirty fighting tactics rather than a fair fistfight. The fight should be a genuine challenge scaled to the hero's specific powers and stats — a fast/agile hero might have to chase him through the warehouse while dodging environmental hazards, a strong/tough hero might have to physically push through his crew while he tries to escape or ignite the truck, etc. Tune the intensity/threat level so this is a hard-fought, satisfying capstone fight, not a curb-stomp in either direction.
-GOALS FOR THIS CHAPTER: The player must defeat or capture Dominic Corvetti and his remaining crew, and prevent the warehouse arson/accelerant threat from harming the hero, any hostages present, or the surrounding neighborhood.
-GM GUIDANCE: Let Corvetti talk during the fight — self-justifying, bitter, maybe even offering a genuine bribe or a plea mid-fight as things turn against him, since he's a businessman at heart even now. Once he's defeated/captured and the fire threat is neutralized, deliver a satisfying epilogue: Corvetti and what's left of his organization go down hard thanks to the evidence trail the hero built (Fiore, the ledger, the seized books), the Alden Court tenants and the other affected families get to stay in their homes, the neighborhood breathes easier — and give a small, character-appropriate final beat with Frankie Vega, true to his nature: he's not thanking the hero for saving the day, he's making sure his own name never surfaces in any of it, and maybe grudgingly admits the hero did all right this time, before vanishing back into the city he actually trusts more than any hero. Clearly end the story after this epilogue beat.
-TONE: Grounded, hard-fought street-level finale — personal, consequential, and satisfying without ever tipping into cosmic or world-ending stakes.`,
-  }
-];
-
-/* ---------- Adventure registry ----------
-   Each adventure is a self-contained chapter arc; the player picks one
-   per hero before their first session, and the choice (plus progress)
-   is remembered in that hero's save. */
-const ADVENTURES = [
-  {
-    id: 'meridian',
-    title: 'Meridian',
-    tagline: 'A Superhero Chronicle',
-    blurb: 'A burning apartment block, a black-market arms auction, and a masked mastermind threatening to black out the whole city.',
-    chapters: CHAPTERS_MERIDIAN
-  },
-  {
-    id: 'shadows_eclipse',
-    title: 'Shadows of the Eclipse',
-    tagline: 'A Superhero Chronicle — 10 Chapters',
-    blurb: 'A city-wide blackout unravels into a secret organization, a shattered dimensional prison, and an ancient entity of pure darkness clawing its way back into the world.',
-    chapters: CHAPTERS_ECLIPSE
-  },
-  {
-    id: 'iron_ledger',
-    title: 'Iron Ledger',
-    tagline: 'A Superhero Chronicle — 10 Chapters',
-    blurb: 'A string of suspicious fires, a criminal family laundering money through the neighborhoods it claims to serve, and a scheme that puts entire apartment buildings full of families in the crosshairs for an insurance payday.',
-    chapters: CHAPTERS_IRONLEDGER
-  }
-];
+  ADVENTURES = loaded;
+}
 
 function getAdventure(id){
-  return ADVENTURES.find(a=>a.id===id) || ADVENTURES[0];
+  return ADVENTURES.find(a=>a.id===id) || ADVENTURES[0] || {id:'', title:'', tagline:'', blurb:'', chapters:[]};
 }
 function currentAdventureChapters(){
   return getAdventure(STATE.adventureId).chapters;
@@ -1334,36 +1072,9 @@ const IMAGE_STYLE = 'photorealistic live-action film still, shot on 35mm anamorp
    Chapters without an entry fall back to live generation using the concrete
    scene description in CHAPTER_IMAGE_PROMPTS below. */
 const CHAPTER_IMAGES = {};
+/* Scene descriptions for live-generation fallback now come from each chapter's
+   imagePrompt field in chronicles/*.json (see CHAPTER_IMAGE_PROMPTS above). */
 
-/* Hand-written, purely visual scene descriptions for live-generation fallback.
-   The chapter prose is abstract/atmospheric, and image models fill vague text
-   with generic moody imagery (forests, creatures), so these name only things
-   that are literally visible. */
-const CHAPTER_IMAGE_PROMPTS = {
-  ch1: 'Night in a city: an apartment tower with flames blazing from the windows of its eleventh floor, thick smoke, tenants running out into the street in nightclothes, fire trucks parked at the end of the block, orange firelight on wet pavement.',
-  ch2: 'Interior of an old dockside grain exchange at night: tall rusted silos, a catwalk, a few shadowy figures in dark jackets gathered around a table under a single hanging work lamp, a small metal device with an ember-inside-a-broken-ring mark on the table.',
-  ch3: 'A tall steel relay tower and power substation at night, crews in dark clothes wiring explosives to transformers at its base, a masked figure in a cracked white ceramic mask standing on scaffolding high above, city lights in the distance.',
-  ecl1: 'A dense downtown city at night with six full blocks completely dark: no streetlights, no lit windows. Cars stopped dead in a wide intersection with headlights off, small groups of people standing on the sidewalk looking up at the rooftops. One thin jagged streak of black lightning arcs across the dim blue-gray sky above the buildings. Wet asphalt, eerie quiet.',
-  ecl2: 'A cluttered university physics lab at night, a woman scientist in a lab coat at a desk lit by a single desk lamp, holding up a faceted black crystal that glows with a slow pulsing violet light, monitors and oscilloscopes around her, a dark hallway visible through the open door.',
-  ecl3: 'An open steel hatch in a city street leading down to a rusted service ladder in an abandoned subway tunnel, peeling tile walls, a single flashlight beam cutting through dust, old track disappearing into darkness.',
-  ecl4: 'A city street at dusk where the sky has a visible crack-like distortion, streetlights glowing violet, a skyscraper in the distance half faded out as if flickering out of existence, pedestrians on the sidewalk frozen and staring upward.',
-  ecl5: 'A rooftop at night with a large electronic billboard behind a water tower, a bullet hole punched through the water tower with water streaming out, a lone figure ducking behind a vent, city skyline in the background.',
-  ecl6: 'An abandoned mountain observatory with a dark dome under a starry sky, a derelict telescope hall inside, a stone stairway spiraling down into rock beneath it, faint violet light pulsing from below.',
-  ecl7: 'The blasted-open stone gate of an ancient temple in the jungle, scorch marks and rubble from fresh explosive charges, thin smoke rising, tracks of boots in the dust leading inside, dim afternoon light.',
-  ecl8: 'A city under a bruise-purple sky, four huge pillars of dark violet light rising from different parts of the skyline, a visible crack across the sky, rust-colored streetlights, people standing frozen in the middle of a street.',
-  ecl9: 'A surreal otherworldly landscape of tilted floating stone platforms under a sky with no sun, four chains of black light stretching across the distance holding a huge dark shape in place, strange colors bleeding across the horizon.',
-  ecl10: 'A torn, glowing black rift in the night sky above a mountain observatory, a robed figure standing at its center with arms raised while streams of shadow energy flow into them, stars visible inside the rift.',
-  il1: 'A burned-out check-cashing storefront in a Brooklyn street on a gray afternoon, blackened windows and scorched brick, fire marshal in a white helmet examining the wall, firefighters coiling hoses, a man in a windbreaker photographing the wreckage from a parked car down the block.',
-  il2: 'A shabby storefront law office on a Brooklyn street at dusk, faded sign and venetian blinds in the window, stacks of paper files visible inside, a man in a trench coat leaning in a doorway across the street.',
-  il3: 'A cramped credit union office on a Bushwick street corner, apartment windows above it with laundry on a fire escape, a dark sedan parked across the street with two men watching the entrance.',
-  il4: 'The rear lot behind a shuttered bowling alley in Queens at night, an unmarked panel van parked under a flickering sodium light, a man handing a thick accounting ledger to a courier by the open van door.',
-  il5: 'A plain office building in Ridgewood, Queens at dusk, a lit third floor window, a directory board in the lobby with the letters R.F. Group, a handwritten margin note in a ledger lying open on a car seat.',
-  il6: 'A quiet third-floor office suite with beige carpet, filing cabinets, a shredder and a glass-walled conference room, a precise-looking man in a gray suit seated alone at a long table with neat stacks of paper and a laptop.',
-  il7: 'A five-story apartment building in Corona, Queens in the evening, lit windows with families visible, a stairwell door in the side alley, a hero-eye view from the opposite rooftop, ticking clock on a wristwatch in the foreground.',
-  il8: 'A dark rooftop at night in New York, a figure in a hero costume looking across to a fire escape where a man in a dark coat is photographing the scene with a long lens, city lights behind.',
-  il9: 'A warehouse office in Long Island City at night, a glass-walled office on a mezzanine with a man in an expensive suit pulling ledgers from a safe into a metal drum, orange flames beginning inside the drum, forklifts and pallets below.',
-  il10: 'A loading dock behind a warehouse at night, a propped-open fire door spilling yellow light, a truck loaded with red fuel drums behind it, a heavyset man in an expensive suit standing in the doorway with his hands raised, smoke in the air.'
-};
 
 /* Shared Gemini call with automatic model fallback. Tries GEMINI_MODEL_PRIMARY
    first; if that call fails with a 503 (overloaded) or 429 (rate-limited),
@@ -2433,6 +2144,7 @@ function renderAdventureSelect(){
         </div>
       </div>
       ${STATE.error ? `<div class="error-box">${escapeHtml(STATE.error)}</div>` : ''}
+      ${(AUTH.isAdmin && ADVENTURE_WARNINGS.length) ? `<div class="error-box"><b>Admin notice:</b> some adventure files were skipped.<br>${ADVENTURE_WARNINGS.map(escapeHtml).join('<br>')}</div>` : ''}
       <div class="adv-list">${cards}</div>
       <div style="margin-top:18px;"><button class="secondary" id="btn-back-adv">Back to roster</button></div>
     </div>
@@ -2974,6 +2686,13 @@ function escapeHtml(str){
     try{ history.replaceState(null, '', location.pathname + location.hash); }catch(e){ /* ignore */ }
   }
   app.innerHTML = '<div class="panel"><div class="thinking">Loading…</div></div>';
+  try{
+    await loadAdventures();
+  }catch(e){
+    app.innerHTML = '<div class="panel"><h2>Could not load the adventures</h2><p>' + escapeHtml(e.message) + '</p><p><button id="retry-adv">Try again</button></p></div>';
+    document.getElementById('retry-adv').onclick = () => location.reload();
+    return;
+  }
   if(confirmTok){
     try{
       const r = await apiCall('POST', '/api/confirm', {token: confirmTok});
