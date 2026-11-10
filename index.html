@@ -220,6 +220,7 @@
   .top-back{ float:right; margin:4px 0 8px 12px; }
   .top-back button{ padding:6px 12px; font-size:0.8rem; }
   @media (max-width:640px){ .top-back{ float:none; margin:0 0 10px; } }
+  .tr-story .text{ white-space:pre-wrap; }
   .coming-soon-badge{ background:var(--hero-red); color:#fff; padding:1px 7px; border:2px solid var(--ink); letter-spacing:.06em; }
   .hist-banner{ position:relative; min-height:120px; background:var(--ink); border:3px solid var(--ink); box-shadow:5px 5px 0 rgba(10,31,68,0.85); overflow:hidden; display:flex; align-items:flex-end; }
   .hist-banner img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:1; }
@@ -1198,10 +1199,15 @@ async function saveGame(heroId, gameState){
     return false;
   }
 }
-async function pushKarma(heroId, adventureId, review){
+function slimTranscript(log){
+  if(!Array.isArray(log) || !log.length) return undefined;
+  return log.map(e=>({chapterId:e.chapterId, chapterTitle:e.chapterTitle, chapterEyebrow:e.chapterEyebrow, who:e.who, text:e.text,
+    mechanics: e.mechanics ? {ability:e.mechanics.ability, effectiveRank:e.mechanics.effectiveRank, roll:e.mechanics.roll, label:e.mechanics.label} : null}));
+}
+async function pushKarma(heroId, adventureId, review, fullLog){
   if(!review || !Array.isArray(review.awards)) return false;
   try{
-    await apiCall('PUT', '/api/karma', { hero_id: heroId, adventure_id: adventureId, total: review.total, awards: review.awards });
+    await apiCall('PUT', '/api/karma', { hero_id: heroId, adventure_id: adventureId, total: review.total, awards: review.awards, transcript: slimTranscript(fullLog) });
     return true;
   }catch(e){ return false; }
 }
@@ -1226,7 +1232,7 @@ async function importOldSaves(){
     if(existing.has(h.id + '|' + advId)) continue;
     await apiCall('PUT', '/api/game', { hero_id: h.id, adventure_id: advId, json: JSON.stringify(g) });
     imported++;
-    if(g.karmaReview) await pushKarma(h.id, advId, g.karmaReview);
+    if(g.karmaReview) await pushKarma(h.id, advId, g.karmaReview, g.fullLog);
   }
   lsSet(IMPORT_FLAG, '1');
   return imported;
@@ -1429,7 +1435,7 @@ function ensureKarmaReview(){
   callKarmaReview(hero).then(result=>{
     STATE.karmaReview = result;
     STATE.karmaReviewStatus = 'done';
-    pushKarma(hero.id, STATE.adventureId, result);
+    pushKarma(hero.id, STATE.adventureId, result, STATE.fullLog);
     saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, karmaReview: result}).catch(()=>{});
     render();
   }).catch(()=>{
@@ -1991,7 +1997,7 @@ function render(){
   if(STATE.screen==='AUTH'){
     if(!bg){ bg = document.createElement('div'); bg.id = 'auth-backdrop'; bg.className = 'auth-backdrop'; document.body.prepend(bg); }
   } else if(bg){ bg.remove(); }
-  app.className = (STATE.screen==='HERO_SELECT' || STATE.screen==='HERO_DETAIL' || STATE.screen==='ADVENTURE_SELECT' || STATE.screen==='KARMA' || STATE.screen==='PLAYERS' || STATE.screen==='HISTORY' || STATE.screen==='HISTORY_MISSION' || STATE.screen==='HISTORY_PERSON') ? 'wide' : '';
+  app.className = (STATE.screen==='HERO_SELECT' || STATE.screen==='HERO_DETAIL' || STATE.screen==='ADVENTURE_SELECT' || STATE.screen==='KARMA' || STATE.screen==='PLAYERS' || STATE.screen==='TRANSCRIPT' || STATE.screen==='HISTORY' || STATE.screen==='HISTORY_MISSION' || STATE.screen==='HISTORY_PERSON') ? 'wide' : '';
   if(STATE.screen==='AUTH') return renderAuth();
   if(STATE.screen==='TITLE') return renderTitle();
   if(STATE.screen==='HERO_SELECT') return renderHeroSelect();
@@ -1999,6 +2005,7 @@ function render(){
   if(STATE.screen==='ADVENTURE_SELECT') return renderAdventureSelect();
   if(STATE.screen==='KARMA') return renderKarma();
   if(STATE.screen==='PLAYERS') return renderPlayers();
+  if(STATE.screen==='TRANSCRIPT') return renderTranscript();
   if(STATE.screen==='HISTORY') return renderHistory();
   if(STATE.screen==='HISTORY_MISSION') return renderHistoryMission();
   if(STATE.screen==='HISTORY_PERSON') return renderHistoryPerson();
@@ -2563,6 +2570,85 @@ async function loadPlayers(){
   }catch(e){ pd.error = e.message; }
   if(STATE.screen==='PLAYERS') render();
 }
+/* ---------- Mission transcript (admin) ---------- */
+async function openTranscript(userId, heroId, advId, run){
+  STATE.transcript = { loading:true, error:null, data:null, userId, heroId, advId, run };
+  STATE.screen = 'TRANSCRIPT';
+  render(); window.scrollTo(0,0);
+  try{
+    const q = '?user_id='+encodeURIComponent(userId)+'&hero='+encodeURIComponent(heroId)+'&adventure='+encodeURIComponent(advId)+(run==='previous'?'&run=previous':'');
+    STATE.transcript.data = await apiCall('GET', '/api/admin/transcript'+q);
+  }catch(e){ STATE.transcript.error = e.message; }
+  STATE.transcript.loading = false;
+  if(STATE.screen==='TRANSCRIPT') render();
+}
+function transcriptToText(d){
+  let out = `${heroLabel(d.hero_id)} — ${adventureLabel(d.adventure_id)}\nPlayer: ${d.email}\nCompleted: ${d.completed_at ? fmtDate(d.completed_at) : 'unknown'}\n`;
+  let last;
+  d.entries.forEach(e=>{
+    if(e.chapterId !== last){ last = e.chapterId; out += `\n=== ${e.chapterTitle||''} ===\n`; }
+    out += `${e.who==='gm' ? 'GM' : heroLabel(d.hero_id)}: ${e.text}\n`;
+  });
+  if(d.awards && d.awards.length){
+    out += `\nKarma earned: ${d.total}\n` + d.awards.map(a=>`${a.points>=0?'+':''}${a.points} ${a.category}${a.note?' — '+a.note:''}`).join('\n') + '\n';
+  }
+  return out;
+}
+function renderTranscript(){
+  const tr = STATE.transcript || {};
+  const d = tr.data;
+  let body;
+  if(tr.loading) body = '<div class="thinking">Loading transcript…</div>';
+  else if(tr.error) body = `<div class="error-box">${escapeHtml(tr.error)}</div>`;
+  else {
+    let last;
+    const story = d.entries.map(e=>{
+      let head = '';
+      if(e.chapterId !== last){ last = e.chapterId; head = `<div class="chapter-eyebrow display" style="margin-top:18px;">${escapeHtml(e.chapterEyebrow||'')}</div><h3 style="margin:2px 0 8px;">${escapeHtml(e.chapterTitle||'')}</h3>`; }
+      const m = e.mechanics;
+      const feat = (e.who==='gm' && m) ? `<div class="tag">FEAT: ${escapeHtml(m.ability)} (${escapeHtml(m.effectiveRank)}) · Roll ${m.roll} · ${escapeHtml(m.label)}</div>` : '';
+      return `${head}<div class="entry ${e.who}"><div class="who">${e.who==='gm' ? 'Game Master' : escapeHtml(heroLabel(d.hero_id))}</div>${feat}<div class="text">${escapeHtml(e.text)}</div></div>`;
+    }).join('');
+    const awards = (d.awards||[]).length ? `<div class="hist-sub">Karma earned${d.total!=null ? ' — '+d.total : ''}</div><ul class="karma-awards">${d.awards.map(a=>`<li>${escapeHtml(signed(a.points))} ${escapeHtml(a.category)}${a.note ? ' — '+escapeHtml(a.note) : ''}</li>`).join('')}</ul>` : '';
+    body = `
+      <div class="tag">Player: ${escapeHtml(d.email)} · Completed ${d.completed_at ? escapeHtml(fmtDate(d.completed_at)) : 'date unknown'}${d.run==='previous' ? ' · <b>earlier run</b>' : ''}${d.source==='save' ? ' · <i>from the current save</i>' : ''}</div>
+      <div class="adv-actions" style="margin:10px 0;">
+        <button class="secondary small" id="btn-tr-copy">Copy</button>
+        <button class="secondary small" id="btn-tr-print">Print</button>
+        ${d.run==='previous' ? '<button class="secondary small" id="btn-tr-cur">View latest run</button>' : (d.has_previous ? '<button class="secondary small" id="btn-tr-prev">View earlier run</button>' : '')}
+      </div>
+      <div class="tr-story">${story}</div>
+      ${awards}`;
+  }
+  const title = d ? `${heroLabel(d.hero_id)} — ${adventureLabel(d.adventure_id)}` : 'Transcript';
+  app.innerHTML = `<div class="panel">
+    ${accountBar()}
+    <div class="top-back"><button class="secondary" id="btn-top-back">← Back to Player Roster</button></div>
+    <div class="chapter-eyebrow display" style="color:var(--hero-red); font-size:0.8rem;">Admin · Transcript</div>
+    <h2 class="display" style="margin-top:2px;">${escapeHtml(title)}</h2>
+    ${body}
+    <div style="margin-top:18px;"><button class="secondary" id="btn-tr-back">← Back to Player Roster</button></div>
+  </div>`;
+  wireAccountBar();
+  const back = ()=>{ STATE.screen='PLAYERS'; render(); window.scrollTo(0,0); };
+  document.getElementById('btn-tr-back').onclick = back;
+  document.getElementById('btn-top-back').onclick = back;
+  if(!d) return;
+  const copy = document.getElementById('btn-tr-copy');
+  if(copy) copy.onclick = async ()=>{
+    let ok = false;
+    try{ await navigator.clipboard.writeText(transcriptToText(d)); ok = true; }catch(e){}
+    copy.textContent = ok ? 'Copied' : 'Copy failed';
+    setTimeout(()=>{ if(copy.isConnected) copy.textContent = 'Copy'; }, 1800);
+  };
+  const pr = document.getElementById('btn-tr-print');
+  if(pr) pr.onclick = ()=>printTranscriptWindow({heroAlias: heroLabel(d.hero_id), advTitle: adventureLabel(d.adventure_id), entries: d.entries,
+    karma: (d.awards||[]).length ? {awards:d.awards, total:d.total||0} : null});
+  const prev = document.getElementById('btn-tr-prev');
+  if(prev) prev.onclick = ()=>openTranscript(tr.userId, tr.heroId, tr.advId, 'previous');
+  const cur = document.getElementById('btn-tr-cur');
+  if(cur) cur.onclick = ()=>openTranscript(tr.userId, tr.heroId, tr.advId, 'current');
+}
 function playerLastActivity(p){
   const times = [p.last_login, p.created_at].concat((p.missions||[]).map(m=>m.last_played), (p.missions||[]).map(m=>m.completed_at)).filter(Boolean);
   return times.sort().pop() || '';
@@ -2594,7 +2680,8 @@ function renderPlayers(){
           ${heroes[hid].map(m=>`<div class="pl-m">${escapeHtml(adventureLabel(m.adventure_id))} — ${
             m.completed ? `✓ Completed ${escapeHtml(fmtDate(m.completed_at))}, ${m.karma} Karma` : ''}${
             m.completed && m.in_progress ? '; ' : ''}${
-            m.in_progress ? `save on file (last played ${escapeHtml(fmtDate(m.last_played))})` : ''}</div>`).join('')}
+            m.in_progress ? `save on file (last played ${escapeHtml(fmtDate(m.last_played))})` : ''}${
+            m.has_transcript ? ` <button class="secondary small tr-view" data-user="${p.id}" data-hero="${escapeHtml(m.hero_id)}" data-adv="${escapeHtml(m.adventure_id)}">View transcript</button>` : ''}</div>`).join('')}
         </div>`).join('') || '<div class="pl-meta">No heroes played yet.</div>';
       const opts = ['<option value="">— none —</option>'].concat(PREMADE_HEROES.map(h=>{
         const other = takenBy[h.id] && takenBy[h.id] !== p.email;
@@ -2634,6 +2721,9 @@ function renderPlayers(){
   wireAccountBar();
   document.getElementById('btn-players-back').onclick = ()=>{ STATE.screen='HERO_SELECT'; render(); window.scrollTo(0,0); };
   document.getElementById('btn-top-back').onclick = ()=>document.getElementById('btn-players-back').click();
+  document.querySelectorAll('.tr-view').forEach(b=>{
+    b.onclick = ()=>openTranscript(parseInt(b.getAttribute('data-user'),10), b.getAttribute('data-hero'), b.getAttribute('data-adv'), 'current');
+  });
   const search = document.getElementById('pl-search');
   if(search) search.oninput = ()=>{
     pd.filter = search.value; const pos = search.selectionStart; render();
@@ -2926,7 +3016,7 @@ function renderAdventureSelect(){
       saved.adventureId = advId;
       STATE.error = null;
       applySavedGame(hero, saved);
-      if(saved.karmaReview) pushKarma(hero.id, advId, saved.karmaReview);
+      if(saved.karmaReview) pushKarma(hero.id, advId, saved.karmaReview, saved.fullLog);
       STATE.screen = 'PLAY';
       render();
     };
@@ -3114,11 +3204,10 @@ function pushFullLog(who, text, mechanics){
   const meta = currentChapterMeta();
   STATE.fullLog.push({chapterId: STATE.chapterId, chapterTitle: meta.title, chapterEyebrow: meta.eyebrow, who, text, mechanics: mechanics || null});
 }
-function printAdventure(){
-  const hero = STATE.activeHero;
-  if(!hero || !STATE.fullLog.length) return;
-  const adventure = getAdventure(STATE.adventureId);
-  const advTitle = adventure ? adventure.title : 'Adventure';
+function printTranscriptWindow(opts){
+  const hero = {alias: opts.heroAlias};
+  const advTitle = opts.advTitle;
+  const entries = opts.entries;
 
   let html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHtml(hero.alias)} — ${escapeHtml(advTitle)}</title>
   <style>
@@ -3137,7 +3226,7 @@ function printAdventure(){
   html += `<h1>${escapeHtml(hero.alias)}<small>${escapeHtml(advTitle)}</small></h1>`;
 
   let lastChapterId = undefined;
-  STATE.fullLog.forEach(entry=>{
+  entries.forEach(entry=>{
     if(entry.chapterId !== lastChapterId){
       lastChapterId = entry.chapterId;
       html += `<div class="eyebrow">${escapeHtml(entry.chapterEyebrow||'')}</div><h2>${escapeHtml(entry.chapterTitle||'')}</h2>`;
@@ -3149,8 +3238,8 @@ function printAdventure(){
 
   html += `</body></html>`;
 
-  if(STATE.karmaReview && STATE.karmaReview.awards.length){
-    const kr = STATE.karmaReview;
+  if(opts.karma && opts.karma.awards.length){
+    const kr = opts.karma;
     const rows = kr.awards.map(a=>`<div class="entry"><div class="who">${escapeHtml(a.category)} (${a.points>=0?'+':''}${a.points})</div><div class="text">${escapeHtml(a.note)}</div></div>`).join('');
     html = html.replace('</body></html>', `
       <div class="eyebrow">Karma</div><h2>Karma Earned This Adventure</h2>
@@ -3165,6 +3254,14 @@ function printAdventure(){
   win.document.write(html);
   win.document.close();
   win.onload = ()=>{ win.focus(); win.print(); };
+}
+
+function printAdventure(){
+  const hero = STATE.activeHero;
+  if(!hero || !STATE.fullLog.length) return;
+  const adventure = getAdventure(STATE.adventureId);
+  printTranscriptWindow({heroAlias: hero.alias, advTitle: adventure ? adventure.title : 'Adventure', entries: STATE.fullLog,
+    karma: (STATE.karmaReview && STATE.karmaReview.awards.length) ? STATE.karmaReview : null});
 }
 
 function renderPlay(){
