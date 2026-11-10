@@ -216,6 +216,23 @@
   .adv-table th, .adv-table td{ border-bottom:1px solid #bbb; padding:6px 4px; text-align:left; vertical-align:middle; }
   .adv-in{ width:80px; }
   .adv-line{ margin-top:10px; padding:8px 12px; border:2px solid var(--hero-red); border-radius:8px; display:inline-block; font-weight:700; }
+  .hist-vol{ margin:22px 0 8px; }
+  .hist-banner{ position:relative; min-height:120px; background:var(--ink); border:3px solid var(--ink); box-shadow:5px 5px 0 rgba(10,31,68,0.85); overflow:hidden; display:flex; align-items:flex-end; }
+  .hist-banner img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:1; }
+  .hist-banner .hist-banner-text{ position:relative; z-index:2; padding:14px 18px; color:#fff; background:linear-gradient(0deg, rgba(10,31,68,0.92), rgba(10,31,68,0)); width:100%; }
+  .hist-banner h3{ font-family:'Anton',sans-serif; text-transform:uppercase; letter-spacing:1px; font-size:1.7rem; margin:0; }
+  .hist-banner p{ margin:2px 0 0; font-size:0.95rem; }
+  .hist-sub{ font-family:'Anton',sans-serif; text-transform:uppercase; letter-spacing:1px; font-size:1.05rem; margin:18px 0 8px; color:var(--ink); }
+  .hist-people{ display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:12px; }
+  .hist-tile{ border:2px solid var(--ink); background:#fff; padding:0; text-align:left; font:inherit; color:inherit; cursor:pointer; display:flex; flex-direction:column; }
+  .hist-tile[disabled]{ cursor:default; }
+  .hist-pic{ position:relative; aspect-ratio:4/5; background:var(--ink); overflow:hidden; }
+  .hist-pic img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 25%; z-index:2; }
+  .hist-tile-name{ font-family:'Anton',sans-serif; text-transform:uppercase; letter-spacing:0.5px; padding:6px 8px 0; font-size:0.95rem; }
+  .hist-tile-sub{ padding:0 8px 8px; font-size:0.75rem; opacity:0.8; }
+  .hist-body p{ line-height:1.6; margin:0 0 12px; }
+  .hist-thread{ border:2px solid var(--hero-red); padding:8px 12px; margin:8px 0; background:#fff; }
+  .hist-thread b{ font-family:'Anton',sans-serif; letter-spacing:0.5px; text-transform:uppercase; }
   .menu-head{ display:flex; justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap; margin:4px 0 18px; }
   .menu-title{ margin:2px 0 0; font-size:clamp(1.6rem,4vw,2.3rem); }
 
@@ -1966,7 +1983,7 @@ function render(){
   if(STATE.screen==='AUTH'){
     if(!bg){ bg = document.createElement('div'); bg.id = 'auth-backdrop'; bg.className = 'auth-backdrop'; document.body.prepend(bg); }
   } else if(bg){ bg.remove(); }
-  app.className = (STATE.screen==='HERO_SELECT' || STATE.screen==='HERO_DETAIL' || STATE.screen==='ADVENTURE_SELECT' || STATE.screen==='KARMA' || STATE.screen==='PLAYERS') ? 'wide' : '';
+  app.className = (STATE.screen==='HERO_SELECT' || STATE.screen==='HERO_DETAIL' || STATE.screen==='ADVENTURE_SELECT' || STATE.screen==='KARMA' || STATE.screen==='PLAYERS' || STATE.screen==='HISTORY' || STATE.screen==='HISTORY_MISSION' || STATE.screen==='HISTORY_PERSON') ? 'wide' : '';
   if(STATE.screen==='AUTH') return renderAuth();
   if(STATE.screen==='TITLE') return renderTitle();
   if(STATE.screen==='HERO_SELECT') return renderHeroSelect();
@@ -1974,6 +1991,9 @@ function render(){
   if(STATE.screen==='ADVENTURE_SELECT') return renderAdventureSelect();
   if(STATE.screen==='KARMA') return renderKarma();
   if(STATE.screen==='PLAYERS') return renderPlayers();
+  if(STATE.screen==='HISTORY') return renderHistory();
+  if(STATE.screen==='HISTORY_MISSION') return renderHistoryMission();
+  if(STATE.screen==='HISTORY_PERSON') return renderHistoryPerson();
   if(STATE.screen==='PLAY') return renderPlay();
 }
 
@@ -2212,6 +2232,7 @@ function renderHeroSelect(isRefresh){
           <h2 class="display menu-title">Choose your hero</h2>
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button id="btn-history" class="secondary">Ultras History</button>
           <button id="btn-karma" class="secondary">Karma Record</button>
           ${AUTH.isAdmin ? '<button id="btn-players" class="secondary">Player Roster</button>' : ''}
         </div>
@@ -2221,6 +2242,7 @@ function renderHeroSelect(isRefresh){
   `;
   wireAccountBar();
   document.getElementById('btn-karma').onclick = ()=>openKarma();
+  document.getElementById('btn-history').onclick = ()=>openHistory();
   const plBtn = document.getElementById('btn-players');
   if(plBtn) plBtn.onclick = ()=>openPlayers();
   document.querySelectorAll('.use-hero').forEach(el=>{
@@ -2230,6 +2252,180 @@ function renderHeroSelect(isRefresh){
     };
   });
   if(!isRefresh) refreshRosterInfo();
+}
+
+/* ---------- Ultras History ----------
+   Content lives in history/volumes.json (volumes, missions, open threads) and history/people.json
+   (villains, allies). Images: images/history/<volumeId|missionId>.jpg and portraits/<personId>.jpg */
+let HISTORY = null;
+async function loadHistory(){
+  if(HISTORY) return HISTORY;
+  const [vols, people] = await Promise.all([ fetchJson('history/volumes.json'), fetchJson('history/people.json') ]);
+  HISTORY = { volumes: vols.volumes || [], openThreads: vols.openThreads || [], people: people.people || [] };
+  return HISTORY;
+}
+async function openHistory(){
+  STATE.historyErr = null;
+  STATE.screen = 'HISTORY';
+  if(!HISTORY){ app.innerHTML = '<div class="panel"><div class="thinking">Opening the archives…</div></div>'; }
+  try{ await loadHistory(); }catch(e){ STATE.historyErr = 'Could not load the Ultras History (' + e.message + ').'; }
+  if(STATE.screen==='HISTORY'){ render(); window.scrollTo(0,0); }
+}
+function historyPerson(id){
+  const p = HISTORY && HISTORY.people.find(x=>x.id===id);
+  if(!p) return null;
+  if(p.contactId){
+    const c = CONTACT_PROFILES.find(x=>x.id===p.contactId);
+    if(c) return Object.assign({}, c, p, { name: c.name, portrait: p.portrait || c.id });
+  }
+  return Object.assign({ portrait: p.id }, p);
+}
+function historyTile(id, kind){
+  const p = historyPerson(id);
+  if(!p) return '';
+  const sub = p.status ? p.status : (p.role || '');
+  return `<button class="hist-tile" data-person="${escapeHtml(id)}">
+    <div class="hist-pic"><div class="portrait-fallback small">${escapeHtml(initials(p.name))}</div>${lookupImg('portraits/'+p.portrait, p.name)}</div>
+    <div class="hist-tile-name">${escapeHtml(p.name)}</div><div class="hist-tile-sub">${escapeHtml(sub)}</div></button>`;
+}
+function heroTile(h, note){
+  return `<div class="hist-tile" style="cursor:default;">
+    <div class="hist-pic"><div class="portrait-fallback small">${escapeHtml(initials(h.alias))}</div>${lookupImg('portraits/'+h.id, h.alias)}</div>
+    <div class="hist-tile-name">${escapeHtml(h.alias)}</div><div class="hist-tile-sub">${escapeHtml(note||'')}</div></div>`;
+}
+function wireHistoryTiles(from){
+  document.querySelectorAll('[data-person]').forEach(el=>{
+    el.onclick = ()=>{ STATE.historyPersonId = el.getAttribute('data-person'); STATE.historyBack = from; STATE.screen = 'HISTORY_PERSON'; render(); window.scrollTo(0,0); };
+  });
+}
+function renderHistory(){
+  if(STATE.historyErr || !HISTORY){
+    app.innerHTML = `<div class="panel">${accountBar()}<h2 class="display">Ultras History</h2>
+      <div class="error-box">${escapeHtml(STATE.historyErr || 'The history is not loaded.')}</div>
+      <div class="adv-actions" style="margin-top:12px;"><button id="btn-hist-retry">Try again</button> <button class="secondary" id="btn-hist-back">Back to roster</button></div></div>`;
+    wireAccountBar();
+    document.getElementById('btn-hist-retry').onclick = ()=>openHistory();
+    document.getElementById('btn-hist-back').onclick = ()=>{ STATE.screen='HERO_SELECT'; render(); };
+    return;
+  }
+  const vols = HISTORY.volumes.map((v, vi)=>{
+    const missions = v.missions.map((m, mi)=>`
+      <div class="adv-card" style="margin-bottom:14px;">
+        <div class="adv-cover"><div class="portrait-fallback small">${escapeHtml(m.title)}</div>${lookupImg('images/history/'+m.id, m.title)}</div>
+        <div class="adv-body">
+          <div class="adv-title">${escapeHtml(m.title)}</div>
+          <div class="tag" style="margin-bottom:6px;">Mission ${mi+1} of ${v.missions.length}</div>
+          <div class="adv-blurb">${escapeHtml(m.summary)}</div>
+          <div class="adv-actions"><button class="read-mission" data-vol="${vi}" data-mis="${mi}">Read the story</button></div>
+        </div>
+      </div>`).join('');
+    const roll = (v.rollCall||[]).map(r=>{ const h = PREMADE_HEROES.find(x=>x.id===r.hero); return h ? heroTile(h, r.note) : ''; }).join('');
+    const vill = (v.villains||[]).map(id=>historyTile(id)).join('');
+    const allies = (v.allies||[]).map(id=>historyTile(id)).join('');
+    return `<section class="hist-vol">
+      <div class="hist-banner"><div class="portrait-fallback small" style="position:absolute;inset:0;"></div>${lookupImg('images/history/'+v.id, v.title)}
+        <div class="hist-banner-text"><div class="chapter-eyebrow display" style="color:var(--hero-gold); font-size:0.75rem;">Volume ${vi+1}</div><h3>${escapeHtml(v.title)}</h3><p>${escapeHtml(v.tagline)}</p></div></div>
+      <p style="margin:12px 0;">${escapeHtml(v.intro)}</p>
+      ${missions}
+      ${roll ? `<div class="hist-sub">Roll Call</div><div class="hist-people">${roll}</div>` : ''}
+      ${vill ? `<div class="hist-sub">Rogues' Gallery</div><div class="hist-people">${vill}</div>` : ''}
+      ${allies ? `<div class="hist-sub">Allies and Contacts</div><div class="hist-people">${allies}</div>` : ''}
+    </section>`;
+  }).join('');
+  const threads = HISTORY.openThreads.length ? `<div class="hist-sub">Open Threads</div>${HISTORY.openThreads.map(t=>`<div class="hist-thread"><b>${escapeHtml(t.title)}</b><div>${escapeHtml(t.text)}</div></div>`).join('')}` : '';
+  app.innerHTML = `<div class="panel menu-panel">
+    ${accountBar()}
+    <div class="chapter-eyebrow display" style="color:var(--hero-red); font-size:0.8rem;">The Ultras</div>
+    <h2 class="display menu-title">Ultras History</h2>
+    ${vols}${threads}
+    <div style="margin-top:18px;"><button class="secondary" id="btn-hist-back">← Back to roster</button></div>
+  </div>`;
+  wireAccountBar();
+  document.getElementById('btn-hist-back').onclick = ()=>{ STATE.screen='HERO_SELECT'; render(); window.scrollTo(0,0); };
+  document.querySelectorAll('.read-mission').forEach(b=>{
+    b.onclick = ()=>{ STATE.historyMission = { vol: +b.getAttribute('data-vol'), mis: +b.getAttribute('data-mis') }; STATE.screen='HISTORY_MISSION'; render(); window.scrollTo(0,0); };
+  });
+  wireHistoryTiles('HISTORY');
+}
+function renderHistoryMission(){
+  const hm = STATE.historyMission;
+  const v = HISTORY && HISTORY.volumes[hm && hm.vol];
+  const m = v && v.missions[hm.mis];
+  if(!m){ STATE.screen='HISTORY'; return render(); }
+  const featured = (m.people||[]).map(id=>historyTile(id)).join('');
+  const prev = hm.mis > 0, next = hm.mis < v.missions.length-1;
+  app.innerHTML = `<div class="panel menu-panel">
+    ${accountBar()}
+    <div class="chapter-eyebrow display" style="color:var(--hero-red); font-size:0.8rem;">${escapeHtml(v.title)} · Mission ${hm.mis+1} of ${v.missions.length}</div>
+    <h2 class="display menu-title">${escapeHtml(m.title)}</h2>
+    <div class="adv-cover" style="display:none; min-height:0; aspect-ratio:16/6; margin:10px 0 14px; border:3px solid var(--ink);">${lookupImg('images/history/'+m.id, m.title).replace('<img ','<img onload="this.parentNode.style.display=\'block\'" ')}</div>
+    <div class="hist-body">${m.body.map(t=>`<p>${escapeHtml(t)}</p>`).join('')}</div>
+    ${featured ? `<div class="hist-sub">Featured in this story</div><div class="hist-people">${featured}</div>` : ''}
+    <div class="adv-actions" style="margin-top:18px;">
+      ${prev ? '<button class="secondary" id="btn-hm-prev">← Previous mission</button>' : ''}
+      ${next ? '<button class="secondary" id="btn-hm-next">Next mission →</button>' : ''}
+      <button id="btn-hm-back">Back to Ultras History</button>
+    </div></div>`;
+  wireAccountBar();
+  document.getElementById('btn-hm-back').onclick = ()=>{ STATE.screen='HISTORY'; render(); window.scrollTo(0,0); };
+  const go = d => { STATE.historyMission = { vol: hm.vol, mis: hm.mis + d }; render(); window.scrollTo(0,0); };
+  if(prev) document.getElementById('btn-hm-prev').onclick = ()=>go(-1);
+  if(next) document.getElementById('btn-hm-next').onclick = ()=>go(1);
+  wireHistoryTiles('HISTORY_MISSION');
+}
+function renderHistoryPerson(){
+  const p = historyPerson(STATE.historyPersonId);
+  if(!p){ STATE.screen = STATE.historyBack || 'HISTORY'; return render(); }
+  const facts = [];
+  if(p.identity) facts.push(['Real name', p.identity]);
+  facts.push(['Age', String(p.age)]);
+  facts.push(['Height', p.height]);
+  facts.push(['Weight', p.weight]);
+  if(p.altForm){ facts.push([p.altForm.label + ' height', p.altForm.height]); facts.push([p.altForm.label + ' weight', p.altForm.weight]); }
+  if(p.origin) facts.push(['Origin', p.origin]);
+  if(p.occupation) facts.push(['Occupation', p.occupation]);
+  if(p.base) facts.push(['Base', p.base]);
+  if(p.affiliation) facts.push(['Affiliation', p.affiliation]);
+  if(p.status) facts.push(['Status', p.status]);
+  const factsHtml = facts.filter(f=>f[1]).map(f=>`<div class="fact${String(f[1]).length > 16 ? ' wide' : ''}"><span class="fact-k">${escapeHtml(f[0])}</span><span class="fact-v">${escapeHtml(f[1])}</span></div>`).join('');
+  const statsHtml = STAT_NAMES.map(n=>{
+    const v = p.stats[n];
+    return `<div class="stat-row"><span class="stat-name">${escapeHtml(n)}</span><span class="stat-bar"><span style="width:${Math.min(100, v)}%"></span></span>
+      <span class="stat-val">${escapeHtml(rankNameForNumber(v))} <b>${v}</b></span></div>`;
+  }).join('');
+  const powersHtml = (p.powers||[]).map(pw=>`<li><b>${escapeHtml(powerName(pw))}</b>${typeof pw === 'object' ? ` — ${escapeHtml(rankNameForNumber(pw.rank))} (${pw.rank})` : ''}</li>`).join('');
+  const talentsHtml = (p.talents||[]).map(t=>`<li>${escapeHtml(typeof t === 'string' ? t : t.name)}</li>`).join('');
+  const chips = [`<span class="chip">Health ${p.health}</span>`, `<span class="chip">Karma ${p.karma}</span>`,
+    `<span class="chip">Resources ${escapeHtml(rankNameForNumber(p.resources))}</span>`];
+  if(p.popularity) chips.push(`<span class="chip">Popularity ${escapeHtml(rankNameForNumber(p.popularity))}</span>`);
+  if(p.stats.Strength >= 40) chips.push(`<span class="chip strength">${escapeHtml(rankNameForNumber(p.stats.Strength))} Strength</span>`);
+  const back = STATE.historyBack || 'HISTORY';
+  app.innerHTML = `<div class="panel menu-panel hero-detail">
+    ${accountBar()}
+    <div class="detail-top">
+      <div class="detail-portrait"><div class="portrait-fallback">${escapeHtml(initials(p.name))}</div>${lookupImg('portraits/'+p.portrait, p.name)}</div>
+      <div class="detail-head">
+        <div class="chapter-eyebrow display" style="color:var(--hero-red); font-size:0.8rem;">${escapeHtml(p.role || 'Profile')}</div>
+        <h2 class="display menu-title" style="margin:2px 0 0;">${escapeHtml(p.name)}</h2>
+        <div style="height:8px;"></div>
+        <div class="chips">${chips.join('')}</div>
+        <div class="facts">${factsHtml}</div>
+      </div>
+    </div>
+    <div class="detail-actions"><button id="btn-hp-back" class="secondary">← Back</button></div>
+    <div class="detail-grid">
+      <section class="detail-sec"><h3>FASERIP Stats</h3>${statsHtml}</section>
+      <section class="detail-sec"><h3>Powers</h3><ul>${powersHtml || '<li>None</li>'}</ul><h3 style="margin-top:14px;">Talents</h3><ul>${talentsHtml || '<li>None</li>'}</ul></section>
+    </div>
+    ${p.line ? `<section class="detail-sec"><h3>Role</h3><p>${escapeHtml(p.line)}</p></section>` : ''}
+    <section class="detail-sec"><h3>Bio</h3><p>${escapeHtml(p.bio)}</p></section>
+    ${p.appearance ? `<section class="detail-sec"><h3>Appearance</h3><p>${escapeHtml(p.appearance)}</p></section>` : ''}
+    ${p.story ? `<section class="detail-sec"><h3>In the story</h3><p>${escapeHtml(p.story)}</p></section>` : ''}
+    ${(p.contacts && p.contacts.length) ? `<section class="detail-sec"><h3>Contacts</h3><ul>${p.contacts.map(c=>`<li>${escapeHtml(c)}</li>`).join('')}</ul></section>` : ''}
+    <div class="detail-actions"><button id="btn-hp-back2" class="secondary">← Back</button></div>
+  </div>`;
+  wireAccountBar();
+  ['btn-hp-back','btn-hp-back2'].forEach(id=>{ document.getElementById(id).onclick = ()=>{ STATE.screen = back; render(); window.scrollTo(0,0); }; });
 }
 
 /* ---------- Player Roster (admin) ---------- */
