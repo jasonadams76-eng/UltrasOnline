@@ -1,0 +1,228 @@
+{
+ "talents": [
+  {
+   "name": "Guns",
+   "double": false
+  },
+  {
+   "name": "Thrown Weapons",
+   "double": false
+  },
+  {
+   "name": "Bows",
+   "double": false
+  },
+  {
+   "name": "Blunt Weapons",
+   "double": false
+  },
+  {
+   "name": "Sharp Weapons",
+   "double": false
+  },
+  {
+   "name": "Marksman",
+   "double": false
+  },
+  {
+   "name": "Weapons Specialist",
+   "double": true
+  },
+  {
+   "name": "Martial Arts A",
+   "double": false
+  },
+  {
+   "name": "Martial Arts B",
+   "double": false
+  },
+  {
+   "name": "Martial Arts C",
+   "double": false
+  },
+  {
+   "name": "Martial Arts D",
+   "double": false
+  },
+  {
+   "name": "Martial Arts E",
+   "double": false
+  },
+  {
+   "name": "Wrestling",
+   "double": false
+  },
+  {
+   "name": "Aerial Combat",
+   "double": false
+  },
+  {
+   "name": "Underwater Combat",
+   "double": false
+  },
+  {
+   "name": "Acrobatics",
+   "double": false
+  },
+  {
+   "name": "Tumbling",
+   "double": false
+  },
+  {
+   "name": "Resist Domination",
+   "double": false
+  },
+  {
+   "name": "Escape Artist",
+   "double": false
+  },
+  {
+   "name": "Student",
+   "double": false
+  },
+  {
+   "name": "First Aid",
+   "double": false
+  },
+  {
+   "name": "Medicine",
+   "double": true
+  },
+  {
+   "name": "Law",
+   "double": false
+  },
+  {
+   "name": "Law Enforcement",
+   "double": true
+  },
+  {
+   "name": "Espionage",
+   "double": false
+  },
+  {
+   "name": "Pilot (aircraft)",
+   "double": false
+  },
+  {
+   "name": "Driving (ground vehicles)",
+   "double": false
+  },
+  {
+   "name": "Military",
+   "double": false
+  },
+  {
+   "name": "Demolition",
+   "double": false
+  },
+  {
+   "name": "Streetsmart",
+   "double": false
+  },
+  {
+   "name": "Multi-lingual",
+   "double": false
+  },
+  {
+   "name": "Leadership",
+   "double": false
+  },
+  {
+   "name": "Business",
+   "double": false
+  },
+  {
+   "name": "Journalism",
+   "double": false
+  },
+  {
+   "name": "Photography",
+   "double": false
+  },
+  {
+   "name": "Artist",
+   "double": false
+  },
+  {
+   "name": "Architecture",
+   "double": false
+  },
+  {
+   "name": "Performer",
+   "double": false
+  },
+  {
+   "name": "Oratory",
+   "double": false
+  },
+  {
+   "name": "Engineering",
+   "double": false
+  },
+  {
+   "name": "Chemistry",
+   "double": false
+  },
+  {
+   "name": "Physics",
+   "double": false
+  },
+  {
+   "name": "Electronics",
+   "double": false
+  },
+  {
+   "name": "Mechanics",
+   "double": false
+  },
+  {
+   "name": "Computers",
+   "double": false
+  },
+  {
+   "name": "Robotics",
+   "double": false
+  },
+  {
+   "name": "Biology",
+   "double": false
+  },
+  {
+   "name": "Geology",
+   "double": false
+  },
+  {
+   "name": "Genetics",
+   "double": false
+  },
+  {
+   "name": "History",
+   "double": false
+  },
+  {
+   "name": "Archeology",
+   "double": false
+  },
+  {
+   "name": "Mystic & Occult Lore",
+   "double": false
+  },
+  {
+   "name": "Crime",
+   "double": false
+  },
+  {
+   "name": "Politics",
+   "double": false
+  },
+  {
+   "name": "Lockpicking",
+   "double": false
+  },
+  {
+   "name": "Television Junkie",
+   "double": false
+  }
+ ]
+}

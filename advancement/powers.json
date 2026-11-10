@@ -1,0 +1,419 @@
+{
+ "powers": [
+  {
+   "name": "Resistance to Fire and Heat",
+   "category": "Resistance",
+   "double": false
+  },
+  {
+   "name": "Resistance to Ice and Cold",
+   "category": "Resistance",
+   "double": false
+  },
+  {
+   "name": "Resistance to Electricity",
+   "category": "Resistance",
+   "double": false
+  },
+  {
+   "name": "Resistance to Radiation",
+   "category": "Resistance",
+   "double": false
+  },
+  {
+   "name": "Resistance to Poison",
+   "category": "Resistance",
+   "double": false
+  },
+  {
+   "name": "Resistance to Emotion Attacks",
+   "category": "Resistance",
+   "double": false
+  },
+  {
+   "name": "Resistance to Mental Attacks",
+   "category": "Resistance",
+   "double": false
+  },
+  {
+   "name": "Resistance to Magical Attacks",
+   "category": "Resistance",
+   "double": false
+  },
+  {
+   "name": "Resistance to Disease",
+   "category": "Resistance",
+   "double": false
+  },
+  {
+   "name": "Invulnerability",
+   "category": "Resistance",
+   "double": true
+  },
+  {
+   "name": "Protected Senses",
+   "category": "Sensory",
+   "double": false
+  },
+  {
+   "name": "Enhanced Senses",
+   "category": "Sensory",
+   "double": false
+  },
+  {
+   "name": "Infravision (or Night Vision)",
+   "category": "Sensory",
+   "double": false
+  },
+  {
+   "name": "Emotion Detection",
+   "category": "Sensory",
+   "double": false
+  },
+  {
+   "name": "Energy Detection",
+   "category": "Sensory",
+   "double": false
+  },
+  {
+   "name": "Magnetic Detection",
+   "category": "Sensory",
+   "double": false
+  },
+  {
+   "name": "Mutant Detection",
+   "category": "Sensory",
+   "double": false
+  },
+  {
+   "name": "Astral & Magic Detection",
+   "category": "Sensory",
+   "double": false
+  },
+  {
+   "name": "Tracking Ability",
+   "category": "Sensory",
+   "double": false
+  },
+  {
+   "name": "Combat Sense",
+   "category": "Sensory",
+   "double": true
+  },
+  {
+   "name": "Flight",
+   "category": "Movement",
+   "double": false
+  },
+  {
+   "name": "Gliding",
+   "category": "Movement",
+   "double": false
+  },
+  {
+   "name": "Leaping",
+   "category": "Movement",
+   "double": false
+  },
+  {
+   "name": "Wall-Crawling",
+   "category": "Movement",
+   "double": false
+  },
+  {
+   "name": "Lightning Speed",
+   "category": "Movement",
+   "double": false
+  },
+  {
+   "name": "Levitation",
+   "category": "Movement",
+   "double": false
+  },
+  {
+   "name": "Swimming",
+   "category": "Movement",
+   "double": false
+  },
+  {
+   "name": "Climbing",
+   "category": "Movement",
+   "double": false
+  },
+  {
+   "name": "Teleportation",
+   "category": "Movement",
+   "double": true
+  },
+  {
+   "name": "Earth Control",
+   "category": "Matter Control",
+   "double": false
+  },
+  {
+   "name": "Air Control",
+   "category": "Matter Control",
+   "double": false
+  },
+  {
+   "name": "Fire Control",
+   "category": "Matter Control",
+   "double": false
+  },
+  {
+   "name": "Water Control",
+   "category": "Matter Control",
+   "double": false
+  },
+  {
+   "name": "Weather Control",
+   "category": "Matter Control",
+   "double": false
+  },
+  {
+   "name": "Magnetic Manipulation",
+   "category": "Energy Control",
+   "double": false
+  },
+  {
+   "name": "Electrical Manipulation",
+   "category": "Energy Control",
+   "double": false
+  },
+  {
+   "name": "Light Manipulation",
+   "category": "Energy Control",
+   "double": false
+  },
+  {
+   "name": "Sound Manipulation",
+   "category": "Energy Control",
+   "double": false
+  },
+  {
+   "name": "Gravity Manipulation",
+   "category": "Energy Control",
+   "double": false
+  },
+  {
+   "name": "Energy Reflection",
+   "category": "Energy Control",
+   "double": false
+  },
+  {
+   "name": "Growth",
+   "category": "Body Control",
+   "double": false
+  },
+  {
+   "name": "Shrinking",
+   "category": "Body Control",
+   "double": false
+  },
+  {
+   "name": "Invisibility",
+   "category": "Body Control",
+   "double": false
+  },
+  {
+   "name": "Elongation",
+   "category": "Body Control",
+   "double": false
+  },
+  {
+   "name": "Shape-Shifting",
+   "category": "Body Control",
+   "double": true
+  },
+  {
+   "name": "Body Transformation",
+   "category": "Body Control",
+   "double": true
+  },
+  {
+   "name": "Animal Transformation—Self",
+   "category": "Body Control",
+   "double": false
+  },
+  {
+   "name": "Raise Lowest Ability",
+   "category": "Body Control",
+   "double": false
+  },
+  {
+   "name": "Alter Ego",
+   "category": "Body Control",
+   "double": false
+  },
+  {
+   "name": "Phasing",
+   "category": "Body Control",
+   "double": false
+  },
+  {
+   "name": "Ranged Attack: Projectiles",
+   "category": "Ranged Attack",
+   "double": false
+  },
+  {
+   "name": "Ranged Attack: Ensnarement",
+   "category": "Ranged Attack",
+   "double": false
+  },
+  {
+   "name": "Ranged Attack: Ice",
+   "category": "Ranged Attack",
+   "double": false
+  },
+  {
+   "name": "Ranged Attack: Fire",
+   "category": "Ranged Attack",
+   "double": false
+  },
+  {
+   "name": "Ranged Attack: Energy",
+   "category": "Ranged Attack",
+   "double": false
+  },
+  {
+   "name": "Ranged Attack: Force",
+   "category": "Ranged Attack",
+   "double": false
+  },
+  {
+   "name": "Ranged Attack: Sound",
+   "category": "Ranged Attack",
+   "double": false
+  },
+  {
+   "name": "Ranged Attack: Stunning",
+   "category": "Ranged Attack",
+   "double": false
+  },
+  {
+   "name": "Ranged Attack: Slashing",
+   "category": "Ranged Attack",
+   "double": false
+  },
+  {
+   "name": "Ranged Attack: Acid/Corrosive",
+   "category": "Ranged Attack",
+   "double": false
+  },
+  {
+   "name": "Telepathy",
+   "category": "Mental",
+   "double": false
+  },
+  {
+   "name": "Image Generation",
+   "category": "Mental",
+   "double": true
+  },
+  {
+   "name": "Telekinesis",
+   "category": "Mental",
+   "double": false
+  },
+  {
+   "name": "Force Fields—Personal",
+   "category": "Mental",
+   "double": false
+  },
+  {
+   "name": "Force Fields—Projected",
+   "category": "Mental",
+   "double": false
+  },
+  {
+   "name": "Mind Control",
+   "category": "Mental",
+   "double": true
+  },
+  {
+   "name": "Plant Control",
+   "category": "Mental",
+   "double": false
+  },
+  {
+   "name": "Psi-Screen",
+   "category": "Mental",
+   "double": false
+  },
+  {
+   "name": "Mental Force Bolts",
+   "category": "Mental",
+   "double": false
+  },
+  {
+   "name": "Astral Projection",
+   "category": "Mental",
+   "double": false
+  },
+  {
+   "name": "Extra Body Parts",
+   "category": "Body Alterations — Offensive",
+   "double": false
+  },
+  {
+   "name": "Extra Attacks",
+   "category": "Body Alterations — Offensive",
+   "double": false
+  },
+  {
+   "name": "Energy Touch",
+   "category": "Body Alterations — Offensive",
+   "double": false
+  },
+  {
+   "name": "Paralyzing Touch",
+   "category": "Body Alterations — Offensive",
+   "double": false
+  },
+  {
+   "name": "Claws",
+   "category": "Body Alterations — Offensive",
+   "double": false
+  },
+  {
+   "name": "Rotting Touch",
+   "category": "Body Alterations — Offensive",
+   "double": false
+  },
+  {
+   "name": "Body Armor",
+   "category": "Body Alterations — Defensive",
+   "double": false
+  },
+  {
+   "name": "Water Breathing",
+   "category": "Body Alterations — Defensive",
+   "double": false
+  },
+  {
+   "name": "Absorption",
+   "category": "Body Alterations — Defensive",
+   "double": false
+  },
+  {
+   "name": "Regeneration",
+   "category": "Body Alterations — Defensive",
+   "double": false
+  },
+  {
+   "name": "Recovery",
+   "category": "Body Alterations — Defensive",
+   "double": false
+  },
+  {
+   "name": "Life Support",
+   "category": "Body Alterations — Defensive",
+   "double": false
+  },
+  {
+   "name": "Healing",
+   "category": "Body Alterations — Defensive",
+   "double": false
+  }
+ ]
+}

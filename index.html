@@ -233,6 +233,9 @@
   .hist-body p{ line-height:1.6; margin:0 0 12px; }
   .hist-thread{ border:2px solid var(--hero-red); padding:8px 12px; margin:8px 0; background:#fff; }
   .hist-thread b{ font-family:'Anton',sans-serif; letter-spacing:0.5px; text-transform:uppercase; }
+  .adv-add{ margin:10px 0; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .adv-add select{ font:inherit; padding:5px 8px; border:2px solid var(--ink); border-radius:6px; background:#fff; max-width:100%; }
+  .adv-sec .adv-table td:last-child{ text-align:right; }
   .menu-head{ display:flex; justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap; margin:4px 0 18px; }
   .menu-title{ margin:2px 0 0; font-size:clamp(1.6rem,4vw,2.3rem); }
 
@@ -1129,7 +1132,7 @@ function setSession(token, email, isAdmin){
   lsSet(SESSION_KEY, token);
 }
 function clearSession(){
-  AUTH.token = null; AUTH.email = null; AUTH.isAdmin = false; STATE.advancement = null;
+  AUTH.token = null; AUTH.email = null; AUTH.isAdmin = false; STATE.advancement = null; STATE.upgrades = null; applyUpgrades([]);
   lsDel(SESSION_KEY);
 }
 async function restoreSession(){
@@ -1149,7 +1152,7 @@ async function restoreSession(){
 async function doLogout(){
   try{ await apiCall('POST', '/api/logout'); }catch(e){ /* best effort */ }
   clearSession();
-  STATE.activeHero = null; STATE.notice = null; STATE.karmaData = null; STATE.advInfo = null;
+  STATE.activeHero = null; STATE.heroSnap = null; STATE.notice = null; STATE.karmaData = null; STATE.advInfo = null;
   STATE.authMode = 'login'; STATE.authMessage = null;
   STATE.screen = 'TITLE';
   render();
@@ -1181,6 +1184,7 @@ async function loadGame(heroId, adventureId){
 }
 /* Never throws (callers treat saving as best-effort); returns true/false. */
 async function saveGame(heroId, gameState){
+  if(STATE.heroSnap && !gameState.heroSnap) gameState.heroSnap = STATE.heroSnap;
   try{
     await apiCall('PUT', '/api/game', { hero_id: heroId, adventure_id: gameState.adventureId, json: JSON.stringify(gameState) });
     hideSaveWarning();
@@ -2254,6 +2258,111 @@ function renderHeroSelect(isRefresh){
   if(!isRefresh) refreshRosterInfo();
 }
 
+/* ---------- Advancement: upgrades overlay ----------
+   Official players spend Advancement Karma (server-side) on upgrades. The server's list of non-reversed upgrades is
+   layered over the original sheets in BASE_HEROES. Saved games keep a snapshot of the sheet they started with. */
+const RANK_STEPS = [2, 4, 6, 10, 20, 30, 40, 50, 75];
+let BASE_HEROES = null;
+const cloneJson = o => JSON.parse(JSON.stringify(o));
+function baseHeroes(){ if(!BASE_HEROES) BASE_HEROES = cloneJson(PREMADE_HEROES); return BASE_HEROES; }
+function nextRankNum(n){ for(const r of RANK_STEPS) if(r > n) return r; return null; }
+function normName(s){ return String(s).toLowerCase().replace(/\(.*?\)/g,'').replace(/\s+-\s+.*$/,'').replace(/\s+/g,' ').trim(); }
+function applyUpgrades(list){
+  const base = baseHeroes();
+  PREMADE_HEROES.forEach(h=>{
+    const b = base.find(x=>x.id===h.id); if(!b) return;
+    h.stats = cloneJson(b.stats); h.powers = cloneJson(b.powers); h.talents = cloneJson(b.talents);
+    (list||[]).filter(u=>u.hero_id===h.id).sort((a,c)=>a.id-c.id).forEach(u=>{
+      if(u.kind==='stat') h.stats[u.target] = u.to_value;
+      else if(u.kind==='power_rank'){ const p = h.powers.find(x=>powerName(x)===u.target); if(p && typeof p==='object') p.rank = u.to_value; }
+      else if(u.kind==='power') h.powers.push({ name:u.target, rank:u.to_value });
+      else if(u.kind==='talent') h.talents.push({ name:u.target, effect:'Gained through advancement.' });
+    });
+  });
+}
+async function loadUpgrades(){
+  try{ const r = await apiCall('GET','/api/advancement/upgrades'); STATE.upgrades = r.upgrades || []; applyUpgrades(STATE.upgrades); }catch(e){ /* keep whatever sheets we have */ }
+}
+function heroSnap(h){ return { stats: cloneJson(h.stats), powers: cloneJson(h.powers), talents: cloneJson(h.talents) }; }
+function heroWithSnap(h, snap){ return Object.assign({}, h, { stats: cloneJson(snap.stats), powers: cloneJson(snap.powers), talents: cloneJson(snap.talents) }); }
+function baseSnapFor(id){ const b = baseHeroes().find(x=>x.id===id); return heroSnap(b); }
+function upgradeText(u){
+  const rk = n => `${rankNameForNumber(n)} (${n})`;
+  if(u.kind==='stat' || u.kind==='power_rank') return `${u.target}: ${rk(u.from_value)} → ${rk(u.to_value)}`;
+  if(u.kind==='power') return `Gained power ${u.target} (${rk(u.to_value)})`;
+  return `Gained talent ${u.target}`;
+}
+let ADV_LISTS = null;
+async function loadAdvLists(){
+  if(ADV_LISTS) return ADV_LISTS;
+  const [p, t] = await Promise.all([ fetchJson('advancement/powers.json'), fetchJson('advancement/talents.json') ]);
+  ADV_LISTS = { powers: p.powers || [], talents: t.talents || [] };
+  return ADV_LISTS;
+}
+function advanceSection(h){
+  const bal = STATE.advancement[h.id];
+  const conf = STATE.advConfirm && STATE.advConfirm.hero === h.id ? STATE.advConfirm : null;
+  const btn = (kind, target, cost, label) => `<button class="secondary small adv-buy" data-kind="${escapeHtml(kind)}" data-target="${escapeHtml(target)}" data-cost="${cost}" data-label="${escapeHtml(label)}" ${cost > bal ? 'disabled' : ''}>Buy ${cost}</button>`;
+  const rankRow = (kind, name, cur) => {
+    const nxt = nextRankNum(cur);
+    return `<tr><td>${escapeHtml(name)}</td><td>${escapeHtml(rankNameForNumber(cur))} (${cur})</td>
+      <td>${nxt ? `${escapeHtml(rankNameForNumber(nxt))} (${nxt})` : '<span class="tag">at the limit</span>'}</td>
+      <td>${nxt ? btn(kind, name, 100*nxt, `Raise ${name} to ${rankNameForNumber(nxt)} (${nxt})`) : ''}</td></tr>`;
+  };
+  const statRows = STAT_NAMES.map(n => rankRow('stat', n, h.stats[n])).join('');
+  const powerRows = h.powers.filter(p => typeof p === 'object').map(p => rankRow('power_rank', p.name, p.rank)).join('');
+  let addHtml = '<div class="tag">Loading the list of powers and talents…</div>';
+  if(ADV_LISTS){
+    const ownedP = h.powers.map(p => normName(powerName(p)));
+    const ownedT = h.talents.map(t => normName(t.name));
+    const pOpts = ADV_LISTS.powers.filter(p => !ownedP.includes(normName(p.name)))
+      .map(p => `<option value="${escapeHtml(p.name)}" data-cost="${p.double ? 8000 : 4000}">${escapeHtml(p.name)}${p.double ? ' ★' : ''} — ${p.double ? 8000 : 4000}</option>`).join('');
+    const tOpts = ADV_LISTS.talents.filter(t => !ownedT.includes(normName(t.name)))
+      .map(t => `<option value="${escapeHtml(t.name)}" data-cost="${t.double ? 4000 : 2000}">${escapeHtml(t.name)}${t.double ? ' ★' : ''} — ${t.double ? 4000 : 2000}</option>`).join('');
+    addHtml = `<div class="adv-add"><label>Add a talent <select id="adv-talent-sel">${tOpts}</select></label> <button class="secondary small" id="adv-talent-buy">Buy</button></div>
+      <div class="adv-add"><label>Add a power (starts at Typical 6) <select id="adv-power-sel">${pOpts}</select></label> <button class="secondary small" id="adv-power-buy">Buy</button></div>
+      <div class="tag">★ costs double.</div>`;
+  }
+  const mine = (STATE.upgrades || []).filter(u => u.hero_id === h.id && u.cost !== undefined).sort((a,b)=>b.id-a.id);
+  const histHtml = mine.length ? `<h3 style="margin-top:14px;">Purchases so far</h3><ul>${mine.map(u => `<li>${escapeHtml(upgradeText(u))} <span class="tag">${u.cost} Karma</span></li>`).join('')}</ul>` : '';
+  return `<section class="detail-sec adv-sec"><h3>Advancement</h3>
+    <div class="adv-line" style="margin:0 0 10px;">Advancement Karma available: ${bal}</div>
+    ${STATE.advMsg ? `<div class="notice-box">${escapeHtml(STATE.advMsg)}</div>` : ''}
+    ${conf ? `<div class="error-box" style="background:#fff7e0;color:#222;border-color:#c90;">Spend <b>${conf.cost}</b> Advancement Karma to ${escapeHtml(conf.label)}? You cannot undo this yourself (an admin can reverse it).
+      <div class="adv-actions" style="margin-top:8px;"><button id="adv-confirm-yes">Confirm</button> <button class="secondary" id="adv-confirm-no">Cancel</button></div></div>` : ''}
+    <table class="adv-table"><tr><th>Stat</th><th>Now</th><th>Next</th><th></th></tr>${statRows}</table>
+    ${powerRows ? `<table class="adv-table"><tr><th>Power</th><th>Now</th><th>Next</th><th></th></tr>${powerRows}</table>` : ''}
+    ${addHtml}${histHtml}
+    <div class="tag" style="margin-top:8px;">Raising a rank costs 100 × the new rank number, up to Monstrous (75). Talents cost 2000, powers 4000.</div>
+  </section>`;
+}
+function wireAdvanceSection(h){
+  document.querySelectorAll('.adv-buy').forEach(b=>{
+    b.onclick = ()=>{ STATE.advConfirm = { hero:h.id, kind:b.getAttribute('data-kind'), target:b.getAttribute('data-target'), cost:+b.getAttribute('data-cost'), label:b.getAttribute('data-label') }; STATE.advMsg = null; render(); };
+  });
+  const pick = (selId, kind, word) => {
+    const sel = document.getElementById(selId); if(!sel || !sel.value) return;
+    const opt = sel.options[sel.selectedIndex];
+    STATE.advConfirm = { hero:h.id, kind, target:sel.value, cost:+opt.getAttribute('data-cost'), label:`gain the ${word} ${sel.value}` };
+    STATE.advMsg = null; render();
+  };
+  const tb = document.getElementById('adv-talent-buy'); if(tb) tb.onclick = ()=>pick('adv-talent-sel','talent','talent');
+  const pb = document.getElementById('adv-power-buy'); if(pb) pb.onclick = ()=>pick('adv-power-sel','power','power');
+  const no = document.getElementById('adv-confirm-no'); if(no) no.onclick = ()=>{ STATE.advConfirm = null; render(); };
+  const yes = document.getElementById('adv-confirm-yes');
+  if(yes) yes.onclick = async ()=>{
+    const c = STATE.advConfirm; yes.disabled = true;
+    try{
+      const r = await apiCall('POST','/api/advancement/purchase',{ hero_id:c.hero, kind:c.kind, target:c.target });
+      STATE.advMsg = `Done: ${c.label}. ${r.cost} Karma spent, ${r.balance} left.`;
+    }catch(e){ STATE.advMsg = e.message; }
+    STATE.advConfirm = null;
+    try{ const a = await apiCall('GET','/api/advancement'); STATE.advancement = a.advancement || {}; }catch(e){}
+    await loadUpgrades();
+    if(STATE.screen==='HERO_DETAIL') render();
+  };
+}
+
 /* ---------- Ultras History ----------
    Content lives in history/volumes.json (volumes, missions, open threads) and history/people.json
    (villains, allies). Images: images/history/<volumeId|missionId>.jpg and portraits/<personId>.jpg */
@@ -2438,7 +2547,8 @@ async function openPlayers(){
 async function loadPlayers(){
   const pd = STATE.playersData;
   try{
-    const [pl, adv] = await Promise.all([ apiCall('GET','/api/admin/players'), apiCall('GET','/api/advancement') ]);
+    const [pl, adv, upg] = await Promise.all([ apiCall('GET','/api/admin/players'), apiCall('GET','/api/advancement'), apiCall('GET','/api/admin/upgrades').catch(()=>({upgrades:[]})) ]);
+    pd.upgrades = upg.upgrades || [];
     pd.players = pl.players || [];
     pd.adv = adv.admin || [];
     pd.error = null;
@@ -2466,7 +2576,7 @@ function renderPlayers(){
       <tr><td><b>${escapeHtml(heroLabel(a.hero_id))}</b></td>
         <td>${a.email ? escapeHtml(a.email) : '<span class="tag">no official player</span>'}</td>
         <td><input class="adv-in" type="number" step="1" data-base="${escapeHtml(a.hero_id)}" value="${a.base_total}"></td>
-        <td>${a.earned}</td><td>${a.spent}</td><td><b>${a.total}</b></td>
+        <td>${a.earned}</td><td>${a.spent}</td><td>${a.spent_upgrades || 0}</td><td><b>${a.total}</b></td>
         <td><button class="secondary small adv-save" data-hero="${escapeHtml(a.hero_id)}">Save</button></td></tr>`).join('');
     const cards = list.map(p=>{
       const heroes = {};
@@ -2493,7 +2603,12 @@ function renderPlayers(){
     }).join('') || '<div class="hero-sheet-mini">No players match.</div>';
     body = `
       <h3 style="margin:14px 0 0;">Advancement Karma</h3>
-      <table class="adv-table"><tr><th>Hero</th><th>Official player</th><th>Starting total</th><th>Earned online</th><th>Spent</th><th>Balance</th><th></th></tr>${advRows}</table>
+      <table class="adv-table"><tr><th>Hero</th><th>Official player</th><th>Starting total</th><th>Earned online</th><th>Spent</th><th>Upgrades</th><th>Balance</th><th></th></tr>${advRows}</table>
+      <h3 style="margin:14px 0 0;">Upgrade log</h3>
+      ${(pd.upgrades||[]).length ? `<table class="adv-table"><tr><th>When</th><th>Player</th><th>Hero</th><th>Upgrade</th><th>Cost</th><th></th></tr>${pd.upgrades.map(u=>`
+        <tr><td>${escapeHtml(fmtDate(u.created_at))}</td><td>${escapeHtml(u.email||'')}</td><td>${escapeHtml(heroLabel(u.hero_id))}</td>
+        <td>${u.reversed ? '<s>' : ''}${escapeHtml(upgradeText(u))}${u.reversed ? '</s> (reversed)' : ''}</td><td>${u.cost}</td>
+        <td>${u.reversed ? '' : `<button class="secondary small upg-rev" data-id="${u.id}">Reverse</button>`}</td></tr>`).join('')}</table>` : '<div class="tag" style="margin:6px 0 12px;">No upgrades bought yet.</div>'}
       <h3 style="margin:14px 0 0;">Players (${pd.players.length})</h3>
       <input id="pl-search" class="pl-search" type="search" placeholder="Search by email" value="${escapeHtml(pd.filter||'')}">
       ${cards}`;
@@ -2530,6 +2645,16 @@ function renderPlayers(){
       }catch(e){ pd.msg = e.message; await loadPlayers(); }
     };
   });
+  document.querySelectorAll('.upg-rev').forEach(btn=>{
+    btn.onclick = async ()=>{
+      try{
+        await apiCall('POST','/api/admin/upgrade/reverse',{ id: parseInt(btn.getAttribute('data-id'),10) });
+        pd.msg = 'Purchase reversed and refunded.';
+        await loadUpgrades();
+      }catch(e){ pd.msg = e.message; }
+      await loadPlayers();
+    };
+  });
   document.querySelectorAll('.adv-save').forEach(btn=>{
     btn.onclick = async ()=>{
       const hid = btn.getAttribute('data-hero');
@@ -2552,9 +2677,14 @@ function openHeroDetail(hero){
   render();
   window.scrollTo(0, 0);
   // Advancement Karma: the server only sends it to the hero's official player and to admins.
-  apiCall('GET','/api/advancement').then(r=>{
+  STATE.advConfirm = null; STATE.advMsg = null;
+  Promise.all([ apiCall('GET','/api/advancement'), loadUpgrades() ]).then(async ([r])=>{
     STATE.advancement = r.advancement || {};
     if(STATE.screen==='HERO_DETAIL' && STATE.detailHero && STATE.detailHero.id===hero.id) render();
+    if(STATE.advancement[hero.id] !== undefined){
+      try{ await loadAdvLists(); }catch(e){ ADV_LISTS = { powers: [], talents: [] }; }
+      if(STATE.screen==='HERO_DETAIL' && STATE.detailHero && STATE.detailHero.id===hero.id) render();
+    }
   }).catch(()=>{});
 }
 function renderHeroDetail(){
@@ -2637,6 +2767,7 @@ function renderHeroDetail(){
         <section class="detail-sec"><h3>FASERIP Stats</h3>${statsHtml}</section>
         <section class="detail-sec"><h3>Powers</h3><ul>${powersHtml}</ul><h3 style="margin-top:14px;">Talents</h3><ul>${talentsHtml || '<li>None</li>'}</ul></section>
       </div>
+      ${(STATE.advancement && STATE.advancement[h.id] !== undefined) ? advanceSection(h) : ''}
       <section class="detail-sec"><h3>Origin</h3><p>${escapeHtml(h.origin)}</p></section>
       <section class="detail-sec"><h3>Bio</h3><p>${escapeHtml(h.bio)}</p></section>
       <section class="detail-sec"><h3>Appearance</h3><p>${escapeHtml(h.appearance)}</p></section>
@@ -2654,6 +2785,7 @@ function renderHeroDetail(){
   ['btn-detail-play', 'btn-detail-play2'].forEach(id => {
     document.getElementById(id).onclick = ()=> openAdventureSelect(h);
   });
+  if(STATE.advancement && STATE.advancement[h.id] !== undefined) wireAdvanceSection(h);
 }
 
 async function openAdventureSelect(hero){
@@ -2662,7 +2794,7 @@ async function openAdventureSelect(hero){
   STATE.error = null;
   app.innerHTML = '<div class="panel"><div class="thinking">Checking your saved games…</div></div>';
   try{
-    const [games, karma] = await Promise.all([ apiCall('GET','/api/games'), apiCall('GET','/api/karma') ]);
+    const [games, karma] = await Promise.all([ apiCall('GET','/api/games'), apiCall('GET','/api/karma'), loadUpgrades() ]);
     STATE.advInfo = {
       saves: new Set((games.games||[]).filter(g=>g.hero_id===hero.id).map(g=>g.adventure_id)),
       done: new Set((karma.ledger||[]).filter(k=>k.hero_id===hero.id).map(k=>k.adventure_id))
@@ -2681,6 +2813,10 @@ async function openAdventureSelect(hero){
 }
 
 function applySavedGame(hero, saved){
+  // A save plays with the sheet it started with; saves from before advancement existed use the original sheet.
+  STATE.heroSnap = saved.heroSnap || baseSnapFor(hero.id);
+  hero = heroWithSnap(hero, STATE.heroSnap);
+  STATE.activeHero = hero;
   STATE.adventureId = saved.adventureId;
   STATE.chapterId = saved.chapterId;
   STATE.log = saved.log;
@@ -2796,8 +2932,10 @@ function renderAdventureSelect(){
       STATE.fullLog = [];
       pushFullLog('gm', currentChapter().opening, null);
       STATE.pendingAdvance = null;
-      STATE.currentHealth = maxHealth(hero);
-      STATE.currentKarma = maxKarma(hero);
+      STATE.heroSnap = heroSnap(hero);
+      STATE.activeHero = heroWithSnap(hero, STATE.heroSnap);
+      STATE.currentHealth = maxHealth(STATE.activeHero);
+      STATE.currentKarma = maxKarma(STATE.activeHero);
       STATE.enemies = {};
       STATE.karmaReview = null;
       STATE.karmaReviewStatus = null;
