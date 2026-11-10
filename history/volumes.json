@@ -167,6 +167,26 @@
    ],
    "rollCall": [
     {
+     "hero": "premade_traumahawk",
+     "note": "Original member"
+    },
+    {
+     "hero": "premade_thunderbolt",
+     "note": "Original member"
+    },
+    {
+     "hero": "premade_steeltalon",
+     "note": "Original member"
+    },
+    {
+     "hero": "premade_silverstar",
+     "note": "Original member"
+    },
+    {
+     "hero": "premade_tungstentitan",
+     "note": "Joined in Shadows of the Infinite"
+    },
+    {
      "hero": "premade_bones",
      "note": "Joined in Ultras Day"
     }
