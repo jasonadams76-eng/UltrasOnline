@@ -268,6 +268,16 @@
     .detail-actions .play-btn, .detail-actions .secondary{ flex:1 1 100%; }
   }
 
+  .contact-list{ display:grid; gap:12px; }
+  .contact-card{ display:grid; grid-template-columns:96px 1fr; gap:14px; border:2px solid var(--ink); background:var(--paper); padding:10px; }
+  .contact-pic{ position:relative; width:96px; aspect-ratio:4/5; overflow:hidden; background:var(--ink); border:2px solid var(--ink); }
+  .contact-pic img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 20%; z-index:2; }
+  .contact-name{ font-family:'Anton',sans-serif; text-transform:uppercase; letter-spacing:0.5px; font-size:1.15rem; }
+  .contact-body p{ margin:6px 0; font-size:0.95rem; line-height:1.45; }
+  .contact-meta{ font-family:'JetBrains Mono',monospace; font-size:0.68rem; color:#333; line-height:1.5; margin-top:3px; }
+  .extra-contacts{ margin:0 0 12px; }
+  @media (max-width:640px){ .contact-card{ grid-template-columns:72px 1fr; } .contact-pic{ width:72px; } }
+
   .adv-hero{ display:flex; align-items:center; gap:14px; margin-bottom:16px; }
   .adv-hero-pic{ position:relative; width:78px; height:78px; flex:none; border:3px solid var(--ink); border-radius:50%; overflow:hidden; background:var(--ink); }
   .adv-hero-pic img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 14%; transform:scale(1.6); transform-origin:50% 14%; z-index:2; }
@@ -395,11 +405,64 @@ const STATE = {
 };
 
 /* ---------- Story content ---------- */
-/* Shared contacts available to every member of The Ultras. */
-const SHARED_CONTACTS = [
-  'Victor Cross — head of ORACLE, a national intelligence agency; can be called on for information relevant to a situation.',
-  'Frankie Vega — a criminal underworld informant tied into the New York crime network; the team has used him before.'
+/* Recurring ORACLE contacts available to every member of The Ultras. */
+const CONTACT_PROFILES = [
+  {
+    id: 'contact_victorcross', name: 'Victor Cross', role: 'Director of ORACLE',
+    line: 'Director of ORACLE, which protects valuable artifacts and keeps them out of the hands of bad people; can be called on for information, resources and backup.',
+    age: 45, height: '6\'2"', weight: '220 lbs',
+    appearance: 'A tall, composed man with close-cropped hair and a neatly trimmed goatee. He dresses like a veteran field officer who rarely needs to raise his voice: a belted tan trench coat over a gray-blue collared shirt and dark tie. He carries himself with quiet authority and watchful, unreadable eyes.',
+    stats: { 'Fighting Ability': 20, Agility: 20, Strength: 10, Endurance: 20, Reason: 20, Intuition: 30, Psyche: 30 },
+    health: 70, karma: 90, resources: 20, popularity: 10,
+    powers: ['Body Armor (Good, 10)', 'Energy Blasters (Remarkable, 30)', 'Electric Shock (Excellent, 20)'],
+    talents: ['Guns', 'Leadership', 'Martial Arts B', 'Espionage', 'Military'],
+    bio: 'Victor Cross is the Director of ORACLE, an organization that helps protect valuable artifacts and keep them out of the hands of bad people. Cross was a special forces operative who was then trained in covert operations by the CIA. He and his network of agents are very active in tracking down any threats to humanity.'
+  },
+  {
+    id: 'contact_frankievega', name: 'Frankie Vega', role: 'Underworld informant',
+    line: 'A street-level criminal with his finger on the pulse of the New York underworld who sometimes sells information to ORACLE when it benefits him; the team has used him before.',
+    age: 38, height: '5\'10"', weight: '175 lbs',
+    appearance: 'A lean, weathered man with slicked-back dark hair and a stubbled, world-weary face. He wears a black button-up shirt under a charcoal wool coat, a dark belt and a wristwatch, and looks like he is always quietly sizing up the room.',
+    stats: { 'Fighting Ability': 10, Agility: 6, Strength: 6, Endurance: 10, Reason: 10, Intuition: 30, Psyche: 10 },
+    health: 32, karma: 50, resources: 10, popularity: 0,
+    powers: ['Equipment: Handgun (Typical, 6 damage)'],
+    talents: ['Crime', 'Sleight of Hand'],
+    bio: 'Frankie Vega is a street-level criminal who has his finger on the pulse of the criminal underworld and has been known to provide information to ORACLE from time to time when it benefits him. He has a funny, likable personality despite being a criminal who mostly looks out for himself.'
+  },
+  {
+    id: 'contact_adrianblackwell', name: 'Adrian Blackwell', role: 'ORACLE scientific consultant',
+    line: 'A brilliant former Genesis Alliance co-leader, now an ORACLE consultant on engineering, genetics, archaeology and the occult.',
+    age: 47, height: '5\'9"', weight: '165 lbs',
+    appearance: 'A composed man with swept-back dark hair graying at the temples, a mustache and a graying goatee. He wears a white lab coat over a collared shirt and a dark patterned tie, and studies everyone like a specimen.',
+    stats: { 'Fighting Ability': 6, Agility: 6, Strength: 6, Endurance: 6, Reason: 30, Intuition: 30, Psyche: 30 },
+    health: 24, karma: 90, resources: 30, popularity: 0,
+    powers: ['Body Armor (Good, 10)', 'Blaster (Excellent, 20)'],
+    talents: ['Engineering', 'Genetics', 'Archaeology', 'Occult Lore'],
+    bio: 'Adrian Blackwell was a founding member and co-leader of The Genesis Alliance, a secret organization of scientists and technologists he steered toward shortcuts to power regardless of who got hurt; he was obsessed with increasing his own power and influence. After the Ultras defeated the Alliance in its attempt to recover the stolen artifact known as the Infinity Codex, he and Evelyn Stone cut a deal with ORACLE to stay out of prison, and now provide scientific expertise on numerous subjects.'
+  },
+  {
+    id: 'contact_evelynstone', name: 'Evelyn Stone', role: 'ORACLE scientific consultant',
+    line: 'A brilliant former Genesis Alliance co-leader, now an ORACLE consultant on engineering, genetics, archaeology and the occult.',
+    age: 38, height: '5\'8"', weight: '125 lbs',
+    appearance: 'A poised woman with shoulder-length brown hair in loose waves and a calm, appraising expression. She wears a belted white lab coat over a teal collared shirt.',
+    stats: { 'Fighting Ability': 6, Agility: 6, Strength: 6, Endurance: 6, Reason: 30, Intuition: 30, Psyche: 30 },
+    health: 24, karma: 90, resources: 30, popularity: 0,
+    powers: ['Body Armor (Good, 10)', 'Blaster (Excellent, 20)'],
+    talents: ['Engineering', 'Genetics', 'Archaeology', 'Occult Lore'],
+    bio: 'Evelyn Stone was a founding member and co-leader of The Genesis Alliance, a secret organization of scientists and technologists she steered toward shortcuts to power regardless of who got hurt; she was obsessed with increasing her own power and influence. After the Ultras defeated the Alliance in its attempt to recover the stolen artifact known as the Infinity Codex, she and Adrian Blackwell cut a deal with ORACLE to stay out of prison, and now provide scientific expertise on numerous subjects.'
+  }
 ];
+const SHARED_CONTACTS = CONTACT_PROFILES.map(c => c.name + ' — ' + c.line);
+
+/* Compact version of the contact profiles for the Game Master's instructions. */
+function contactsGmText(){
+  const rank = n => rankNameForNumber(n);
+  return 'RECURRING ORACLE CONTACTS (every hero can call on these people; keep them consistent whenever they appear, and never invent backstory beyond what is stated here — in particular, say nothing about what the Infinity Codex does, who stole it, or where it is now):\n' +
+    CONTACT_PROFILES.map(c =>
+      `- ${c.name} (${c.role}): age ${c.age}, ${c.height}, ${c.weight}. Looks: ${c.appearance} Talents: ${c.talents.join(', ')}. ${c.bio}`
+    ).join('\n') +
+    '\nPERSONALITY NOTES: Victor Cross is calm, authoritative and quietly protective of the heroes; he is a former special forces operative and CIA-trained covert operator who does not waste words. Frankie Vega is funny and likable but mostly looks out for himself; he trades information only when it benefits him and never fully trusts the heroes. Adrian Blackwell and Evelyn Stone are brilliant, still ambitious, and cooperating because their deal with ORACLE requires it; the heroes know their history and do not fully trust them, and they can speak with real authority on engineering, genetics, archaeology and the occult.';
+}
 
 /* Each premade hero's powers are {name, rank} objects — rank is the numeric
    FASERIP ability score, resolved on the Universal Table exactly like a
@@ -940,7 +1003,9 @@ RULES YOU MUST FOLLOW:
 - NEVER fire [CHAPTER_COMPLETE] while a thread you just introduced is still hanging — e.g. if an NPC is mid-interrogation, mid-conversation, or about to reveal information, that exchange must actually play out (the NPC answers, refuses, escapes, or is otherwise definitively resolved) before the chapter can end. If the player's stated action is asking a character a question, your reply must answer it in-fiction first — never cut away, timeskip, or jump to a closing beat that skips over the answer. This applies just as strongly to physical danger and rescues: if your own reply introduces or reiterates someone still trapped, pounding on a door, in a burning/collapsing structure, or otherwise in active danger, that person must actually be reached and made safe — not just heard or implied — before the chapter can end. Never end a reply on a newly-introduced emergency and the completion token at the same time; a chapter whose goals include "civilians safe" is not complete while anyone is still confirmed in danger, however close the hero is to reaching them. When in doubt about whether a goal is "meaningfully achieved," err toward one more exchange rather than ending early.
 - When a chapter's stated goals describe multiple discrete targets (e.g. "destroy all four Shadow Conduits," "free every hostage," "question each lieutenant," "collect all seven fragments"), treat each one as its own hanging thread, exactly like an unresolved NPC exchange or a trapped civilian: [CHAPTER_COMPLETE] cannot fire — and you must not narrate a summary, montage, or time-skip that glosses past any of them — until every single target has its own distinct, played-out beat in the actual narration. Keep a running mental tally as the scene progresses; if the player's action would only resolve one of several remaining targets, resolve that one and let the others still stand, unresolved, for the next exchange. Never let a chapter's grand finale (an escalation, an emerging final threat, a partial-success beat, etc.) substitute for actually finishing off outstanding targets first, unless the chapter's own instructions explicitly say that finale should happen "regardless" of how many targets were cleared — and even then, only after making it explicit in the narration exactly which targets were and weren't dealt with, so the story's own logic stays consistent.
 - PACING: Resolve only what the player's single stated action attempts, then stop and hand control back. Never carry the hero through several separate beats in one reply (for example entering, rescuing someone, leaving, re-entering and discovering a clue). Each of a chapter's goals must be earned through separate player actions: do not let a single reply both complete a rescue and uncover the chapter's key clue, and do not end the chapter in the same reply that achieves its final goal. Offer the next discovery or complication as something the player can choose to pursue.
-- Once the chapter's main threat has already been dealt with, don't manufacture a brand-new element of menace or dread — an unseen watcher, a fresh attacker, a strange sound or chill, a newly-glimpsed danger — just to end the scene on a dramatic note. A closing beat can be atmospheric or eerie in tone without introducing a new unresolved threat; let the scene's existing stakes (what the hero just went through) carry the weight of the ending instead. Whatever kind of threat you do introduce anywhere in a chapter — physical danger to someone, a new attacker, an ominous presence, or anything else framed as a menace — must be fully resolved in-fiction (not just glanced at or hinted at) before [CHAPTER_COMPLETE] fires. If something you introduced isn't resolved yet, that is reason enough to hold off ending the chapter.`;
+- Once the chapter's main threat has already been dealt with, don't manufacture a brand-new element of menace or dread — an unseen watcher, a fresh attacker, a strange sound or chill, a newly-glimpsed danger — just to end the scene on a dramatic note. A closing beat can be atmospheric or eerie in tone without introducing a new unresolved threat; let the scene's existing stakes (what the hero just went through) carry the weight of the ending instead. Whatever kind of threat you do introduce anywhere in a chapter — physical danger to someone, a new attacker, an ominous presence, or anything else framed as a menace — must be fully resolved in-fiction (not just glanced at or hinted at) before [CHAPTER_COMPLETE] fires. If something you introduced isn't resolved yet, that is reason enough to hold off ending the chapter.
+
+${contactsGmText()}`;
 
 /* ---------- Accounts & cloud saves ----------
    Saves, logins and the Karma ledger live on the game's server (the Cloudflare
@@ -2140,7 +2205,27 @@ function renderHeroDetail(){
   }).join('');
   const powersHtml = h.powers.map(pw => `<li><b>${escapeHtml(powerName(pw))}</b>${typeof pw === 'object' ? ` — ${escapeHtml(rankNameForNumber(pw.rank))} (${pw.rank})` : ''}</li>`).join('');
   const talentsHtml = (h.talents || []).map(t => `<li><b>${escapeHtml(t.name)}</b> — ${escapeHtml(t.effect)}</li>`).join('');
-  const contactsHtml = (h.contacts || []).map(c => `<li>${escapeHtml(c)}</li>`).join('');
+  const extraContacts = (h.contacts || []).filter(c => !CONTACT_PROFILES.some(cp => String(c).startsWith(cp.name)));
+  const extraHtml = extraContacts.length ? `<ul class="extra-contacts">${extraContacts.map(c => `<li>${escapeHtml(c)}</li>`).join('')}</ul>` : '';
+  const contactCards = CONTACT_PROFILES.map(c => {
+    const st = STAT_NAMES.map(n => `${n.split(' ')[0]} ${rankNameForNumber(c.stats[n])} (${c.stats[n]})`).join(' · ');
+    return `<div class="contact-card">
+      <div class="contact-pic">
+        <div class="portrait-fallback small">${escapeHtml(initials(c.name))}</div>
+        ${lookupImg('portraits/'+c.id, c.name)}
+      </div>
+      <div class="contact-body">
+        <div class="contact-name">${escapeHtml(c.name)}</div>
+        <div class="tag">${escapeHtml(c.role)} · Age ${c.age} · ${escapeHtml(c.height)} · ${escapeHtml(c.weight)}</div>
+        <p>${escapeHtml(c.bio)}</p>
+        <div class="contact-meta"><b>Talents:</b> ${escapeHtml(c.talents.join(', '))}</div>
+        <div class="contact-meta"><b>Powers/Gear:</b> ${escapeHtml(c.powers.join(', '))}</div>
+        <div class="contact-meta"><b>Stats:</b> ${escapeHtml(st)}</div>
+        <div class="contact-meta"><b>Health</b> ${c.health} · <b>Karma</b> ${c.karma} · <b>Resources</b> ${escapeHtml(rankNameForNumber(c.resources))} (${c.resources}) · <b>Popularity</b> ${c.popularity ? escapeHtml(rankNameForNumber(c.popularity)) + ' (' + c.popularity + ')' : '0'}</div>
+      </div>
+    </div>`;
+  }).join('');
+  const contactsHtml = contactCards;
   app.innerHTML = `
     <div class="panel menu-panel hero-detail">
       ${accountBar()}
@@ -2174,7 +2259,7 @@ function renderHeroDetail(){
       <section class="detail-sec"><h3>Origin</h3><p>${escapeHtml(h.origin)}</p></section>
       <section class="detail-sec"><h3>Bio</h3><p>${escapeHtml(h.bio)}</p></section>
       <section class="detail-sec"><h3>Appearance</h3><p>${escapeHtml(h.appearance)}</p></section>
-      ${contactsHtml ? `<section class="detail-sec"><h3>Contacts</h3><ul>${contactsHtml}</ul></section>` : ''}
+      <section class="detail-sec"><h3>Contacts</h3>${extraHtml}<div class="contact-list">${contactsHtml}</div></section>
       <div class="detail-actions">
         <button id="btn-detail-play2" class="play-btn">Play as ${escapeHtml(h.alias)}</button>
         <button id="btn-detail-back2" class="secondary">← Back to roster</button>
