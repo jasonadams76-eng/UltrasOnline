@@ -202,6 +202,20 @@
       radial-gradient(ellipse at 50% 0%, rgba(21,101,192,0.18), transparent 60%), var(--paper); }
   @keyframes fadeUp{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
   .menu-panel{ animation:fadeUp .35s ease both; }
+  .pl-card{ border:2px solid var(--ink); border-radius:8px; padding:12px 14px; margin:12px 0; background:#fff; }
+  .pl-head{ display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:baseline; }
+  .pl-email{ font-weight:700; word-break:break-all; }
+  .pl-meta{ font-size:0.85rem; opacity:0.75; margin:2px 0 8px; }
+  .pl-hero{ margin:8px 0 0; padding-top:6px; border-top:1px dashed #999; }
+  .pl-hero b{ font-family:'Anton',sans-serif; letter-spacing:0.03em; }
+  .pl-m{ font-size:0.9rem; margin:2px 0 2px 12px; }
+  .pl-official{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px; font-size:0.9rem; }
+  .pl-official select, .pl-search, .adv-in{ font:inherit; padding:5px 8px; border:2px solid var(--ink); border-radius:6px; background:#fff; }
+  .pl-search{ width:100%; max-width:380px; margin:8px 0; }
+  .adv-table{ width:100%; border-collapse:collapse; font-size:0.9rem; margin:8px 0 16px; }
+  .adv-table th, .adv-table td{ border-bottom:1px solid #bbb; padding:6px 4px; text-align:left; vertical-align:middle; }
+  .adv-in{ width:80px; }
+  .adv-line{ margin-top:10px; padding:8px 12px; border:2px solid var(--hero-red); border-radius:8px; display:inline-block; font-weight:700; }
   .menu-head{ display:flex; justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap; margin:4px 0 18px; }
   .menu-title{ margin:2px 0 0; font-size:clamp(1.6rem,4vw,2.3rem); }
 
@@ -1098,7 +1112,7 @@ function setSession(token, email, isAdmin){
   lsSet(SESSION_KEY, token);
 }
 function clearSession(){
-  AUTH.token = null; AUTH.email = null; AUTH.isAdmin = false;
+  AUTH.token = null; AUTH.email = null; AUTH.isAdmin = false; STATE.advancement = null;
   lsDel(SESSION_KEY);
 }
 async function restoreSession(){
@@ -1952,13 +1966,14 @@ function render(){
   if(STATE.screen==='AUTH'){
     if(!bg){ bg = document.createElement('div'); bg.id = 'auth-backdrop'; bg.className = 'auth-backdrop'; document.body.prepend(bg); }
   } else if(bg){ bg.remove(); }
-  app.className = (STATE.screen==='HERO_SELECT' || STATE.screen==='HERO_DETAIL' || STATE.screen==='ADVENTURE_SELECT' || STATE.screen==='KARMA') ? 'wide' : '';
+  app.className = (STATE.screen==='HERO_SELECT' || STATE.screen==='HERO_DETAIL' || STATE.screen==='ADVENTURE_SELECT' || STATE.screen==='KARMA' || STATE.screen==='PLAYERS') ? 'wide' : '';
   if(STATE.screen==='AUTH') return renderAuth();
   if(STATE.screen==='TITLE') return renderTitle();
   if(STATE.screen==='HERO_SELECT') return renderHeroSelect();
   if(STATE.screen==='HERO_DETAIL') return renderHeroDetail();
   if(STATE.screen==='ADVENTURE_SELECT') return renderAdventureSelect();
   if(STATE.screen==='KARMA') return renderKarma();
+  if(STATE.screen==='PLAYERS') return renderPlayers();
   if(STATE.screen==='PLAY') return renderPlay();
 }
 
@@ -2196,13 +2211,18 @@ function renderHeroSelect(isRefresh){
           <div class="chapter-eyebrow display" style="color:var(--hero-red); font-size:0.8rem;">The Ultras</div>
           <h2 class="display menu-title">Choose your hero</h2>
         </div>
-        <button id="btn-karma" class="secondary">Karma Record</button>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button id="btn-karma" class="secondary">Karma Record</button>
+          ${AUTH.isAdmin ? '<button id="btn-players" class="secondary">Player Roster</button>' : ''}
+        </div>
       </div>
       <div class="hero-grid">${tiles}</div>
     </div>
   `;
   wireAccountBar();
   document.getElementById('btn-karma').onclick = ()=>openKarma();
+  const plBtn = document.getElementById('btn-players');
+  if(plBtn) plBtn.onclick = ()=>openPlayers();
   document.querySelectorAll('.use-hero').forEach(el=>{
     el.onclick = ()=>{
       const hero = PREMADE_HEROES.find(h=>h.id===el.getAttribute('data-hero'));
@@ -2212,12 +2232,134 @@ function renderHeroSelect(isRefresh){
   if(!isRefresh) refreshRosterInfo();
 }
 
+/* ---------- Player Roster (admin) ---------- */
+async function openPlayers(){
+  STATE.playersData = { players: null, adv: null, error: null, filter: '', msg: null };
+  STATE.screen = 'PLAYERS';
+  render();
+  await loadPlayers();
+}
+async function loadPlayers(){
+  const pd = STATE.playersData;
+  try{
+    const [pl, adv] = await Promise.all([ apiCall('GET','/api/admin/players'), apiCall('GET','/api/advancement') ]);
+    pd.players = pl.players || [];
+    pd.adv = adv.admin || [];
+    pd.error = null;
+  }catch(e){ pd.error = e.message; }
+  if(STATE.screen==='PLAYERS') render();
+}
+function playerLastActivity(p){
+  const times = [p.last_login, p.created_at].concat((p.missions||[]).map(m=>m.last_played), (p.missions||[]).map(m=>m.completed_at)).filter(Boolean);
+  return times.sort().pop() || '';
+}
+function renderPlayers(){
+  const pd = STATE.playersData || { players:null, adv:null, error:null, filter:'', msg:null };
+  let body;
+  if(pd.error){
+    body = `<div class="error-box">${escapeHtml(pd.error)}</div>`;
+  } else if(pd.players === null){
+    body = '<div class="thinking">Loading…</div>';
+  } else {
+    const f = (pd.filter||'').trim().toLowerCase();
+    const list = pd.players.filter(p=>!f || p.email.toLowerCase().includes(f))
+      .sort((a,b)=>playerLastActivity(b).localeCompare(playerLastActivity(a)));
+    const takenBy = {};
+    (pd.adv||[]).forEach(a=>{ if(a.user_id) takenBy[a.hero_id] = a.email; });
+    const advRows = (pd.adv||[]).map(a=>`
+      <tr><td><b>${escapeHtml(heroLabel(a.hero_id))}</b></td>
+        <td>${a.email ? escapeHtml(a.email) : '<span class="tag">no official player</span>'}</td>
+        <td><input class="adv-in" type="number" step="1" data-base="${escapeHtml(a.hero_id)}" value="${a.base_total}"></td>
+        <td>${a.earned}</td><td>${a.spent}</td><td><b>${a.total}</b></td>
+        <td><button class="secondary small adv-save" data-hero="${escapeHtml(a.hero_id)}">Save</button></td></tr>`).join('');
+    const cards = list.map(p=>{
+      const heroes = {};
+      (p.missions||[]).forEach(m=>{ (heroes[m.hero_id] = heroes[m.hero_id] || []).push(m); });
+      const heroHtml = Object.keys(heroes).map(hid=>`
+        <div class="pl-hero"><b>${escapeHtml(heroLabel(hid))}</b>
+          ${heroes[hid].map(m=>`<div class="pl-m">${escapeHtml(adventureLabel(m.adventure_id))} — ${
+            m.completed ? `✓ Completed ${escapeHtml(fmtDate(m.completed_at))}, ${m.karma} Karma` : ''}${
+            m.completed && m.in_progress ? '; ' : ''}${
+            m.in_progress ? `save on file (last played ${escapeHtml(fmtDate(m.last_played))})` : ''}</div>`).join('')}
+        </div>`).join('') || '<div class="pl-meta">No heroes played yet.</div>';
+      const opts = ['<option value="">— none —</option>'].concat(PREMADE_HEROES.map(h=>{
+        const other = takenBy[h.id] && takenBy[h.id] !== p.email;
+        return `<option value="${escapeHtml(h.id)}"${p.official_hero===h.id?' selected':''}>${escapeHtml(h.alias)}${other ? ' (taken: '+escapeHtml(takenBy[h.id])+')' : ''}</option>`;
+      })).join('');
+      return `<div class="pl-card">
+        <div class="pl-head"><span class="pl-email">${escapeHtml(p.email)}${p.is_admin?' (admin)':''}</span>
+          <span class="tag">${p.confirmed ? 'confirmed' : 'NOT confirmed'}</span></div>
+        <div class="pl-meta">Joined ${escapeHtml(fmtDate(p.created_at))} · Last sign-in ${p.last_login ? escapeHtml(fmtDate(p.last_login)) : '—'}</div>
+        ${heroHtml}
+        <div class="pl-official"><label>Official player of:
+          <select class="official-sel" data-user="${p.id}">${opts}</select></label></div>
+      </div>`;
+    }).join('') || '<div class="hero-sheet-mini">No players match.</div>';
+    body = `
+      <h3 style="margin:14px 0 0;">Advancement Karma</h3>
+      <table class="adv-table"><tr><th>Hero</th><th>Official player</th><th>Starting total</th><th>Earned online</th><th>Spent</th><th>Balance</th><th></th></tr>${advRows}</table>
+      <h3 style="margin:14px 0 0;">Players (${pd.players.length})</h3>
+      <input id="pl-search" class="pl-search" type="search" placeholder="Search by email" value="${escapeHtml(pd.filter||'')}">
+      ${cards}`;
+  }
+  app.innerHTML = `
+    <div class="panel">
+      ${accountBar()}
+      <div class="chapter-eyebrow display" style="color:var(--hero-red); font-size:0.8rem;">Admin</div>
+      <h2 class="display" style="margin-top:2px;">Player Roster</h2>
+      ${pd.msg ? `<div class="notice-box">${escapeHtml(pd.msg)}</div>` : ''}
+      ${body}
+      <div style="margin-top:18px;"><button class="secondary" id="btn-players-back">Back to roster</button></div>
+    </div>`;
+  wireAccountBar();
+  document.getElementById('btn-players-back').onclick = ()=>{ STATE.screen='HERO_SELECT'; render(); };
+  const search = document.getElementById('pl-search');
+  if(search) search.oninput = ()=>{
+    pd.filter = search.value; const pos = search.selectionStart; render();
+    const again = document.getElementById('pl-search'); if(again){ again.focus(); again.setSelectionRange(pos,pos); }
+  };
+  document.querySelectorAll('.official-sel').forEach(sel=>{
+    sel.onchange = async ()=>{
+      const uid = parseInt(sel.getAttribute('data-user'),10);
+      const heroId = sel.value;
+      try{
+        if(heroId){
+          const r = await apiCall('POST','/api/admin/official',{hero_id:heroId, user_id:uid});
+          pd.msg = `Official player set. Counted ${r.backfilled_missions} earlier mission(s) toward Advancement Karma.`;
+        } else {
+          const cur = (pd.players.find(p=>p.id===uid)||{}).official_hero;
+          if(cur){ await apiCall('POST','/api/admin/official',{hero_id:cur, user_id:null}); pd.msg = 'Official player cleared.'; }
+        }
+        await loadPlayers();
+      }catch(e){ pd.msg = e.message; await loadPlayers(); }
+    };
+  });
+  document.querySelectorAll('.adv-save').forEach(btn=>{
+    btn.onclick = async ()=>{
+      const hid = btn.getAttribute('data-hero');
+      const input = document.querySelector('.adv-in[data-base="'+hid+'"]');
+      const v = parseInt(input.value,10);
+      if(!Number.isInteger(v)){ pd.msg = 'Enter a whole number.'; return render(); }
+      try{
+        await apiCall('POST','/api/admin/advancement',{hero_id:hid, base_total:v});
+        pd.msg = 'Saved starting total for ' + heroLabel(hid) + '.';
+      }catch(e){ pd.msg = e.message; }
+      await loadPlayers();
+    };
+  });
+}
+
 /* ---------- Adventure choice (per hero) ---------- */
 function openHeroDetail(hero){
   STATE.detailHero = hero;
   STATE.screen = 'HERO_DETAIL';
   render();
   window.scrollTo(0, 0);
+  // Advancement Karma: the server only sends it to the hero's official player and to admins.
+  apiCall('GET','/api/advancement').then(r=>{
+    STATE.advancement = r.advancement || {};
+    if(STATE.screen==='HERO_DETAIL' && STATE.detailHero && STATE.detailHero.id===hero.id) render();
+  }).catch(()=>{});
 }
 function renderHeroDetail(){
   const h = STATE.detailHero;
@@ -2288,6 +2430,7 @@ function renderHeroDetail(){
           </div>
           <div class="facts">${factsHtml}</div>
           ${history ? `<div class="badges" style="margin-top:10px;">${history}</div>` : ''}
+          ${(STATE.advancement && STATE.advancement[h.id] !== undefined) ? `<div class="adv-line">Advancement Karma: ${STATE.advancement[h.id]}</div>` : ''}
         </div>
       </div>
       <div class="detail-actions">
