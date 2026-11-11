@@ -730,17 +730,13 @@ const RANK_TYPICAL_NUMBER = {
 function rankNumberForName(name){
   return RANK_TYPICAL_NUMBER[name] != null ? RANK_TYPICAL_NUMBER[name] : RANK_TYPICAL_NUMBER['Typical'];
 }
-/* FASERIP damage is driven by the attacking rank's number, not a flat
-   per-color table — a Remarkable-Strength brawler (or a Remarkable-rank
-   weapon) hits far harder than a Typical one. Result color still matters
-   (a Yellow/Red result represents a solid or critical hit) and scales the
-   damage up accordingly. */
+/* FASERIP damage is the attacking rank's number, full stop: any hit (any
+   result color except white, which is a miss) does that much damage. The
+   color only decides the after-effect of the action (Slam, Stun, Bullseye,
+   Kill and so on, per the Universal Table), never the amount. */
 function damageForAttack(attackerRankNumber, color){
   if(color==='white' || !attackerRankNumber) return 0;
-  if(color==='green') return Math.round(attackerRankNumber);
-  if(color==='yellow') return Math.round(attackerRankNumber * 1.5);
-  if(color==='red') return Math.round(attackerRankNumber * 2);
-  return 0;
+  return Math.round(attackerRankNumber);
 }
 
 /* Baseline FASERIP stat tiers for ordinary human NPCs (per the rulebook's
@@ -1304,7 +1300,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-11.8';
+const APP_VERSION = '2026-11-11.9';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -1681,6 +1677,21 @@ function heroLookText(hero){
   return out;
 }
 
+function mechNotes(m){
+  let out = '';
+  if(m.impossible) out += '\nNOTE: this task is beyond what the hero can possibly do (far above their ability). It cannot work, no matter the effort or luck: show the hero straining and failing with no partial success and no near-miss, and do not suggest another roll would work.';
+  if(m.repeated) out += '\nNOTE: the hero already failed at exactly this and has changed nothing. It fails again; show that the same approach is not enough and let the scene hint that a different approach is needed.';
+  if(m.unlistedClaim) out += '\nNOTE: the player tried to use an ability the hero does NOT have (or a power for something it cannot do). That ability does NOT work. Resolve the action only as an ordinary physical attempt matching the result above, and show the claimed effect not happening (no barrier forms, no beam fires). Any spirit or ally may only offer advice.';
+  return out;
+}
+function stepsBlockText(mechanics){
+  return mechanics.steps.map((st, i) => {
+    if(!st.attempted) return `Step ${i+1} (${st.text}): NOT ATTEMPTED — an earlier step failed, so the hero never got this far. Do NOT narrate it happening; show where the hero was stopped.`;
+    if(st.routine) return `Step ${i+1} (${st.text}): routine, succeeds without a roll.`;
+    const m = st.m;
+    return `Step ${i+1} (${st.text}): ${m.usedPower ? 'Power' : 'Ability'} ${m.ability} (${m.effectiveRank}${m.columnShift ? ', shifted from '+m.baseRank+' by '+(m.columnShift>0?'+':'')+m.columnShift+' CS' : ''}), action type ${m.actionType}. Roll ${m.roll}, result color ${m.color.toUpperCase()}. Outcome: ${m.label}${mechNotes(m)}`;
+  }).join('\n');
+}
 async function callGM(hero, chapter, log, newPlayerLine, mechanics, healthContext) {
 
   const heroSheet = `Name: ${hero.name}
@@ -1710,13 +1721,15 @@ Bio: ${hero.bio}${heroLookText(hero)}`;
     enemyContextLine += `\nEnemy targeted: ${er.name} — ${condition} (never state numbers, just show it in the fiction).`;
   }
 
-  const mechanicsBlock = mechanics ? `
+  const mechanicsBlock = (mechanics && mechanics.steps && mechanics.steps.length > 1) ? `
+
+THE PLAYER GAVE SEVERAL ACTIONS IN ONE COMMAND. THEY WERE RESOLVED ONE AFTER ANOTHER ON THE UNIVERSAL TABLE — NARRATE THEM IN ORDER AND MATCH EACH OUTCOME EXACTLY (do not contradict any result, never narrate a step marked NOT ATTEMPTED as happening):\n${stepsBlockText(mechanics)}${enemyContextLine}\nNarrate all steps vividly in-fiction as one flowing scene — do not mention dice, colors, ranks, or "FEAT rolls" by name.` : mechanics ? `
 
 THIS ACTION WAS RESOLVED WITH A FEAT ROLL ON THE UNIVERSAL TABLE — YOUR NARRATION MUST MATCH THIS OUTCOME EXACTLY (do not contradict it, do not narrate a different result color or degree of success):
 ${mechanics.usedPower ? 'Power' : 'Ability'} used: ${mechanics.ability} (${mechanics.effectiveRank}${mechanics.columnShift ? ', shifted from '+mechanics.baseRank+' by '+(mechanics.columnShift>0?'+':'')+mechanics.columnShift+' CS' : ''})
 Action type: ${mechanics.actionType}
 Roll: ${mechanics.roll} — Result color: ${mechanics.color.toUpperCase()}
-Mechanical outcome: ${mechanics.label}${mechanics.impossible ? '\nNOTE: this task is beyond what the hero can possibly do (far above their ability). It cannot work, no matter the effort or luck: show the hero straining and failing with no partial success and no near-miss, and do not suggest another roll would work.' : ''}${mechanics.repeated ? '\nNOTE: the hero already failed at exactly this and has changed nothing. It fails again; show that the same approach is not enough and let the scene hint that a different approach is needed.' : ''}${mechanics.unlistedClaim ? '\nNOTE: the player tried to use an ability the hero does NOT have (or a power for something it cannot do). That ability does NOT work. Resolve the action only as an ordinary physical attempt matching the result above, and show the claimed effect not happening (no barrier forms, no beam fires). Any spirit or ally may only offer advice.' : ''}${enemyContextLine}
+Mechanical outcome: ${mechanics.label}${mechNotes(mechanics)}${enemyContextLine}
 Narrate this outcome vividly in-fiction — do not mention dice, colors, ranks, or "FEAT rolls" by name, just make the story match this result.` : `
 
 This action did not require a dice roll — it's routine or safely within the hero's ability. Narrate the outcome as a clear success appropriate to the fiction, without needing to reference any mechanics.`;
@@ -1978,7 +1991,9 @@ ${recentLog}
 PLAYER'S STATED ACTION:
 "${playerLine}"
 
-Determine:
+The player may describe up to 3 separate actions in one command (for example "climb the fence, then open the door, then talk to the guard"). Produce one object per distinct action, in order, up to 3; if there is only one action, return one object. Each object has the fields below, plus "stepText": a short phrase naming that action. Do not split one continuous action into several.
+
+Determine (for each action):
 1. "requiresFeat" (boolean) — true if this action is difficult/uncertain enough to need a dice roll (combat, risky stunts, using powers under pressure, tricky social/technical challenges). False for simple/routine actions, pure roleplay/dialogue with no risk, or things automatically within the hero's ability.
 1b. "heroIsTarget" (boolean) — true ONLY if this action describes an enemy/hazard attacking or harming the hero (the hero is on the receiving end of danger), false if the hero is the one acting offensively/defensively/routinely. Used to determine if the hero takes damage.
 2. "powerUsed" — if the action is primarily accomplished using one of the hero's named Powers listed above (e.g. firing energy arrows, flying, using talons), return that power's exact name as listed. Otherwise null. Only set this when a listed power is the actual mechanism of the action, not just flavor.
@@ -1997,11 +2012,11 @@ Determine:
 14. "claimsUnlistedPower" (boolean) — true if the player's action relies on an ability this hero does NOT have: a power not on the sheet, or a listed power used for something its description does not allow (a force field, protective bubble, energy blast or beam, telekinesis, extra damage from a utility or communication power, etc.). Otherwise false.
 15. "taskSummary" — a very short plain label of the exact task being attempted (e.g. "lift the one-ton weight", "pick the vault lock"). Use the SAME label when the player simply tries the same thing again, and a DIFFERENT label when the player changes their approach (a lever, a different power, help from someone).
 ${heroPowerLimitsText(hero)}
-${namedEnemiesPromptText(STATE.adventureId, log)}${nonAttackRuleText(hero)}Return exactly: {"requiresFeat":bool,"heroIsTarget":bool,"powerUsed":"..."|null,"ability":"...","actionType":"...","columnShift":int,"intensity":"..."|null,"enemyName":"..."|null,"enemyTier":"..."|null,"enemyStats":{...}|null,"enemyPowers":[...],"enemyWeapon":"..."|null,"enemyPowerUsed":"..."|null,"targetsEnemy":bool,"claimsUnlistedPower":bool,"taskSummary":"..."|null}`;
+${namedEnemiesPromptText(STATE.adventureId, log)}${nonAttackRuleText(hero)}Return exactly: {"actions":[{"stepText":"...","requiresFeat":bool,"heroIsTarget":bool,"powerUsed":"..."|null,"ability":"...","actionType":"...","columnShift":int,"intensity":"..."|null,"enemyName":"..."|null,"enemyTier":"..."|null,"enemyStats":{...}|null,"enemyPowers":[...],"enemyWeapon":"..."|null,"enemyPowerUsed":"..."|null,"targetsEnemy":bool,"claimsUnlistedPower":bool,"taskSummary":"..."|null}, ...up to 3 items]}`;
 
   const response = await fetchGeminiWithFallback({
     contents: [{ role:"user", parts:[{text: prompt}] }],
-    generationConfig: { temperature: 0.2, maxOutputTokens: 220 }
+    generationConfig: { temperature: 0.2, maxOutputTokens: 900 }
   });
 
   if(!response.ok) throw new Error('Classifier connection failed ('+response.status+' from '+response.usedModel+')');
@@ -2013,6 +2028,11 @@ ${namedEnemiesPromptText(STATE.adventureId, log)}${nonAttackRuleText(hero)}Retur
   try{ parsed = JSON.parse(text); }
   catch(e){ throw new Error('Classifier returned malformed JSON'); }
 
+  const rawList = Array.isArray(parsed.actions) && parsed.actions.length ? parsed.actions.slice(0,3) : [parsed];
+  return rawList.map((one, i) => normalizeClassification(one, hero, i));
+}
+function normalizeClassification(parsed, hero, i){
+  parsed.stepText = (typeof parsed.stepText === 'string' && parsed.stepText.trim()) ? parsed.stepText.trim().slice(0,80) : ('action ' + (i + 1));
   if(!STAT_NAMES.includes(parsed.ability)) parsed.ability = 'Fighting Ability';
   if(!ACTION_TYPES.includes(parsed.actionType)) parsed.actionType = 'feat';
   if(typeof parsed.columnShift !== 'number' || isNaN(parsed.columnShift)) parsed.columnShift = 0;
@@ -2049,7 +2069,37 @@ ${namedEnemiesPromptText(STATE.adventureId, log)}${nonAttackRuleText(hero)}Retur
    When the action is powered by one of the hero's named Powers, the roll
    uses that power's own rank instead of the linked core stat. */
 async function resolveMechanics(hero, chapter, log, playerLine){
-  const classification = await classifyAction(hero, chapter, log, playerLine);
+  const list = await classifyAction(hero, chapter, log, playerLine);
+  const actions = (Array.isArray(list) ? list : [list]).slice(0, 3);
+  if(actions.length === 1) return resolveOne(hero, chapter, actions[0]);
+  // Several actions in one command: resolve them in order. A step that
+  // fails outright (a white result) stops the rest from being attempted.
+  const steps = [];
+  let stopped = false;
+  actions.forEach((c, i) => {
+    const text = c.stepText || ('action ' + (i + 1));
+    if(stopped){ steps.push({ text, attempted: false }); return; }
+    const m = resolveOne(hero, chapter, c);
+    if(!m){ steps.push({ text, attempted: true, routine: true }); return; }
+    steps.push({ text, attempted: true, m });
+    if(m.color === 'white') stopped = true;
+  });
+  const rolled = steps.filter(s => s.m);
+  if(!rolled.length) return null;
+  const last = rolled[rolled.length - 1].m;
+  const withEnemy = rolled.slice().reverse().find(s => s.m.enemyResult);
+  return Object.assign({}, last, {
+    ability: rolled.map(s => s.m.ability).join(' → '),
+    effectiveRank: rolled.map(s => s.m.effectiveRank).join(' / '),
+    roll: rolled.map(s => s.m.roll).join(', '),
+    label: steps.map((s, i) => (i + 1) + '. ' + (s.m ? s.m.label : s.routine ? 'Routine' : 'Not attempted')).join(' | '),
+    damage: rolled.reduce((n, s) => n + (s.m.damage || 0), 0),
+    heroIsTarget: rolled.some(s => s.m.heroIsTarget),
+    enemyResult: withEnemy ? withEnemy.m.enemyResult : null,
+    steps
+  });
+}
+function resolveOne(hero, chapter, classification){
   if(classification.claimsUnlistedPower) classification.requiresFeat = true;
   if(!classification.requiresFeat) return null;
 
