@@ -1302,7 +1302,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-11.5';
+const APP_VERSION = '2026-11-11.6';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -1485,6 +1485,7 @@ const KARMA_MASS_RESCUE = 'Five or more Rescues (in one adventure)';
 const KARMA_MAX_AWARDS = 60;
 
 const KARMA_GUIDE = `HOW TO RECOGNIZE EACH AWARD IN THE STORY (read the whole transcript once for each group below):
+- Only count what actually happened in the story: attempts the narration shows failing (including impossible feats) earn nothing.
 - Crimes, Conspiracies and Offenses: the hero stops/prevents the crime or plot before it succeeds ("Stop or Prevent"), or captures/turns in the criminals ("Arrest"). A villain attack on a city, a bomb plot, a heist and a murder are examples.
 - Rescue: the hero protects people from imminent danger: pulling someone out of a fire, shielding a crowd, stopping a villain who was about to destroy a building, a city or a crowd (the people in danger are the ones rescued). Report one "Rescue" event for each separate rescue and give "people_saved", the number of people whose lives were saved (use your best estimate; 1 for one person, 5 or more for a crowd, a building, a city, a hostage group).
 - Defeating Powerful Foe: the hero defeats, captures or drives off a dangerous opponent. Give "points" from 30 to 100 by how dangerous the foe was (a street thug is not a Powerful Foe; a super-powered villain who threatened a city is 70 to 100). THE VOID EMPEROR cannot be beaten in combat: if the hero destroys the crystals / the gateway and so ends him, award Defeating Powerful Foe with 100 points whatever the combat results were; if the hero trapped him instead, award 70; if the crystals were not destroyed or trapped, award nothing for him.
@@ -1678,7 +1679,7 @@ THIS ACTION WAS RESOLVED WITH A FEAT ROLL ON THE UNIVERSAL TABLE — YOUR NARRAT
 ${mechanics.usedPower ? 'Power' : 'Ability'} used: ${mechanics.ability} (${mechanics.effectiveRank}${mechanics.columnShift ? ', shifted from '+mechanics.baseRank+' by '+(mechanics.columnShift>0?'+':'')+mechanics.columnShift+' CS' : ''})
 Action type: ${mechanics.actionType}
 Roll: ${mechanics.roll} — Result color: ${mechanics.color.toUpperCase()}
-Mechanical outcome: ${mechanics.label}${mechanics.unlistedClaim ? '\nNOTE: the player tried to use an ability the hero does NOT have (or a power for something it cannot do). That ability does NOT work. Resolve the action only as an ordinary physical attempt matching the result above, and show the claimed effect not happening (no barrier forms, no beam fires). Any spirit or ally may only offer advice.' : ''}${enemyContextLine}
+Mechanical outcome: ${mechanics.label}${mechanics.impossible ? '\nNOTE: this task is beyond what the hero can possibly do (far above their ability). It cannot work, no matter the effort or luck: show the hero straining and failing with no partial success and no near-miss, and do not suggest another roll would work.' : ''}${mechanics.repeated ? '\nNOTE: the hero already failed at exactly this and has changed nothing. It fails again; show that the same approach is not enough and let the scene hint that a different approach is needed.' : ''}${mechanics.unlistedClaim ? '\nNOTE: the player tried to use an ability the hero does NOT have (or a power for something it cannot do). That ability does NOT work. Resolve the action only as an ordinary physical attempt matching the result above, and show the claimed effect not happening (no barrier forms, no beam fires). Any spirit or ally may only offer advice.' : ''}${enemyContextLine}
 Narrate this outcome vividly in-fiction — do not mention dice, colors, ranks, or "FEAT rolls" by name, just make the story match this result.` : `
 
 This action did not require a dice roll — it's routine or safely within the hero's ability. Narrate the outcome as a clear success appropriate to the fiction, without needing to reference any mechanics.`;
@@ -1947,7 +1948,7 @@ Determine:
 3. "ability" — one of: "Fighting Ability","Agility","Strength","Endurance","Reason","Intuition","Psyche". Pick whichever stat governs this action per FASERIP (Fighting=melee/attacks, Agility=ranged/dodging/acrobatics, Strength=lifting/breaking/wrestling, Endurance=resisting/charging, Reason=tech/science, Intuition=perception/danger-sense, Psyche=willpower/magic). Still fill this in even if powerUsed is set, in case the power lookup fails.
 4. "actionType" — one of: ${ACTION_TYPES.join(', ')}. Use "feat" for any non-combat ability check. Use the combat types only for actual attacks/defenses.
 5. "columnShift" — a small integer (typically -3 to +3) reflecting situational modifiers AND any of the hero's listed Talents that plausibly apply to this specific action per their effect description (favorable position/talent = positive, unfavorable/penalized = negative, 0 if none apply). Only apply a talent's bonus if the action genuinely matches what that talent covers — do not stack multiple talents unless multiple clearly apply.
-6. "intensity" — for actionType "feat" only: the difficulty of the task as a FASERIP rank name (one of ${RANK_ORDER.join(', ')}), reflecting how hard this specific task is versus a generic person. Use null for combat actionTypes (their difficulty is just the opposed FEAT roll itself).
+6. "intensity" — for actionType "feat" only: the difficulty of the task as a FASERIP rank name (one of ${RANK_ORDER.join(', ')}), reflecting how hard this specific task is versus a generic person. Use null for combat actionTypes (their difficulty is just the opposed FEAT roll itself). Rate intensity by the REAL-WORLD scale of the task, not by how dramatic it sounds. Weight guide for lifting/breaking: a person or heavy furniture = Typical to Good; a motorcycle or boulder = Excellent to Remarkable; a car = Remarkable; a truck or one ton = Incredible; a bus or tank = Amazing; a train or a building section = Monstrous; a skyscraper or a mountain = Unearthly. Speed, durability, leaping and other physical feats use the same idea.
 7. "enemyName" — ONLY for combat actionTypes: a short, consistent label for the specific enemy/threat involved (e.g. "Cinder Syndicate thug", "Warden Ash", "dreadnought #1"). Reuse the EXACT same label across turns for the same individual/unit so their sheet and condition can be tracked. Null if this isn't combat or no specific enemy is involved (e.g. a pure environmental hazard).
 8. "enemyTier" — ONLY when enemyName is set: one of "civilian", "trained", or "super". Use "civilian" for an ordinary untrained bystander-level opponent (all stats Typical, per the rulebook's baseline for regular humans). Use "trained" for a professional fighter — cop, soldier, career criminal, martial artist — who runs Good on their combat stats. Use "super" ONLY for a named supervillain, powered threat, or unique named mastermind who should have a full individual stat sheet and their own powers.
 9. "enemyStats" — REQUIRED and only meaningful when enemyTier is "super": a full FASERIP stat sheet as rank names (one of ${RANK_ORDER.join(', ')}) for all seven abilities: "Fighting Ability","Agility","Strength","Endurance","Reason","Intuition","Psyche". Scale these to fit the story stakes (a menacing mid-arc lieutenant might run Excellent-Remarkable; a final-chapter mastermind might run Remarkable-Incredible or higher). Null when enemyTier is not "super".
@@ -1957,8 +1958,9 @@ Determine:
 13. "targetsEnemy" — boolean, true ONLY when the hero is the one attacking/pressuring a specific enemy (used to track that enemy's Health toward a knockout). False if the hero is just defending, dodging, or not engaging an enemy directly.
 
 14. "claimsUnlistedPower" (boolean) — true if the player's action relies on an ability this hero does NOT have: a power not on the sheet, or a listed power used for something its description does not allow (a force field, protective bubble, energy blast or beam, telekinesis, extra damage from a utility or communication power, etc.). Otherwise false.
+15. "taskSummary" — a very short plain label of the exact task being attempted (e.g. "lift the one-ton weight", "pick the vault lock"). Use the SAME label when the player simply tries the same thing again, and a DIFFERENT label when the player changes their approach (a lever, a different power, help from someone).
 ${heroPowerLimitsText(hero)}
-${namedEnemiesPromptText(STATE.adventureId, log)}${nonAttackRuleText(hero)}Return exactly: {"requiresFeat":bool,"heroIsTarget":bool,"powerUsed":"..."|null,"ability":"...","actionType":"...","columnShift":int,"intensity":"..."|null,"enemyName":"..."|null,"enemyTier":"..."|null,"enemyStats":{...}|null,"enemyPowers":[...],"enemyWeapon":"..."|null,"enemyPowerUsed":"..."|null,"targetsEnemy":bool,"claimsUnlistedPower":bool}`;
+${namedEnemiesPromptText(STATE.adventureId, log)}${nonAttackRuleText(hero)}Return exactly: {"requiresFeat":bool,"heroIsTarget":bool,"powerUsed":"..."|null,"ability":"...","actionType":"...","columnShift":int,"intensity":"..."|null,"enemyName":"..."|null,"enemyTier":"..."|null,"enemyStats":{...}|null,"enemyPowers":[...],"enemyWeapon":"..."|null,"enemyPowerUsed":"..."|null,"targetsEnemy":bool,"claimsUnlistedPower":bool,"taskSummary":"..."|null}`;
 
   const response = await fetchGeminiWithFallback({
     contents: [{ role:"user", parts:[{text: prompt}] }],
@@ -2028,12 +2030,36 @@ async function resolveMechanics(hero, chapter, log, playerLine){
   const abilityNumber = usedPower != null ? usedPower : hero.stats[classification.ability];
   const displayName = usedPower != null ? classification.powerUsed : classification.ability;
   const feat = resolveFeat(abilityNumber, classification.columnShift);
+  // Impossible tasks: two or more ranks above the ability can never succeed,
+  // and a task that already failed cannot be retried unchanged in this chapter.
+  const abilityColIdx = colIdxForNumber(abilityNumber);
+  const taskKey = classification.taskSummary ? (chapter.id + '|' + String(classification.taskSummary).toLowerCase().trim()) : null;
+  STATE.failedTasks = STATE.failedTasks || {};
+  if(classification.actionType === 'feat' && classification.intensity){
+    const gap = colIdxForRankName(classification.intensity) - abilityColIdx;
+    const retry = taskKey && STATE.failedTasks[taskKey];
+    if(gap >= 2 || retry){
+      const why = gap >= 2 ? 'Impossible' : 'Failure (same attempt repeated, no change of approach)';
+      return {
+        ability: displayName, usedPower: usedPower != null, actionType: 'feat', columnShift: 0,
+        intensity: classification.intensity, heroIsTarget: classification.heroIsTarget,
+        enemyName: classification.enemyName, enemyWeapon: null, enemyPowerUsed: null, damage: 0, enemyResult: null,
+        roll: '—', color: 'white', baseRank: feat.baseRank, effectiveRank: feat.baseRank,
+        unlistedClaim: !!classification.claimsUnlistedPower, impossible: gap >= 2 ? true : false, repeated: !!retry && gap < 2,
+        label: why
+      };
+    }
+  }
   const label = classification.actionType === 'feat'
     ? (tierMeetsRequirement(feat.color, requiredTierForIntensity(abilityNumber, classification.intensity))
         ? `Success (${feat.color} result${classification.intensity ? ' vs '+classification.intensity+' intensity' : ''})`
         : `Failure (${feat.color} result${classification.intensity ? ' vs '+classification.intensity+' intensity' : ''})`)
     : actionLabel(classification.actionType, feat.color);
 
+  if(classification.actionType === 'feat' && classification.intensity && taskKey && /^Failure/.test(label)
+     && colIdxForRankName(classification.intensity) >= abilityColIdx){
+    STATE.failedTasks[taskKey] = true;
+  }
   const isCombatType = classification.actionType !== 'feat';
   const isHarmfulColor = classification.actionType === 'blunt' || classification.actionType === 'edged'
     || classification.actionType === 'shooting' || classification.actionType === 'energy' || classification.actionType === 'charge';
@@ -3348,6 +3374,7 @@ function renderAdventureSelect(){
       STATE.currentHealth = maxHealth(STATE.activeHero);
       STATE.currentKarma = maxKarma(STATE.activeHero);
       STATE.enemies = {};
+      STATE.failedTasks = {};
       STATE.secondWindUsed = false;
       STATE.karmaReview = null;
       STATE.karmaReviewStatus = null;
@@ -3726,6 +3753,7 @@ async function advanceChapter(){
   STATE.pendingAdvance = null;
   STATE.log = []; // fresh log for the new chapter; opening narration re-renders from chapter data
   STATE.enemies = {}; // new chapter, new set of threats to track
+  STATE.failedTasks = {};
   if(STATE.chapterId !== 'FINISHED'){
     const nextChapter = currentChapter();
     STATE.busy = true;
