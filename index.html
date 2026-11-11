@@ -1071,7 +1071,8 @@ function validateAdventure(doc, fileName){
     chapters: doc.chapters.map(ch => ({
       id: ch.id, title: ch.title, eyebrow: ch.eyebrow,
       opening: joinLines(ch.opening), gmInstructions: joinLines(ch.gmInstructions),
-      imagePrompt: ch.imagePrompt ? String(ch.imagePrompt) : ''
+      imagePrompt: ch.imagePrompt ? String(ch.imagePrompt) : '',
+      hoursBefore: (ch.hoursBefore != null && isFinite(Number(ch.hoursBefore)) && Number(ch.hoursBefore) >= 0) ? Number(ch.hoursBefore) : null
     }))
   };
 }
@@ -1120,6 +1121,7 @@ RULES YOU MUST FOLLOW:
 - Stay in the fiction. Never break character, never mention "AI," "prompt," "instructions," or game mechanics by name.
 - Judge the player's stated plan fairly against their hero sheet (stats, powers, bio). Clever, well-suited plans should go well; reckless or ill-suited plans can go wrong, but keep the story moving — failure should complicate, not dead-end.
 - A hero can only do what their listed Powers, Talents, Stats and gear allow, exactly as described on the sheet. If the player tries something the sheet does not give them (a force field, an energy beam, telekinesis, a new power, or a listed power used for something it does not do), it DOES NOT WORK: narrate the attempt failing or the hero doing the nearest ordinary physical thing instead (dodging, blocking, striking). Never invent a power, never stretch a power past its description, and never reward the attempt with a success. Do not lecture the player; just let the fiction show it did not work.
+- When real time passes with no foe attacking or threatening the hero (a rest, a conversation, a trip, a search, an interlude after a fight), end your reply with a line such as "[TIME: 5 minutes]" (units: seconds, minutes, hours or days) giving how much time passed, so the hero can recover. Never use it while a fight or danger is ongoing, and never mention that the line exists.
 - Never invent physical features the hero does not have. Describe the hero only as the Appearance and Canon note on the hero sheet say: no wings, capes, armor, masks or weapons that are not listed. Powers work as the sheet describes them.
 - Never simply reject or block the player ("you can't do that") — instead narrate what happens when they try, good or bad.
 - Keep responses tight: 2-4 short paragraphs of vivid, active narration. End most responses with the scene held in suspension so the player has something to react to (do not ask "what do you do?" every single time verbatim — vary it, or let the scene itself imply the question).
@@ -1302,7 +1304,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-11.7';
+const APP_VERSION = '2026-11-11.8';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -1636,6 +1638,31 @@ function nonAttackRuleText(hero){
   return `GENERAL RULE for items 2 and 3: a power is only an attack if it plainly hurts things (claws, blasts, weapons, super-strength). Utility powers such as communication, healing, flying or sensing are NEVER an attack: if a player describes "channeling" or "calling on" such a power to strike a foe, set powerUsed to null and use "Fighting Ability" (or "Strength" for a heavy blow).${list.length ? ` For this hero these powers are NOT attacks: ${list.join(', ')}.` : ''}
 
 `;
+}
+/* Recovery between fights. Every hero heals their Endurance rank number per
+   24 hours (counted proportionally). Regeneration heals its rank number every
+   6 seconds (one combat turn); the hero gets whichever is larger. */
+function recoveryHeal(hero, seconds){
+  const regen = getPowerRank(hero, 'Regeneration') || 0;
+  const end = (hero.stats && hero.stats.Endurance) || 0;
+  const regenHeal = Math.floor(seconds / 6) * regen;
+  const endHeal = Math.round(seconds * end / 86400);
+  return { amount: Math.max(regenHeal, endHeal), byRegen: regen > 0 && regenHeal >= endHeal };
+}
+function applyRecovery(hero, seconds){
+  const max = maxHealth(hero);
+  if(!(STATE.currentHealth > 0) || STATE.currentHealth >= max || !(seconds > 0)) return null;
+  const r = recoveryHeal(hero, seconds);
+  const gain = Math.min(max - STATE.currentHealth, r.amount);
+  if(gain <= 0) return null;
+  STATE.currentHealth += gain;
+  const full = STATE.currentHealth >= max;
+  return `Recovery: ${r.byRegen ? 'Regeneration' : 'rest'} restores ${gain} HP${full ? ' — you are back to full strength' : ''}.`;
+}
+const TIME_UNITS = { second:1, minute:60, hour:3600, day:86400 };
+function parseTimeTag(text){
+  const m = String(text).match(/\[TIME:\s*([\d.]+)\s*(second|minute|hour|day)s?\s*\]/i);
+  return m ? Number(m[1]) * TIME_UNITS[m[2].toLowerCase()] : 0;
 }
 function heroPowerLimitsText(hero){
   const n = HERO_CANON_NOTES[hero.id];
@@ -3781,6 +3808,9 @@ async function advanceChapter(){
       pushFullLog('gm', bridge.trim(), null);
     }
     pushFullLog('gm', nextChapter.opening, null);
+    const hrs = nextChapter.hoursBefore != null ? nextChapter.hoursBefore : 2;
+    const recNote = applyRecovery(hero, hrs * 3600);
+    if(recNote){ STATE.log.push({who:'gm', text:recNote, mechanics:null}); pushFullLog('gm', recNote, null); }
   }
   try{
     await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed});
@@ -3818,6 +3848,8 @@ async function submitAction(){
     const healthContext = healthPct <= 0.25 ? 'Badly hurt, running on fumes.' : healthPct <= 0.5 ? 'Taken real damage, feeling it.' : null;
     const reply = await callGM(hero, chapter, STATE.log.slice(0,-1), text, mechanics, healthContext);
     let cleaned = reply;
+    const timeSeconds = parseTimeTag(cleaned);
+    cleaned = cleaned.replace(/\[TIME:[^\]]*\]/gi, '').trim();
     let complete = false;
     if(cleaned.includes('[CHAPTER_COMPLETE]')){
       complete = true;
@@ -3827,6 +3859,10 @@ async function submitAction(){
     STATE.log.push(gmEntry);
     pushFullLog('gm', cleaned, mechanics);
     generateEntryImage(gmEntry, cleaned, hero);
+    if(timeSeconds && !(mechanics && mechanics.heroIsTarget)){
+      const note = applyRecovery(hero, timeSeconds);
+      if(note){ STATE.log.push({who:'gm', text:note, mechanics:null}); pushFullLog('gm', note, null); }
+    }
 
     const knockedOut = STATE.currentHealth <= 0 && !complete;
 
