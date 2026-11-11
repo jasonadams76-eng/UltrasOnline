@@ -221,6 +221,8 @@
   .top-back button{ padding:6px 12px; font-size:0.8rem; }
   @media (max-width:640px){ .top-back{ float:none; margin:0 0 10px; } }
   .tr-story .text{ white-space:pre-wrap; }
+  #update-bar{ position:fixed; top:0; left:0; right:0; z-index:9999; display:flex; flex-wrap:wrap; gap:8px 12px; align-items:center; justify-content:center; padding:10px 14px; background:var(--hero-gold,#f5c518); color:#111; border-bottom:3px solid var(--ink,#111); font-weight:600; }
+  #update-bar button{ padding:6px 14px; font-size:0.85rem; }
   .rescore-box{ border:2px dashed var(--ink); padding:12px; margin-top:6px; }
   .coming-soon-badge{ background:var(--hero-red); color:#fff; padding:1px 7px; border:2px solid var(--ink); letter-spacing:.06em; }
   .hist-banner{ position:relative; min-height:120px; background:var(--ink); border:3px solid var(--ink); box-shadow:5px 5px 0 rgba(10,31,68,0.85); overflow:hidden; display:flex; align-items:flex-end; }
@@ -1251,6 +1253,48 @@ async function importOldSaves(){
 const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKey) || "";
 /* If config.js sets workerUrl, all Gemini calls go through that Cloudflare Worker
    (which holds the real key) and no key is needed in the browser. */
+/* ---------- Update notice ----------
+   APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
+   from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
+const APP_VERSION = '2026-11-11.1';
+const UPDATE_CHECK_MS = 5 * 60 * 1000;
+let updateDismissedFor = null, updateChecking = false;
+function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
+async function fetchLiveVersion(){
+  const r = await fetch(liveIndexUrl() + '?cb=' + Date.now(), { cache: 'no-store' });
+  if(!r.ok) return null;
+  const m = (await r.text()).match(/const APP_VERSION = '([^']+)'/);
+  return m ? m[1] : null;
+}
+function showUpdateBar(version){
+  if(updateDismissedFor === version || document.getElementById('update-bar')) return;
+  const bar = document.createElement('div');
+  bar.id = 'update-bar';
+  bar.setAttribute('role', 'status');
+  bar.innerHTML = '<span>The game has been updated. Finish your current turn, then reload to get the latest version.</span> <button id="update-reload">Reload</button> <button class="secondary" id="update-later">Later</button>';
+  document.body.appendChild(bar);
+  document.getElementById('update-later').onclick = ()=>{ updateDismissedFor = version; bar.remove(); };
+  document.getElementById('update-reload').onclick = async ()=>{
+    const b = document.getElementById('update-reload'); b.disabled = true; b.textContent = 'Reloading…';
+    try{ await fetch(liveIndexUrl(), { cache: 'reload' }); }catch(e){ /* reload anyway */ }
+    location.reload();
+  };
+}
+async function checkForUpdate(){
+  if(updateChecking) return;
+  updateChecking = true;
+  try{
+    const live = await fetchLiveVersion();
+    if(live && live !== APP_VERSION) showUpdateBar(live);
+  }catch(e){ /* offline or blocked: try again later */ }
+  updateChecking = false;
+}
+function startUpdateWatch(){
+  checkForUpdate();
+  setInterval(checkForUpdate, UPDATE_CHECK_MS);
+  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'visible') checkForUpdate(); });
+}
+
 const GEMINI_WORKER_URL = ((window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.workerUrl) || "").replace(/\/+$/, "");
 if(!GEMINI_WORKER_URL && !GEMINI_API_KEY) console.warn('No workerUrl or Gemini API key found — create config.js next to index.html (see comment above).');
 const GEMINI_MODEL_PRIMARY = "gemini-3.5-flash-lite";
@@ -3675,6 +3719,7 @@ function escapeHtml(str){
   }
   await restoreSession();
   render();
+  startUpdateWatch();
 })();
 </script>
 </body>
