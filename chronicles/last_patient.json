@@ -34,6 +34,7 @@
     },
     {
       "id": "shared_dreams",
+      "hoursBefore": 24,
       "title": "Shared Dreams",
       "eyebrow": "Chapter Two — Something Connects Them",
       "opening": [
@@ -63,6 +64,7 @@
     },
     {
       "id": "the_missing_records",
+      "hoursBefore": 24,
       "title": "The Missing Records",
       "eyebrow": "Chapter Three — A Treatment Without a Name",
       "opening": [
@@ -91,6 +93,7 @@
     },
     {
       "id": "oracle_consultation",
+      "hoursBefore": 6,
       "title": "ORACLE Consultation",
       "eyebrow": "Chapter Four — The Biology of a Miracle",
       "opening": [
@@ -145,6 +148,7 @@
     },
     {
       "id": "the_hidden_facility",
+      "hoursBefore": 12,
       "title": "The Hidden Facility",
       "eyebrow": "Chapter Six — Behind the Hospital Walls",
       "opening": [

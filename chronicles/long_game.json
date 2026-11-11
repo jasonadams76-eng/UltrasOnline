@@ -27,6 +27,7 @@
     },
     {
       "id": "tlg2",
+      "hoursBefore": 168,
       "title": "A Useful Collection",
       "eyebrow": "Chapter Two",
       "opening": [
@@ -46,6 +47,7 @@
     },
     {
       "id": "tlg3",
+      "hoursBefore": 24,
       "title": "The Missing Pieces",
       "eyebrow": "Chapter Three",
       "opening": [
@@ -65,6 +67,7 @@
     },
     {
       "id": "tlg4",
+      "hoursBefore": 12,
       "title": "An Old Grudge",
       "eyebrow": "Chapter Four",
       "opening": [
@@ -101,6 +104,7 @@
     },
     {
       "id": "tlg6",
+      "hoursBefore": 24,
       "title": "The Gathering Place",
       "eyebrow": "Chapter Six",
       "opening": [

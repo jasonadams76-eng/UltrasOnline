@@ -23,6 +23,7 @@
     },
     {
       "id": "ecl2",
+      "hoursBefore": 72,
       "title": "Ghosts in the Machine",
       "eyebrow": "Chapter Two — Act I: The Mystery",
       "opening": [
@@ -74,6 +75,7 @@
     },
     {
       "id": "ecl5",
+      "hoursBefore": 8,
       "title": "Hunter and Hunted",
       "eyebrow": "Chapter Five — Act II: Escalating Threat",
       "opening": [
@@ -91,6 +93,7 @@
     },
     {
       "id": "ecl6",
+      "hoursBefore": 4,
       "title": "Secrets of the Observatory",
       "eyebrow": "Chapter Six — Act II: Escalating Threat",
       "opening": [
@@ -108,6 +111,7 @@
     },
     {
       "id": "ecl7",
+      "hoursBefore": 6,
       "title": "Race Against the Eclipse",
       "eyebrow": "Chapter Seven — Act II: Escalating Threat",
       "opening": [

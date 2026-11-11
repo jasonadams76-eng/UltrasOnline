@@ -23,6 +23,7 @@
     },
     {
       "id": "il2",
+      "hoursBefore": 12,
       "title": "Paper Trail",
       "eyebrow": "Chapter Two",
       "opening": [
@@ -40,6 +41,7 @@
     },
     {
       "id": "il3",
+      "hoursBefore": 24,
       "title": "The Acquisitions",
       "eyebrow": "Chapter Three",
       "opening": [
@@ -57,6 +59,7 @@
     },
     {
       "id": "il4",
+      "hoursBefore": 48,
       "title": "The Ledger Drop",
       "eyebrow": "Chapter Four",
       "opening": [
@@ -75,6 +78,7 @@
     },
     {
       "id": "il5",
+      "hoursBefore": 12,
       "title": "Names in the Margins",
       "eyebrow": "Chapter Five",
       "opening": [
@@ -109,6 +113,7 @@
     },
     {
       "id": "il7",
+      "hoursBefore": 24,
       "title": "The Clock Is Running",
       "eyebrow": "Chapter Seven",
       "opening": [
@@ -126,6 +131,7 @@
     },
     {
       "id": "il8",
+      "hoursBefore": 24,
       "title": "Rats in the Walls",
       "eyebrow": "Chapter Eight",
       "opening": [

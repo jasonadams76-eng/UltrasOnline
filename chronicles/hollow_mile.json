@@ -29,6 +29,7 @@
     },
     {
       "id": "a_favor_for_frankie",
+      "hoursBefore": 6,
       "title": "A Favor for Frankie",
       "eyebrow": "Information Has a Price",
       "opening": [
@@ -78,6 +79,7 @@
     },
     {
       "id": "the_oracle_briefing",
+      "hoursBefore": 4,
       "title": "The ORACLE Briefing",
       "eyebrow": "Science Has Its Limits",
       "opening": [
