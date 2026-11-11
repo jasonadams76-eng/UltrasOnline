@@ -443,6 +443,9 @@ const STATE = {
   pendingAdvance: null,// set to the next chapterId (or 'FINISHED') once a chapter completes, until the player clicks Continue
   currentHealth: null, // current Health pool for the active hero's session (see maxHealth())
   currentKarma: null,  // current Karma pool for the active hero's session (see maxKarma())
+  armorLost: 0,        // ranks of body armor lost this adventure (see armorRankNumber())
+  transformed: false,  // Tungsten Titan: true while in tungsten form
+  atWorkshop: false,   // true once the story puts the hero in a workshop with tools
   oraclePending: false,// true while an ORACLE rescue narration is being generated after a Health knockout
   enemies: {},         // keyed by lowercase enemy name -> {name, rank, maxHealth, currentHealth}, tracked per chapter/session
   karmaReview: null,    // {awards:[{category,points,note}], total} once the end-of-adventure Karma review completes
@@ -747,6 +750,156 @@ function damageForAttack(attackerRankNumber, color){
   return Math.round(attackerRankNumber);
 }
 
+/* ---------- Body armor ----------
+   Armor cuts every non-mental hit by its CURRENT rank number. A hit that does
+   no damage after armor can still Slam but can never Stun or Kill. Armor drops
+   one rank when (a) an edged weapon hits with a yellow or red result, even
+   with no Health lost, or (b) a blow two or more ranks above the armor lands
+   on a red result. Natural armor (Tungsten Skin) is whole again once Health is
+   full; built armor (a suit) needs repair. Foes use the same rules. */
+function isArmorPower(p){
+  if(!p) return false;
+  if(p.armor === true) return true;
+  const n = String(typeof p === 'string' ? p : p.name).toLowerCase();
+  return /armou?r/.test(n) && !/piercing|weapon|attack/.test(n);
+}
+function isMentalName(n){
+  return /(mental|psychic|psionic|mind|telepath|hypno|illusion|emotion)/i.test(String(n || ''));
+}
+function shortArmorName(n){ return String(n || 'Armor').split(' - ').pop(); }
+function armorRankNumber(base, lost){
+  if(!(base > 0)) return 0;
+  if(!lost) return base;
+  const idx = colIdxForNumber(base) - lost;
+  return idx <= 0 ? 0 : (RANK_TYPICAL_NUMBER[RANK_ORDER[idx]] || 0);
+}
+function heroArmor(hero){
+  const p = (hero && hero.powers || []).find(x => typeof x !== 'string' && isArmorPower(x));
+  if(!p) return null;
+  const natural = /natural/i.test(p.name);
+  return { name: p.name, base: p.rank, natural, needsForm: natural && getPowerRank(hero, 'Body Transformation') != null };
+}
+function heroCanTransform(hero){ const a = heroArmor(hero); return !!(a && a.needsForm); }
+function syncNaturalArmor(hero){
+  const a = heroArmor(hero);
+  if(a && a.natural && STATE.armorLost && STATE.currentHealth >= maxHealth(hero)) STATE.armorLost = 0;
+}
+function heroArmorNow(hero){
+  const a = heroArmor(hero);
+  if(!a) return null;
+  const lost = STATE.armorLost || 0;
+  const rank = armorRankNumber(a.base, lost);
+  return Object.assign({}, a, { lost, rank, active: !a.needsForm || !!STATE.transformed, rankName: rank ? rankNameForNumber(rank) : 'gone' });
+}
+function foeArmor(enemy){
+  const p = (enemy.powers || []).find(isArmorPower);
+  if(!p) return null;
+  const base = rankNumberForName(p.rank), lost = enemy.armorLost || 0, rank = armorRankNumber(base, lost);
+  return { name: p.name, base, lost, rank, active: true, rankName: rank ? rankNameForNumber(rank) : 'gone' };
+}
+/* One hit through armor. armor may be null. Returns damage after armor,
+   the after-effect that still applies, and whether the armor cracks. */
+function armorOutcome(armor, rawDamage, type, color, mental){
+  if(!(rawDamage > 0)) return { damage: 0, absorbed: 0, cracked: false, after: null };
+  let after = aftereffectFor(type, color);
+  if(!armor || !armor.active || !(armor.rank > 0) || mental) return { damage: rawDamage, absorbed: 0, cracked: false, after };
+  const damage = Math.max(0, rawDamage - armor.rank);
+  if(damage === 0 && after !== 'slam') after = null;
+  const gap = colIdxForNumber(rawDamage) - colIdxForNumber(armor.rank);
+  const cracked = (type === 'edged' && (color === 'yellow' || color === 'red')) || (gap >= 2 && color === 'red');
+  return { damage, absorbed: rawDamage - damage, cracked, after };
+}
+function armorHitNote(subject, armorName, ao, rankAfter){
+  if(!ao || !(ao.absorbed > 0 || ao.cracked)) return '';
+  let t = '';
+  if(ao.absorbed > 0 && ao.damage === 0) t += `${subject}'s armor (${armorName}) completely stopped the blow: no wound at all${ao.after === 'slam' ? ', though the force still throws them back or off their feet' : ''}.`;
+  else if(ao.absorbed > 0) t += `${subject}'s armor (${armorName}) soaked up most of the blow, so only a lighter injury got through.`;
+  if(ao.cracked) t += ` The armor cracks and gives way a little under the hit${rankAfter === 0 ? ' and is destroyed entirely' : ', and is weaker from now on'}.`;
+  return t.trim();
+}
+/* Runs a hit against the hero (side 'hero') or an enemy through armor,
+   records any armor loss, and returns the outcome plus narrator text. */
+function armorHit(side, hero, enemy, rawDamage, type, color, powerName){
+  const armor = side === 'hero' ? heroArmorNow(hero) : foeArmor(enemy);
+  const ao = armorOutcome(armor, rawDamage, type, color, isMentalName(powerName));
+  let rankAfter = armor ? armor.rank : 0;
+  if(ao.cracked && armor){
+    const cap = colIdxForNumber(armor.base);
+    if(side === 'hero') STATE.armorLost = Math.min(cap, (STATE.armorLost || 0) + 1);
+    else enemy.armorLost = Math.min(cap, (enemy.armorLost || 0) + 1);
+    rankAfter = armorRankNumber(armor.base, armor.lost + 1);
+  }
+  ao.text = armor ? armorHitNote(side === 'hero' ? 'The hero' : enemy.name, shortArmorName(armor.name), ao, rankAfter) : '';
+  return ao;
+}
+function armorHudText(hero){
+  const a = heroArmorNow(hero);
+  if(!a) return '';
+  const nm = shortArmorName(a.name);
+  if(a.needsForm && !a.active) return `${nm}: inactive (human form)`;
+  return `${nm}: ${a.rank ? a.rankName + (a.lost ? ' (damaged)' : '') : 'destroyed'}`;
+}
+function armorNarratorText(hero){
+  const a = heroArmorNow(hero);
+  if(!a) return '';
+  const nm = shortArmorName(a.name);
+  let t = '\nARMOR STATUS (never state numbers or ranks): ';
+  if(a.needsForm){
+    t += STATE.transformed ? 'The hero is in his TUNGSTEN form: the metal skin is active armor.' : 'The hero is in his ordinary HUMAN form: he has no armor in this form.';
+    t += ' His form changes only when the game says so; never change it yourself in the narration.';
+  }
+  if(!a.active) return t;
+  if(a.rank === 0) t += ` The ${nm} has been destroyed and gives no protection.`;
+  else if(a.lost) t += a.natural ? ` The ${nm} is cracked, pitted and weaker than normal; it mends fully once he has recovered.` : ` The ${nm} is damaged (dented, torn or cracked plating) and gives less protection. Light damage can be fixed in the field with basic tools given an hour, but heavy damage needs a workshop with proper tools and equipment, such as the hero's own lab or ORACLE's facilities.`;
+  else t += ` The ${nm} is undamaged.`;
+  return t;
+}
+function repairIntent(text){ return /\b(repair|fix|mend|patch|rebuild|refit|recalibrate|service)\b[^.!?]{0,40}\b(armou?r|suit)\b/i.test(text); }
+function transformIntent(text){ return text.length <= 80 && /\b(transform|revert|change back|turn back|switch back|change into|turn into)\b/i.test(text); }
+function repairTalentShift(hero){
+  return (hero.talents || []).some(t => /(engineer|mechanic|repair|electronic|technolog|inventor|gadget|armou?rer|machin|smith|metallurg)/i.test(talentName(t)) || /repair/i.test(typeof t === 'string' ? '' : (t.effect || ''))) ? 1 : 0;
+}
+/* Built armor repair: one rank lost can be fixed in the field in 1 hour;
+   two or more need a workshop, 2 hours per rank. Each attempt is a Reason
+   FEAT and costs the full time even when it fails. */
+function doArmorRepair(hero){
+  const a = heroArmor(hero);
+  if(!a) return { text: '' };
+  if(a.natural) return { text: '\nThe player tried to repair natural armor. It is the hero\'s own body: it cannot be repaired with tools and mends by itself as he recovers. Show that.' };
+  const lost = STATE.armorLost || 0;
+  const nm = shortArmorName(a.name);
+  if(lost <= 0) return { text: `\nThe player wants to repair the ${nm}, but it is undamaged. Nothing needs fixing; no time passes.` };
+  const needsShop = lost >= 2;
+  if(needsShop && !STATE.atWorkshop) return { text: `\nThe player wants to repair the badly damaged ${nm}, but heavy damage cannot be fixed in the field: it needs a workshop with proper tools and equipment (the hero's own lab or ORACLE's facilities). No repair happens and no time passes. Show them sizing up the damage and realizing this, and hint where they could do the work.` };
+  const hours = needsShop ? lost * 2 : 1;
+  const shift = repairTalentShift(hero);
+  const feat = resolveFeat(hero.stats.Reason, shift);
+  const ok = feat.color !== 'white';
+  if(ok) STATE.armorLost = 0;
+  const mechanics = Object.assign({ ability:'Reason', usedPower:false, actionType:'feat', columnShift:shift, intensity:null, heroIsTarget:false, enemyName:null, damage:0, enemyResult:null,
+    label: ok ? `Repair succeeded (${feat.color} result)` : `Repair failed (${feat.color} result)` }, feat);
+  return {
+    mechanics, seconds: hours * 3600,
+    text: `\nARMOR REPAIR: the hero spends ${hours} hour${hours > 1 ? 's' : ''} working on the damaged ${nm} ${needsShop ? 'in a workshop with proper tools and equipment' : 'in the field with basic tools'}. ${ok ? 'The work succeeds and the armor is restored to full strength.' : 'The work does not come out right: the hours are spent but the armor is still damaged and needs another attempt.'} The time passing is already counted by the game: do NOT add a [TIME] line.`,
+    note: ok ? `Repair: ${hours} hour${hours > 1 ? 's' : ''} of work restores your ${nm} to full strength.` : `Repair: ${hours} hour${hours > 1 ? 's' : ''} of work, but the ${nm} is still damaged. Try again.`
+  };
+}
+/* Between chapters: 12+ hours assumes a workshop (full repair); at least an hour
+   allows one rank of field repair. Natural armor heals with Health instead. */
+function applyArmorBreakRepair(hero, hrs){
+  syncNaturalArmor(hero);
+  const a = heroArmor(hero);
+  const lost = STATE.armorLost || 0;
+  if(!a || a.natural || lost <= 0) return null;
+  const nm = shortArmorName(a.name);
+  if(hrs >= 12){ STATE.armorLost = 0; return `Repairs: with time in a workshop, your ${nm} is back to full strength.`; }
+  if(hrs >= 1){
+    STATE.armorLost = lost - 1;
+    return STATE.armorLost > 0 ? `Repairs: a field fix restores one rank of your ${nm}, but it still needs a proper workshop.` : `Repairs: a field fix restores your ${nm} to full strength.`;
+  }
+  return null;
+}
+
 /* Baseline FASERIP stat tiers for ordinary human NPCs (per the rulebook's
    guidance that untrained bystanders and rank-and-file thugs sit at
    Typical across the board, with trained professionals — cops, soldiers,
@@ -796,7 +949,7 @@ function enemyMaxHealth(statRanks){
 const ENEMY_FALLBACK = [{
   id:'warden_ash', name:'Warden Ash', aliases:['ash','the warden'], adventures:['meridian'], escapesBeforeFinal:true,
   stats:{ 'Fighting Ability':'Excellent', Agility:'Excellent', Strength:'Good', Endurance:'Excellent', Reason:'Remarkable', Intuition:'Excellent', Psyche:'Excellent' },
-  powers:[ {name:'Ceramic Plate Armor', rank:'Excellent'}, {name:'Arc Baton', rank:'Excellent', attack:true}, {name:'Signal Jammer', rank:'Good'}, {name:'Remote Charges', rank:'Incredible'} ],
+  powers:[ {name:'Ceramic Plate Armor', rank:'Excellent', armor:true}, {name:'Arc Baton', rank:'Excellent', attack:true}, {name:'Signal Jammer', rank:'Good'}, {name:'Remote Charges', rank:'Incredible'} ],
   note:'Only the Arc Baton is used to attack. The Remote Charges are the substation explosives (a story device, never swung at the hero), the Signal Jammer only disrupts radios and phones, and the Ceramic Plate Armor is purely defensive.'
 }];
 let NAMED_ENEMIES = {};
@@ -1127,6 +1280,7 @@ RULES YOU MUST FOLLOW:
 - A hero can only do what their listed Powers, Talents, Stats and gear allow, exactly as described on the sheet. If the player tries something the sheet does not give them (a force field, an energy beam, telekinesis, a new power, or a listed power used for something it does not do), it DOES NOT WORK: narrate the attempt failing or the hero doing the nearest ordinary physical thing instead (dodging, blocking, striking). Never invent a power, never stretch a power past its description, and never reward the attempt with a success. Do not lecture the player; just let the fiction show it did not work.
 - When real time passes with no foe attacking or threatening the hero (a rest, a conversation, a trip, a search, an interlude after a fight), end your reply with a line such as "[TIME: 5 minutes]" (units: seconds, minutes, hours or days) giving how much time passed, so the hero can recover. Never use it while a fight or danger is ongoing, and never mention that the line exists.
 - When the hero is suddenly attacked or an ambush or fight breaks out, end your reply with the line "[COMBAT]" so turn-based combat can begin. Do not use it for a threat that has not yet attacked. Never mention that the line exists.
+- When the hero arrives at a place with proper tools and equipment where armor or gear can be repaired (their own lab, ORACLE's workshop, a well-equipped garage), end your reply with the line "[WORKSHOP]". Never mention that the line exists.
 - Nobody dies from a combat result. A gravely wounded foe or hero is badly hurt, unconscious and survivable, never dead. When a foe is gravely wounded, let the hero notice and have the chance to check on them.
 - Never invent physical features the hero does not have. Describe the hero only as the Appearance and Canon note on the hero sheet say: no wings, capes, armor, masks or weapons that are not listed. Powers work as the sheet describes them.
 - Never simply reject or block the player ("you can't do that") — instead narrate what happens when they try, good or bad.
@@ -1310,7 +1464,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-11.10';
+const APP_VERSION = '2026-11-11.11';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -1608,7 +1762,7 @@ function ensureKarmaReview(){
     STATE.karmaReview = result;
     STATE.karmaReviewStatus = 'done';
     pushKarma(hero.id, STATE.adventureId, result, STATE.fullLog);
-    saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || [], karmaReview: result}).catch(()=>{});
+    saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || [], armorLost: STATE.armorLost || 0, transformed: !!STATE.transformed, atWorkshop: !!STATE.atWorkshop, karmaReview: result}).catch(()=>{});
     render();
   }).catch(()=>{
     STATE.karmaReviewStatus = 'error';
@@ -1657,13 +1811,20 @@ function recoveryHeal(hero, seconds){
 }
 function applyRecovery(hero, seconds){
   const max = maxHealth(hero);
-  if(!(STATE.currentHealth > 0) || STATE.currentHealth >= max || !(seconds > 0)) return null;
-  const r = recoveryHeal(hero, seconds);
-  const gain = Math.min(max - STATE.currentHealth, r.amount);
-  if(gain <= 0) return null;
-  STATE.currentHealth += gain;
+  if(!(STATE.currentHealth > 0) || !(seconds > 0)) return null;
+  const hadLost = STATE.armorLost || 0;
+  let gain = 0, r = null;
+  if(STATE.currentHealth < max){
+    r = recoveryHeal(hero, seconds);
+    gain = Math.min(max - STATE.currentHealth, r.amount);
+    if(gain > 0) STATE.currentHealth += gain;
+  }
+  syncNaturalArmor(hero); // natural armor mends once time passes with Health full
+  const armorBack = hadLost > 0 && !STATE.armorLost;
+  if(gain <= 0 && !armorBack) return null;
+  if(gain <= 0) return 'Recovery: your armor is whole again.';
   const full = STATE.currentHealth >= max;
-  return `Recovery: ${r.byRegen ? 'Regeneration' : 'rest'} restores ${gain} HP${full ? ' — you are back to full strength' : ''}.`;
+  return `Recovery: ${r.byRegen ? 'Regeneration' : 'rest'} restores ${gain} HP${full ? ' — you are back to full strength' : ''}${armorBack ? ', and your armor is whole again' : ''}.`;
 }
 const TIME_UNITS = { second:1, minute:60, hour:3600, day:86400 };
 function parseTimeTag(text){
@@ -1689,6 +1850,7 @@ function heroLookText(hero){
 
 function mechNotes(m){
   let out = '';
+  if(m.armor && m.armor.text) out += '\nNOTE: ' + m.armor.text;
   if(m.impossible) out += '\nNOTE: this task is beyond what the hero can possibly do (far above their ability). It cannot work, no matter the effort or luck: show the hero straining and failing with no partial success and no near-miss, and do not suggest another roll would work.';
   if(m.repeated) out += '\nNOTE: the hero already failed at exactly this and has changed nothing. It fails again; show that the same approach is not enough and let the scene hint that a different approach is needed.';
   if(m.unlistedClaim) out += '\nNOTE: the player tried to use an ability the hero does NOT have (or a power for something it cannot do). That ability does NOT work. Resolve the action only as an ordinary physical attempt matching the result above, and show the claimed effect not happening (no barrier forms, no beam fires). Any spirit or ally may only offer advice.';
@@ -1730,6 +1892,7 @@ Bio: ${hero.bio}${heroLookText(hero)}`;
       : pct <= 0.5 ? 'This foe has taken real damage and is visibly hurting.'
       : 'This foe is still standing strong.';
     enemyContextLine += `\nEnemy targeted: ${er.name} — ${condition} (never state numbers, just show it in the fiction).`;
+    if(er.armorText) enemyContextLine += '\nArmor: ' + er.armorText;
   }
 
   const mechanicsBlock = (mechanics && mechanics.steps && mechanics.steps.length > 1) ? `
@@ -2181,7 +2344,7 @@ function resolveOne(hero, chapter, classification){
   // Damage to the HERO is driven by the attacking enemy's own weapon,
   // power, or stat rank — a stronger threat (or a heavier gun) should hit
   // harder regardless of who's rolling the FEAT this turn.
-  let damage = 0;
+  let damage = 0, heroAfter = null, heroArmorInfo = null;
   if(isCombatType && isHarmfulColor && classification.heroIsTarget && feat.color !== 'white'){
     let attackerRankNumber = abilityNumber; // fallback
     if(classification.enemyWeapon && WEAPON_DAMAGE_RANK[classification.enemyWeapon]){
@@ -2200,14 +2363,18 @@ function resolveOne(hero, chapter, classification){
         ? enemy.stats['Strength'] : enemy.stats['Fighting Ability'];
       attackerRankNumber = rankNumberForName(meleeStat);
     }
-    damage = damageForAttack(attackerRankNumber, feat.color);
+    const rawDamage = damageForAttack(attackerRankNumber, feat.color);
+    const ao = armorHit('hero', hero, null, rawDamage, classification.actionType, feat.color, classification.enemyPowerUsed);
+    damage = ao.damage; heroAfter = ao.after; heroArmorInfo = ao;
   }
 
   // Damage to an ENEMY (hero attacking) is driven by the hero's own
   // resolved rank/power, tracked against that enemy's Health pool.
   let enemyResult = null;
   if(isCombatType && isHarmfulColor && classification.targetsEnemy && enemy){
-    const enemyDamage = damageForAttack(heroDamageRank(hero, usedPower, abilityNumber), feat.color);
+    const rawEnemyDamage = damageForAttack(heroDamageRank(hero, usedPower, abilityNumber), feat.color);
+    const eao = armorHit('foe', hero, enemy, rawEnemyDamage, classification.actionType, feat.color, classification.powerUsed);
+    const enemyDamage = eao.damage;
     if(enemyDamage > 0) enemy.currentHealth = Math.max(0, enemy.currentHealth - enemyDamage);
     const sheet = namedEnemyFor(enemy.name) || {};
     const atZero = enemy.currentHealth <= 0;
@@ -2216,6 +2383,8 @@ function resolveOne(hero, chapter, classification){
     enemyResult = {
       name: enemy.name,
       damage: enemyDamage,
+      after: eao.after,
+      armorText: eao.text,
       currentHealth: enemy.currentHealth,
       maxHealth: enemy.maxHealth,
       knockedOut: atZero && !sheet.staggerOnly && !escapes,
@@ -2236,6 +2405,8 @@ function resolveOne(hero, chapter, classification){
     enemyWeapon: classification.enemyWeapon,
     enemyPowerUsed: classification.enemyPowerUsed,
     damage,
+    after: heroAfter,
+    armor: heroArmorInfo,
     enemyResult,
     unlistedClaim: !!classification.claimsUnlistedPower,
     ...feat,
@@ -3364,6 +3535,7 @@ function applySavedGame(hero, saved){
   STATE.combat = (saved.combat && typeof saved.combat === 'object' && Array.isArray(saved.combat.order)) ? saved.combat : null;
   STATE.checkPrompts = Array.isArray(saved.checkPrompts) ? saved.checkPrompts : [];
   STATE.heroStunned = false;
+  STATE.armorLost = Number(saved.armorLost) || 0; STATE.transformed = !!saved.transformed; STATE.atWorkshop = !!saved.atWorkshop;
   STATE.karmaReview = saved.karmaReview || null;
   STATE.karmaReviewStatus = saved.karmaReview ? 'done' : null;
 }
@@ -3481,10 +3653,11 @@ function renderAdventureSelect(){
       STATE.failedTasks = {};
       STATE.secondWindUsed = false;
       STATE.combat = null; STATE.checkPrompts = []; STATE.heroStunned = false;
+      STATE.armorLost = 0; STATE.transformed = false; STATE.atWorkshop = false;
       STATE.karmaReview = null;
       STATE.karmaReviewStatus = null;
       STATE.screen='PLAY';
-      await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || []});
+      await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || [], armorLost: STATE.armorLost || 0, transformed: !!STATE.transformed, atWorkshop: !!STATE.atWorkshop});
       render();
     };
   });
@@ -3731,7 +3904,7 @@ function renderPlay(){
     const mechanicsHtml = (e.who==='gm' && m) ? `
       <div class="feat-roll feat-${m.color}">
         <span class="feat-tag">FEAT</span> ${escapeHtml(m.ability)} (${escapeHtml(m.effectiveRank)}) · Roll ${m.roll} ·
-        <span class="feat-color-tag">${m.color.toUpperCase()}</span> · ${escapeHtml(m.label)}${enemyBadge}
+        <span class="feat-color-tag">${m.color.toUpperCase()}</span> · ${escapeHtml(m.label)}${enemyBadge}${(m.armor && m.armor.absorbed) ? ' · Armor absorbed ' + m.armor.absorbed : ''}
       </div>` : '';
     return `
     <div class="entry ${e.who}">
@@ -3746,7 +3919,7 @@ function renderPlay(){
   app.innerHTML = `
     <div class="top-bar">
       <button class="secondary" id="btn-menu">← Roster</button>
-      <div class="mono" style="font-size:0.75rem; color:var(--paper-dim);">${escapeHtml(hero.alias)} · HP ${STATE.currentHealth ?? maxHealth(hero)}/${maxHealth(hero)} · Karma ${STATE.currentKarma ?? maxKarma(hero)}/${maxKarma(hero)}</div>
+      <div class="mono" style="font-size:0.75rem; color:var(--paper-dim);">${escapeHtml(hero.alias)} · HP ${STATE.currentHealth ?? maxHealth(hero)}/${maxHealth(hero)} · Karma ${STATE.currentKarma ?? maxKarma(hero)}/${maxKarma(hero)}${armorHudText(hero) ? ' · ' + escapeHtml(armorHudText(hero)) : ''}</div>
       <button class="secondary" id="btn-print" title="Open a print-friendly transcript of the whole adventure so far (use your browser's Print → Save as PDF)">🖨 Print Adventure</button>
     </div>
     <div class="panel">
@@ -3800,6 +3973,7 @@ function renderPlay(){
         </div>
       ` : `
         ${combatPanelHtml()}${checkPromptsHtml()}
+        ${heroCanTransform(hero) ? `<div style="margin-bottom:8px;"><button id="btn-transform" class="secondary" ${STATE.busy?'disabled':''}>Transform: ${STATE.transformed ? 'return to human form' : 'change to tungsten form'}${STATE.combat ? ' (uses your action)' : ''}</button></div>` : ''}
         <div class="input-row">
           <textarea id="player-input" placeholder="${STATE.combat ? 'Your action this turn (Round ' + STATE.combat.round + ')' : 'What does ' + escapeHtml(hero.alias) + ' do?'}" ${STATE.busy?'disabled':''}></textarea>
           <button id="btn-send" ${STATE.busy?'disabled':''}>${STATE.busy?'…':'Act'}</button>
@@ -3840,6 +4014,8 @@ function renderPlay(){
   const sendBtn = document.getElementById('btn-send');
   if(sendBtn){
     sendBtn.onclick = ()=> submitAction();
+    const transformBtn = document.getElementById('btn-transform');
+    if(transformBtn) transformBtn.onclick = ()=> submitAction({ transform: true });
     const retreatBtn = document.getElementById('btn-retreat');
     if(retreatBtn) retreatBtn.onclick = ()=>{ document.getElementById('player-input').value = 'I retreat from the fight.'; STATE.retreatNow = true; submitAction(); };
     document.querySelectorAll('.btn-check').forEach(b => { b.onclick = ()=>{ document.getElementById('player-input').value = 'I check on ' + b.getAttribute('data-name') + ' and stabilize them.'; submitAction(); }; });
@@ -3863,7 +4039,7 @@ async function advanceChapter(){
   STATE.log = []; // fresh log for the new chapter; opening narration re-renders from chapter data
   STATE.enemies = {}; // new chapter, new set of threats to track
   STATE.failedTasks = {};
-  STATE.combat = null; STATE.checkPrompts = []; STATE.heroStunned = false;
+  STATE.combat = null; STATE.checkPrompts = []; STATE.heroStunned = false; STATE.atWorkshop = false;
   if(STATE.chapterId !== 'FINISHED'){
     const nextChapter = currentChapter();
     STATE.busy = true;
@@ -3884,9 +4060,11 @@ async function advanceChapter(){
     const hrs = nextChapter.hoursBefore != null ? nextChapter.hoursBefore : 2;
     const recNote = applyRecovery(hero, hrs * 3600);
     if(recNote){ STATE.log.push({who:'gm', text:recNote, mechanics:null}); pushFullLog('gm', recNote, null); }
+    const armNote = applyArmorBreakRepair(hero, hrs);
+    if(armNote){ STATE.log.push({who:'gm', text:armNote, mechanics:null}); pushFullLog('gm', armNote, null); }
   }
   try{
-    await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || []});
+    await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || [], armorLost: STATE.armorLost || 0, transformed: !!STATE.transformed, atWorkshop: !!STATE.atWorkshop});
   }catch(e){ /* saving is best-effort */ }
   render();
 }
@@ -3942,9 +4120,10 @@ function foeAttackProfile(enemy){
 function resolveFoeTurn(enemy, shift){
   const prof = foeAttackProfile(enemy);
   const feat = resolveFeat(prof.rollRank, shift || 0);
-  const damage = damageForAttack(prof.damageRank, feat.color);
+  const raw = damageForAttack(prof.damageRank, feat.color);
+  const ao = armorHit('hero', STATE.activeHero, null, raw, prof.type, feat.color, prof.name);
   return { kind:'attack', name: enemy.name, attack: prof.name, type: prof.type, roll: feat.roll, color: feat.color,
-           label: actionLabel(prof.type, feat.color), damage, after: damage > 0 ? aftereffectFor(prof.type, feat.color) : null };
+           label: actionLabel(prof.type, feat.color), damage: ao.damage, after: ao.after, armorText: ao.text, armorAbsorbed: ao.absorbed };
 }
 /* An ordinary foe surrenders once it is clearly overmatched. Named villains
    never do unless their sheet says "surrenders". */
@@ -3976,7 +4155,7 @@ function applyHitAftereffects(mechanics){
     const e = key && STATE.enemies[key];
     if(!e) continue;
     const sheet = namedEnemyFor(e.name) || {};
-    const after = er.damage > 0 ? aftereffectFor(m.actionType, m.color) : null;
+    const after = (er.after !== undefined) ? er.after : (er.damage > 0 ? aftereffectFor(m.actionType, m.color) : null);
     if(after === 'kill' && e.currentHealth > 0){ e.currentHealth = 0; er.currentHealth = 0; er.knockedOut = !sheet.staggerOnly; er.staggered = !!sheet.staggerOnly; }
     if(e.currentHealth <= 0){
       if(sheet.staggerOnly){ e.staggerSkip = true; er.staggered = true; er.knockedOut = false; }
@@ -4058,11 +4237,12 @@ function endCombat(reason){
 }
 /* One full round: foes ahead of the hero in initiative, the hero's single
    action, then the remaining foes. Returns what the narrator must show. */
-async function resolveCombatRound(hero, chapter, text){
+async function resolveCombatRound(hero, chapter, text, opts){
+  opts = opts || {};
   const c = STATE.combat;
   const events = [];
   let mechanics = null, retreated = false, ended = null;
-  let postShift = 0;
+  let postShift = 0, didTransform = false;
   const lastCh = (() => { const cs = currentAdventureChapters(); return cs.length ? cs[cs.length-1].id : null; })();
   const runFoe = (o, shift) => {
     const e = STATE.enemies[o.key];
@@ -4086,10 +4266,15 @@ async function resolveCombatRound(hero, chapter, text){
     if(regen > 0 && STATE.currentHealth < maxHealth(hero)){
       const gain = Math.min(regen, maxHealth(hero) - STATE.currentHealth);
       STATE.currentHealth += gain;
+      syncNaturalArmor(hero);
       events.push({ kind:'regen', amount: gain });
     }
     if(STATE.retreatNow){
       retreated = true;
+    } else if(opts.transform){
+      STATE.transformed = !STATE.transformed;
+      events.push({ kind:'transform', to: STATE.transformed });
+      didTransform = true;
     } else {
       const list = await classifyAction(hero, chapter, STATE.log.slice(0, -1), text, { combat: true, foes: activeFoes().map(e => e.name) });
       const c0 = list[0];
@@ -4108,7 +4293,7 @@ async function resolveCombatRound(hero, chapter, text){
         }
       }
     }
-    events.push({ kind:'hero' });
+    if(!didTransform) events.push({ kind:'hero' });
   } else {
     events.push({ kind:'hero-down-first' });
   }
@@ -4137,10 +4322,11 @@ async function resolveCombatRound(hero, chapter, text){
 function combatBlockText(cr){
   const lines = cr.events.map(ev => {
     switch(ev.kind){
-      case 'attack': return `${ev.name} attacks with ${ev.attack}: ${ev.label} (${ev.color.toUpperCase()}). ${ev.damage > 0 ? 'It HITS the hero.' : 'It MISSES.'}${ev.devastating ? ' This is a DEVASTATING blow: the hero is gravely wounded and goes down.' : ev.after === 'stun' ? ' The hero is left reeling and dazed.' : ev.after === 'slam' ? ' The hero is knocked back or down.' : ''}`;
+      case 'attack': return `${ev.name} attacks with ${ev.attack}: ${ev.label} (${ev.color.toUpperCase()}). ${ev.damage > 0 ? 'It HITS the hero.' : ev.armorAbsorbed > 0 ? 'It strikes the hero but does no damage.' : 'It MISSES.'}${ev.armorText ? ' ' + ev.armorText : ''}${ev.devastating ? ' This is a DEVASTATING blow: the hero is gravely wounded and goes down.' : ev.after === 'stun' ? ' The hero is left reeling and dazed.' : ev.after === 'slam' ? ' The hero is knocked back or down.' : ''}`;
       case 'stunned': return `${ev.name} is stunned and loses their turn.`;
       case 'staggered': return `${ev.name} is staggered and loses their turn, then pulls himself together.`;
       case 'surrender': return `${ev.name} sees they are hopelessly beaten and SURRENDERS (drops their weapon or raises their hands). Narrate a clear surrender beat; the fight with them is over. Do NOT end the chapter just because of this.`;
+      case 'transform': return ev.to ? `The hero spends their whole action changing into their TUNGSTEN form: the skin hardens into gleaming tungsten armor. They do nothing else this round.` : `The hero spends their whole action changing back into their ordinary HUMAN form. They do nothing else this round.`;
       case 'regen': return `The hero's Regeneration knits their wounds at the start of their turn (a quick visible recovery).`;
       case 'dazed': return `The hero is still dazed from the last blow (this action is harder).`;
       case 'hero': return `HERO ACTION: the hero's one action this round (its resolved result is given above — match it exactly).`;
@@ -4169,7 +4355,7 @@ function applyHeroKill(m){
   const list = m.steps ? m.steps.filter(x => x.m).map(x => x.m) : [m];
   let hit = false;
   for(const x of list){
-    if(x.heroIsTarget && x.damage > 0 && aftereffectFor(x.actionType, x.color) === 'kill'){ hit = true; }
+    if(x.heroIsTarget && x.damage > 0 && x.after === 'kill'){ hit = true; }
   }
   if(hit) STATE.currentHealth = 0;
   return hit;
@@ -4180,7 +4366,7 @@ function combatPanelHtml(){
   const foes = activeFoes();
   const rows = foes.map(e => {
     const pct = e.maxHealth ? Math.max(0, Math.min(100, Math.round(e.currentHealth / e.maxHealth * 100))) : 0;
-    return `<div class="foe-row"><span class="foe-name">${escapeHtml(e.name)}</span><span class="foe-bar"><i style="width:${pct}%"></i></span><span class="foe-cond">${escapeHtml(conditionWord(e))}${e.stunned ? ' · Stunned' : ''}${e.staggerSkip ? ' · Staggered' : ''}</span></div>`;
+    return `<div class="foe-row"><span class="foe-name">${escapeHtml(e.name)}</span><span class="foe-bar"><i style="width:${pct}%"></i></span><span class="foe-cond">${escapeHtml(conditionWord(e))}${e.stunned ? ' · Stunned' : ''}${e.staggerSkip ? ' · Staggered' : ''}${(e.armorLost || 0) > 0 ? ' · Armor damaged' : ''}</span></div>`;
   }).join('');
   return `<div class="combat-panel"><div class="combat-head"><strong>COMBAT — Round ${c.round}</strong> <span class="combat-sub">one action per turn</span></div>${rows}${c.queue.length ? `<div class="combat-sub">${c.queue.length} more foe${c.queue.length > 1 ? 's' : ''} waiting to join</div>` : ''}<div style="margin-top:8px;"><button id="btn-retreat" class="secondary" ${STATE.busy ? 'disabled' : ''}>Retreat</button></div></div>`;
 }
@@ -4190,9 +4376,13 @@ function checkPromptsHtml(){
   return `<div class="combat-panel check-panel">${names.map(n => `<button class="btn-check secondary" data-name="${escapeHtml(n)}" ${STATE.busy ? 'disabled' : ''}>Check on ${escapeHtml(n)}</button>`).join(' ')}<div class="combat-sub">They are gravely wounded. You can see to them.</div></div>`;
 }
 
-async function submitAction(){
+async function submitAction(opts){
+  opts = (opts && opts.transform === true) ? { transform: true } : {};
   const ta = document.getElementById('player-input');
-  const text = ta.value.trim();
+  const hero0 = STATE.activeHero;
+  let text = ta.value.trim();
+  if(opts.transform && heroCanTransform(hero0)) text = STATE.transformed ? 'I change back to my human form.' : 'I transform into my tungsten form.';
+  else { opts = {}; if(heroCanTransform(hero0) && transformIntent(text)) opts.transform = true; }
   if(!text || STATE.busy) return;
   STATE.busy = true;
   STATE.error = null;
@@ -4205,6 +4395,8 @@ async function submitAction(){
 
   try{
     let mechanics = null, extraBlock = '', cr = null, devastating = false;
+    let repairSeconds = 0, repairNote = null;
+    const repairWanted = !STATE.combat && !opts.transform && repairIntent(text) && !!heroArmor(hero);
     let checkedName = null;
     if((STATE.checkPrompts || []).length && /(check|stabili|tend|treat|heal|aid)/i.test(text)){
       const low = text.toLowerCase();
@@ -4212,9 +4404,21 @@ async function submitAction(){
       if(checkedName) STATE.checkPrompts = STATE.checkPrompts.filter(n => n !== checkedName);
     }
     if(STATE.combat){
-      cr = await resolveCombatRound(hero, chapter, text);
+      cr = await resolveCombatRound(hero, chapter, text, opts);
       mechanics = cr.mechanics;
       extraBlock = combatBlockText(cr);
+      if(repairIntent(text) && !opts.transform) extraBlock += '\nThe player mentioned repairing armor, but repairs take hours and cannot be done in the middle of a fight. Nothing is repaired.';
+    } else if(opts.transform){
+      STATE.transformed = !STATE.transformed;
+      extraBlock += STATE.transformed
+        ? '\nThe hero spends this action changing into their TUNGSTEN form: the skin hardens into gleaming tungsten armor. They do nothing else this turn.'
+        : '\nThe hero spends this action changing back into their ordinary HUMAN form. They do nothing else this turn.';
+    } else if(repairWanted){
+      const rp = doArmorRepair(hero);
+      mechanics = rp.mechanics || null;
+      extraBlock += rp.text || '';
+      repairSeconds = rp.seconds || 0;
+      repairNote = rp.note || null;
     } else {
       try{
         mechanics = await resolveMechanics(hero, chapter, STATE.log.slice(0,-1), text);
@@ -4229,6 +4433,7 @@ async function submitAction(){
       devastating = applyHeroKill(mechanics);
       if(devastating) extraBlock += '\nA foe has landed a DEVASTATING blow: the hero is gravely wounded and goes down.';
     }
+    extraBlock += armorNarratorText(hero);
     if(checkedName) extraBlock += `\nThe hero is checking on ${checkedName}: they are stabilized, alive but unconscious, and will recover.`;
     extraBlock += woundedBlockText();
 
@@ -4236,8 +4441,10 @@ async function submitAction(){
     const healthContext = healthPct <= 0.25 ? 'Badly hurt, running on fumes.' : healthPct <= 0.5 ? 'Taken real damage, feeling it.' : null;
     const reply = await callGM(hero, chapter, STATE.log.slice(0,-1), text, mechanics, healthContext, extraBlock);
     let cleaned = reply;
-    const timeSeconds = parseTimeTag(cleaned);
+    const timeSeconds = repairSeconds ? 0 : parseTimeTag(cleaned);
     cleaned = cleaned.replace(/\[TIME:[^\]]*\]/gi, '').trim();
+    if(/\[WORKSHOP\]/i.test(cleaned)) STATE.atWorkshop = true;
+    cleaned = cleaned.replace(/\[WORKSHOP\]/gi, '').trim();
     const wantsCombatTag = /\[COMBAT\]/i.test(cleaned);
     cleaned = cleaned.replace(/\[COMBAT\]/gi, '').trim();
     let complete = false;
@@ -4258,6 +4465,11 @@ async function submitAction(){
       else if(cr.ended === 'hero-down') endCombat(null);
       else if(STATE.combat) pushCombatNote(`Round ${STATE.combat.round} — ${foeLinesText()}.`);
       if(complete && (STATE.combat || surrendered)) complete = false;
+    }
+    if(repairSeconds){
+      if(repairNote) pushCombatNote(repairNote);
+      const rn = applyRecovery(hero, repairSeconds);
+      if(rn) pushCombatNote(rn);
     }
     if(timeSeconds && !STATE.combat && !(mechanics && mechanics.heroIsTarget)){
       const note = applyRecovery(hero, timeSeconds);
@@ -4317,7 +4529,7 @@ async function submitAction(){
       STATE.pendingAdvance = next ? next.id : 'FINISHED';
     }
 
-    await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: STATE.pendingAdvance, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || []});
+    await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: STATE.pendingAdvance, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || [], armorLost: STATE.armorLost || 0, transformed: !!STATE.transformed, atWorkshop: !!STATE.atWorkshop});
   }catch(e){
     STATE.error = 'The signal dropped: ' + e.message + '. Try again.';
   }finally{

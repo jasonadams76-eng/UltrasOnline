@@ -111,7 +111,8 @@
    },
    {
     "name": "Body Armor",
-    "rank": "Good"
+    "rank": "Good",
+    "armor": true
    },
    {
     "name": "Ranged Sound Attack",
@@ -152,7 +153,8 @@
    },
    {
     "name": "Body Armor",
-    "rank": "Remarkable"
+    "rank": "Remarkable",
+    "armor": true
    },
    {
     "name": "Resistance to Cold",
@@ -185,7 +187,8 @@
   "powers": [
    {
     "name": "Body Armor",
-    "rank": "Excellent"
+    "rank": "Excellent",
+    "armor": true
    },
    {
     "name": "Flight",
@@ -349,7 +352,8 @@
   "powers": [
    {
     "name": "Ceramic Plate Armor",
-    "rank": "Excellent"
+    "rank": "Excellent",
+    "armor": true
    },
    {
     "name": "Arc Baton",
