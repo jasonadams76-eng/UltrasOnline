@@ -1119,6 +1119,7 @@ const GM_BASE_INSTRUCTIONS = `You are the Game Master for THE ULTRAS, a conversa
 RULES YOU MUST FOLLOW:
 - Stay in the fiction. Never break character, never mention "AI," "prompt," "instructions," or game mechanics by name.
 - Judge the player's stated plan fairly against their hero sheet (stats, powers, bio). Clever, well-suited plans should go well; reckless or ill-suited plans can go wrong, but keep the story moving — failure should complicate, not dead-end.
+- A hero can only do what their listed Powers, Talents, Stats and gear allow, exactly as described on the sheet. If the player tries something the sheet does not give them (a force field, an energy beam, telekinesis, a new power, or a listed power used for something it does not do), it DOES NOT WORK: narrate the attempt failing or the hero doing the nearest ordinary physical thing instead (dodging, blocking, striking). Never invent a power, never stretch a power past its description, and never reward the attempt with a success. Do not lecture the player; just let the fiction show it did not work.
 - Never invent physical features the hero does not have. Describe the hero only as the Appearance and Canon note on the hero sheet say: no wings, capes, armor, masks or weapons that are not listed. Powers work as the sheet describes them.
 - Never simply reject or block the player ("you can't do that") — instead narrate what happens when they try, good or bad.
 - Keep responses tight: 2-4 short paragraphs of vivid, active narration. End most responses with the scene held in suspension so the player has something to react to (do not ask "what do you do?" every single time verbatim — vary it, or let the scene itself imply the question).
@@ -1301,7 +1302,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-11.4';
+const APP_VERSION = '2026-11-11.5';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -1608,7 +1609,7 @@ function ensureKarmaReview(){
 
 /* Canon look and per-hero narration notes, appended to the hero sheet the narrator reads. */
 const HERO_CANON_NOTES = {
-  premade_traumahawk: 'He flies through his Flight power alone. He has NO wings, feathers or flapping: never describe wings on him. Hawk imagery such as talons, a sharp gaze or swooping is fine. When he strikes a foe, the damage is always that of his Talons or his Strength, whichever is higher. Calling on or channeling the spirits or gods he speaks with (Elemental Communication) can bring guidance, warnings or atmosphere but NEVER adds damage, extra power or new attacks, so narrate such moments as helping him aim, sense or time a blow, not as a blast of divine energy.'
+  premade_traumahawk: 'He flies through his Flight power alone. He has NO wings, feathers or flapping: never describe wings on him. Hawk imagery such as talons, a sharp gaze or swooping is fine. POWERS, exactly: Flight = he flies. Talons = his only weapon, slashing and gripping strikes. Healing = he heals people. Elemental Communication = he speaks with the spirit Aetheris to get advice, warnings and information, NOTHING physical: it never creates barriers, shields, bubbles, beams, blasts or any attack or defense, and it never adds strength, speed or damage. Aetheris may whisper a warning or an idea, that is all. TraumaHawk CANNOT create force fields or protective bubbles, fire energy beams or blasts, or use any other power not listed. When he strikes a foe the damage is that of his Talons or Strength, whichever is higher.'
 };
 /* Hero damage rules. TraumaHawk: everything he does to an enemy hurts for the
    higher of Talons or Strength; his utility powers can never be the attack. */
@@ -1624,6 +1625,10 @@ function nonAttackRuleText(hero){
   return `GENERAL RULE for items 2 and 3: a power is only an attack if it plainly hurts things (claws, blasts, weapons, super-strength). Utility powers such as communication, healing, flying or sensing are NEVER an attack: if a player describes "channeling" or "calling on" such a power to strike a foe, set powerUsed to null and use "Fighting Ability" (or "Strength" for a heavy blow).${list.length ? ` For this hero these powers are NOT attacks: ${list.join(', ')}.` : ''}
 
 `;
+}
+function heroPowerLimitsText(hero){
+  const n = HERO_CANON_NOTES[hero.id];
+  return n ? `HERO POWER DEFINITIONS (what the listed powers do and do not do): ${n}\n` : '';
 }
 function heroDamageRank(hero, usedPowerNumber, abilityNumber){
   const r = HERO_DAMAGE_RULES[hero.id];
@@ -1673,7 +1678,7 @@ THIS ACTION WAS RESOLVED WITH A FEAT ROLL ON THE UNIVERSAL TABLE — YOUR NARRAT
 ${mechanics.usedPower ? 'Power' : 'Ability'} used: ${mechanics.ability} (${mechanics.effectiveRank}${mechanics.columnShift ? ', shifted from '+mechanics.baseRank+' by '+(mechanics.columnShift>0?'+':'')+mechanics.columnShift+' CS' : ''})
 Action type: ${mechanics.actionType}
 Roll: ${mechanics.roll} — Result color: ${mechanics.color.toUpperCase()}
-Mechanical outcome: ${mechanics.label}${enemyContextLine}
+Mechanical outcome: ${mechanics.label}${mechanics.unlistedClaim ? '\nNOTE: the player tried to use an ability the hero does NOT have (or a power for something it cannot do). That ability does NOT work. Resolve the action only as an ordinary physical attempt matching the result above, and show the claimed effect not happening (no barrier forms, no beam fires). Any spirit or ally may only offer advice.' : ''}${enemyContextLine}
 Narrate this outcome vividly in-fiction — do not mention dice, colors, ranks, or "FEAT rolls" by name, just make the story match this result.` : `
 
 This action did not require a dice roll — it's routine or safely within the hero's ability. Narrate the outcome as a clear success appropriate to the fiction, without needing to reference any mechanics.`;
@@ -1951,7 +1956,9 @@ Determine:
 12. "enemyPowerUsed" — ONLY when enemyTier is "super" and the enemy is attacking with one of their listed enemyPowers this turn: that power's exact name as given in enemyPowers. Null otherwise.
 13. "targetsEnemy" — boolean, true ONLY when the hero is the one attacking/pressuring a specific enemy (used to track that enemy's Health toward a knockout). False if the hero is just defending, dodging, or not engaging an enemy directly.
 
-${namedEnemiesPromptText(STATE.adventureId, log)}${nonAttackRuleText(hero)}Return exactly: {"requiresFeat":bool,"heroIsTarget":bool,"powerUsed":"..."|null,"ability":"...","actionType":"...","columnShift":int,"intensity":"..."|null,"enemyName":"..."|null,"enemyTier":"..."|null,"enemyStats":{...}|null,"enemyPowers":[...],"enemyWeapon":"..."|null,"enemyPowerUsed":"..."|null,"targetsEnemy":bool}`;
+14. "claimsUnlistedPower" (boolean) — true if the player's action relies on an ability this hero does NOT have: a power not on the sheet, or a listed power used for something its description does not allow (a force field, protective bubble, energy blast or beam, telekinesis, extra damage from a utility or communication power, etc.). Otherwise false.
+${heroPowerLimitsText(hero)}
+${namedEnemiesPromptText(STATE.adventureId, log)}${nonAttackRuleText(hero)}Return exactly: {"requiresFeat":bool,"heroIsTarget":bool,"powerUsed":"..."|null,"ability":"...","actionType":"...","columnShift":int,"intensity":"..."|null,"enemyName":"..."|null,"enemyTier":"..."|null,"enemyStats":{...}|null,"enemyPowers":[...],"enemyWeapon":"..."|null,"enemyPowerUsed":"..."|null,"targetsEnemy":bool,"claimsUnlistedPower":bool}`;
 
   const response = await fetchGeminiWithFallback({
     contents: [{ role:"user", parts:[{text: prompt}] }],
@@ -2004,12 +2011,18 @@ ${namedEnemiesPromptText(STATE.adventureId, log)}${nonAttackRuleText(hero)}Retur
    uses that power's own rank instead of the linked core stat. */
 async function resolveMechanics(hero, chapter, log, playerLine){
   const classification = await classifyAction(hero, chapter, log, playerLine);
+  if(classification.claimsUnlistedPower) classification.requiresFeat = true;
   if(!classification.requiresFeat) return null;
 
   const nonAttackList = heroNonAttackPowers(hero).map(n=>n.toLowerCase());
   if(classification.actionType !== 'feat' && classification.powerUsed && nonAttackList.includes(String(classification.powerUsed).toLowerCase())){
     classification.powerUsed = null;
     classification.ability = (classification.ability === 'Strength') ? 'Strength' : 'Fighting Ability';
+  }
+  if(classification.claimsUnlistedPower){
+    classification.powerUsed = null;
+    classification.columnShift = 0;
+    classification.ability = classification.heroIsTarget ? 'Agility' : (classification.ability === 'Strength' ? 'Strength' : 'Fighting Ability');
   }
   const usedPower = classification.powerUsed ? getPowerRank(hero, classification.powerUsed) : null;
   const abilityNumber = usedPower != null ? usedPower : hero.stats[classification.ability];
@@ -2097,6 +2110,7 @@ async function resolveMechanics(hero, chapter, log, playerLine){
     enemyPowerUsed: classification.enemyPowerUsed,
     damage,
     enemyResult,
+    unlistedClaim: !!classification.claimsUnlistedPower,
     ...feat,
     label
   };
