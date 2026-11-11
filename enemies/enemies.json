@@ -1,0 +1,728 @@
+[
+ {
+  "id": "drpsionic",
+  "name": "Doctor Psionic",
+  "aliases": [
+   "dr. psionic",
+   "psionic"
+  ],
+  "adventures": [],
+  "stats": {
+   "Fighting Ability": "Poor",
+   "Agility": "Typical",
+   "Strength": "Poor",
+   "Endurance": "Typical",
+   "Reason": "Incredible",
+   "Intuition": "Incredible",
+   "Psyche": "Incredible"
+  },
+  "powers": [
+   {
+    "name": "Telepathy",
+    "rank": "Incredible"
+   },
+   {
+    "name": "Telekinesis",
+    "rank": "Incredible"
+   },
+   {
+    "name": "Mind Control",
+    "rank": "Remarkable"
+   },
+   {
+    "name": "Mental Force Bolts",
+    "rank": "Incredible",
+    "attack": true
+   },
+   {
+    "name": "Force Field Generation",
+    "rank": "Remarkable"
+   }
+  ],
+  "talents": [
+   "Psychiatry",
+   "Heir to Fortune"
+  ],
+  "note": "Fights from range with mind powers; physically weak.",
+  "health": 20
+ },
+ {
+  "id": "copperhead",
+  "name": "Copperhead",
+  "aliases": [
+   "david lofkis"
+  ],
+  "adventures": [
+   "the_long_game"
+  ],
+  "stats": {
+   "Fighting Ability": "Remarkable",
+   "Agility": "Excellent",
+   "Strength": "Good",
+   "Endurance": "Excellent",
+   "Reason": "Good",
+   "Intuition": "Good",
+   "Psyche": "Good"
+  },
+  "powers": [
+   {
+    "name": "Growth",
+    "rank": "Incredible"
+   },
+   {
+    "name": "Animal Transformation - Snake",
+    "rank": "Incredible"
+   },
+   {
+    "name": "Teeth",
+    "rank": "Incredible",
+    "attack": true
+   },
+   {
+    "name": "Venom",
+    "rank": "Excellent",
+    "attack": true
+   }
+  ],
+  "talents": [
+   "Martial Arts C"
+  ],
+  "note": "David Lofkis, a mercenary; prefers to be called Copperhead.",
+  "health": 80
+ },
+ {
+  "id": "shockwave",
+  "name": "Shockwave",
+  "aliases": [],
+  "adventures": [],
+  "stats": {
+   "Fighting Ability": "Excellent",
+   "Agility": "Excellent",
+   "Strength": "Good",
+   "Endurance": "Incredible",
+   "Reason": "Excellent",
+   "Intuition": "Good",
+   "Psyche": "Good"
+  },
+  "powers": [
+   {
+    "name": "Sound Manipulation",
+    "rank": "Amazing"
+   },
+   {
+    "name": "Body Armor",
+    "rank": "Good"
+   },
+   {
+    "name": "Ranged Sound Attack",
+    "rank": "Amazing",
+    "attack": true
+   }
+  ],
+  "talents": [
+   "Engineering",
+   "Electronics",
+   "Acoustics",
+   "Leadership"
+  ],
+  "note": "Leader of Havoc (Maxwell Reed).",
+  "health": 90
+ },
+ {
+  "id": "blastfreeze",
+  "name": "Blast Freeze",
+  "aliases": [
+   "blast freeze"
+  ],
+  "adventures": [],
+  "stats": {
+   "Fighting Ability": "Remarkable",
+   "Agility": "Excellent",
+   "Strength": "Incredible",
+   "Endurance": "Good",
+   "Reason": "Good",
+   "Intuition": "Excellent",
+   "Psyche": "Incredible"
+  },
+  "powers": [
+   {
+    "name": "Ice Generation",
+    "rank": "Remarkable",
+    "attack": true
+   },
+   {
+    "name": "Body Armor",
+    "rank": "Remarkable"
+   },
+   {
+    "name": "Resistance to Cold",
+    "rank": "Remarkable"
+   }
+  ],
+  "talents": [
+   "Martial Arts C",
+   "Martial Arts D"
+  ],
+  "note": "Havoc member.",
+  "health": 100
+ },
+ {
+  "id": "mosquito",
+  "name": "The Mosquito",
+  "aliases": [
+   "mosquito"
+  ],
+  "adventures": [],
+  "stats": {
+   "Fighting Ability": "Excellent",
+   "Agility": "Remarkable",
+   "Strength": "Good",
+   "Endurance": "Incredible",
+   "Reason": "Remarkable",
+   "Intuition": "Remarkable",
+   "Psyche": "Good"
+  },
+  "powers": [
+   {
+    "name": "Body Armor",
+    "rank": "Excellent"
+   },
+   {
+    "name": "Flight",
+    "rank": "Excellent"
+   },
+   {
+    "name": "Mosquito Sting Blood Darts",
+    "rank": "Remarkable",
+    "attack": true
+   },
+   {
+    "name": "Sound Generation",
+    "rank": "Excellent"
+   }
+  ],
+  "talents": [
+   "Chemistry",
+   "Martial Arts A",
+   "Thrown Objects",
+   "Engineering",
+   "Entomology"
+  ],
+  "note": "Havoc member.",
+  "health": 100
+ },
+ {
+  "id": "blaze",
+  "name": "Blaze",
+  "aliases": [],
+  "adventures": [],
+  "stats": {
+   "Fighting Ability": "Excellent",
+   "Agility": "Remarkable",
+   "Strength": "Excellent",
+   "Endurance": "Excellent",
+   "Reason": "Good",
+   "Intuition": "Good",
+   "Psyche": "Excellent"
+  },
+  "powers": [
+   {
+    "name": "Fire Control",
+    "rank": "Incredible"
+   },
+   {
+    "name": "Ranged Fire Attack",
+    "rank": "Incredible",
+    "attack": true
+   },
+   {
+    "name": "Resistance to Fire & Heat",
+    "rank": "Incredible"
+   }
+  ],
+  "talents": [
+   "Crime",
+   "Marksman"
+  ],
+  "note": "Havoc member.",
+  "health": 90
+ },
+ {
+  "id": "killzone",
+  "name": "Kill Zone",
+  "aliases": [
+   "kill zone"
+  ],
+  "adventures": [],
+  "stats": {
+   "Fighting Ability": "Remarkable",
+   "Agility": "Excellent",
+   "Strength": "Amazing",
+   "Endurance": "Incredible",
+   "Reason": "Typical",
+   "Intuition": "Good",
+   "Psyche": "Typical"
+  },
+  "powers": [
+   {
+    "name": "Energy Bolts",
+    "rank": "Amazing",
+    "attack": true
+   },
+   {
+    "name": "Death Field",
+    "rank": "Excellent",
+    "attack": true
+   },
+   {
+    "name": "Body Suit",
+    "rank": "Remarkable"
+   }
+  ],
+  "talents": [
+   "Marksman",
+   "Guns",
+   "Languages - English & German"
+  ],
+  "note": "Havoc member.",
+  "health": 140
+ },
+ {
+  "id": "lynx",
+  "name": "Lynx",
+  "aliases": [],
+  "adventures": [],
+  "stats": {
+   "Fighting Ability": "Incredible",
+   "Agility": "Remarkable",
+   "Strength": "Excellent",
+   "Endurance": "Remarkable",
+   "Reason": "Good",
+   "Intuition": "Good",
+   "Psyche": "Good"
+  },
+  "powers": [
+   {
+    "name": "Enhanced Senses",
+    "rank": "Excellent"
+   },
+   {
+    "name": "Leaping",
+    "rank": "Good"
+   },
+   {
+    "name": "Claws/Teeth",
+    "rank": "Incredible",
+    "attack": true
+   },
+   {
+    "name": "Infravision",
+    "rank": "Remarkable"
+   }
+  ],
+  "talents": [
+   "Martial Arts B",
+   "Martial Arts D"
+  ],
+  "note": "Havoc member; killed Erwin Lancaster.",
+  "health": 120
+ },
+ {
+  "id": "warden_ash",
+  "name": "Warden Ash",
+  "aliases": [
+   "ash",
+   "the warden"
+  ],
+  "adventures": [
+   "meridian"
+  ],
+  "stats": {
+   "Fighting Ability": "Excellent",
+   "Agility": "Excellent",
+   "Strength": "Good",
+   "Endurance": "Excellent",
+   "Reason": "Remarkable",
+   "Intuition": "Excellent",
+   "Psyche": "Excellent"
+  },
+  "powers": [
+   {
+    "name": "Ceramic Plate Armor",
+    "rank": "Excellent"
+   },
+   {
+    "name": "Arc Baton",
+    "rank": "Excellent",
+    "attack": true
+   },
+   {
+    "name": "Signal Jammer",
+    "rank": "Good"
+   },
+   {
+    "name": "Remote Charges",
+    "rank": "Incredible"
+   }
+  ],
+  "talents": [],
+  "note": "Only the Arc Baton is used to attack. The Remote Charges are the substation explosives (a story device, never swung at the hero), the Signal Jammer only disrupts radios and phones, and the Ceramic Plate Armor is purely defensive.",
+  "health": 70
+ },
+ {
+  "id": "dominic_corvetti",
+  "name": "Dominic \"The Ledger\" Corvetti",
+  "aliases": [
+   "dominic corvetti",
+   "the ledger",
+   "corvetti",
+   "dominic"
+  ],
+  "adventures": [
+   "iron_ledger"
+  ],
+  "stats": {
+   "Fighting Ability": "Good",
+   "Agility": "Good",
+   "Strength": "Typical",
+   "Endurance": "Good",
+   "Reason": "Excellent",
+   "Intuition": "Excellent",
+   "Psyche": "Excellent"
+  },
+  "powers": [
+   {
+    "name": "Heavy Pistol",
+    "rank": "Good",
+    "attack": true
+   }
+  ],
+  "talents": [
+   "Crime Boss",
+   "Leadership"
+  ],
+  "note": "Not superpowered. Cunning, ruthless and cornered: fights dirty with hostages, threats to ignite the accelerant and his loyal crew.",
+  "health": 36
+ },
+ {
+  "id": "raymond_fiore",
+  "name": "Raymond Fiore (\"the Accountant\")",
+  "aliases": [
+   "raymond fiore",
+   "the accountant",
+   "fiore"
+  ],
+  "adventures": [
+   "iron_ledger"
+  ],
+  "stats": {
+   "Fighting Ability": "Poor",
+   "Agility": "Typical",
+   "Strength": "Typical",
+   "Endurance": "Typical",
+   "Reason": "Excellent",
+   "Intuition": "Good",
+   "Psyche": "Good"
+  },
+  "powers": [],
+  "talents": [
+   "Accounting",
+   "Finance"
+  ],
+  "note": "Not a fighter: talks, bribes, stalls and destroys evidence rather than physically resisting. Flees if he can.",
+  "health": 22
+ },
+ {
+  "id": "nathaniel_mercer",
+  "name": "Dr. Nathaniel Mercer",
+  "aliases": [
+   "mercer",
+   "dr. mercer"
+  ],
+  "adventures": [
+   "the_last_patient"
+  ],
+  "stats": {
+   "Fighting Ability": "Typical",
+   "Agility": "Typical",
+   "Strength": "Typical",
+   "Endurance": "Good",
+   "Reason": "Remarkable",
+   "Intuition": "Good",
+   "Psyche": "Excellent"
+  },
+  "powers": [
+   {
+    "name": "Stun Injector",
+    "rank": "Good",
+    "attack": true
+   },
+   {
+    "name": "Experimental Treatment Control System",
+    "rank": "Incredible"
+   }
+  ],
+  "talents": [
+   "Medicine",
+   "Biology"
+  ],
+  "note": "Brilliant, idealistic, obsessive; argues and stalls rather than fights. He may attack the hero with the Stun Injector, but he remains an ordinary human. The hero should be able to end the threat without severely injuring him; if he goes down he is subdued, restrained or disarmed, never badly hurt. The control system is a story device, not an attack.",
+  "nonLethal": true,
+  "health": 28
+ },
+ {
+  "id": "project_director",
+  "name": "Project Director (unnamed)",
+  "aliases": [
+   "the director",
+   "director",
+   "project director"
+  ],
+  "adventures": [
+   "the_hollow_mile"
+  ],
+  "stats": {
+   "Fighting Ability": "Typical",
+   "Agility": "Typical",
+   "Strength": "Typical",
+   "Endurance": "Typical",
+   "Reason": "Excellent",
+   "Intuition": "Good",
+   "Psyche": "Good"
+  },
+  "powers": [],
+  "talents": [
+   "Engineering"
+  ],
+  "note": "An ordinary scientist who believes the project can still be controlled; argues and obstructs, not a fighter. Not a recurring villain. If force is used he is subdued or restrained, never badly hurt.",
+  "nonLethal": true,
+  "health": 24
+ },
+ {
+  "id": "the_hunter",
+  "name": "The Hunter",
+  "aliases": [
+   "hunter"
+  ],
+  "adventures": [
+   "shadows_eclipse"
+  ],
+  "stats": {
+   "Fighting Ability": "Remarkable",
+   "Agility": "Incredible",
+   "Strength": "Good",
+   "Endurance": "Excellent",
+   "Reason": "Good",
+   "Intuition": "Remarkable",
+   "Psyche": "Good"
+  },
+  "powers": [
+   {
+    "name": "Signature High-Tech Rifle",
+    "rank": "Incredible",
+    "attack": true
+   },
+   {
+    "name": "Cloaking Field",
+    "rank": "Excellent"
+   },
+   {
+    "name": "Tracking Darts",
+    "rank": "Good"
+   }
+  ],
+  "talents": [
+   "Marksman",
+   "Tracking"
+  ],
+  "note": "Eclipse Collective assassin; ambushes and called shots.",
+  "health": 100
+ },
+ {
+  "id": "project_revenant",
+  "name": "Project Revenant",
+  "aliases": [
+   "revenant"
+  ],
+  "adventures": [
+   "shadows_eclipse"
+  ],
+  "stats": {
+   "Fighting Ability": "Remarkable",
+   "Agility": "Excellent",
+   "Strength": "Incredible",
+   "Endurance": "Incredible",
+   "Reason": "Poor",
+   "Intuition": "Good",
+   "Psyche": "Typical"
+  },
+  "powers": [
+   {
+    "name": "Shadow Tendrils",
+    "rank": "Incredible",
+    "attack": true
+   },
+   {
+    "name": "Living Shadow Body",
+    "rank": "Remarkable"
+   }
+  ],
+  "talents": [],
+  "note": "Warped test subject, part human, part living shadow.",
+  "health": 130
+ },
+ {
+  "id": "shade",
+  "name": "Shade",
+  "aliases": [
+   "shades",
+   "shadow construct"
+  ],
+  "adventures": [
+   "shadows_eclipse"
+  ],
+  "stats": {
+   "Fighting Ability": "Good",
+   "Agility": "Excellent",
+   "Strength": "Good",
+   "Endurance": "Good",
+   "Reason": "Feeble",
+   "Intuition": "Typical",
+   "Psyche": "Feeble"
+  },
+  "powers": [
+   {
+    "name": "Shadow Claws",
+    "rank": "Excellent",
+    "attack": true
+   }
+  ],
+  "talents": [],
+  "note": "Mindless, non-verbal construct of living shadow (smoke with claws). One sheet per Shade; each is tracked separately.",
+  "template": true,
+  "health": 50
+ },
+ {
+  "id": "shadow_titan",
+  "name": "Shadow Titan",
+  "aliases": [
+   "shadow titans",
+   "titan"
+  ],
+  "adventures": [
+   "shadows_eclipse"
+  ],
+  "stats": {
+   "Fighting Ability": "Amazing",
+   "Agility": "Poor",
+   "Strength": "Amazing",
+   "Endurance": "Amazing",
+   "Reason": "Feeble",
+   "Intuition": "Poor",
+   "Psyche": "Typical"
+  },
+  "powers": [
+   {
+    "name": "Crushing Blows",
+    "rank": "Amazing",
+    "attack": true
+   },
+   {
+    "name": "Shadow Quake",
+    "rank": "Incredible",
+    "attack": true
+   }
+  ],
+  "talents": [],
+  "note": "Slow, city-block-scale manifestation of living darkness guarding a Shadow Conduit. One per conduit, each tracked separately.",
+  "template": true,
+  "health": 154
+ },
+ {
+  "id": "silas_vane",
+  "name": "Silas Vane (Eclipse Collective leader)",
+  "aliases": [
+   "silas vane",
+   "vane",
+   "eclipse collective leader",
+   "the eclipse leader",
+   "eclipse leader"
+  ],
+  "adventures": [
+   "shadows_eclipse"
+  ],
+  "stats": {
+   "Fighting Ability": "Incredible",
+   "Agility": "Excellent",
+   "Strength": "Incredible",
+   "Endurance": "Amazing",
+   "Reason": "Remarkable",
+   "Intuition": "Remarkable",
+   "Psyche": "Amazing"
+  },
+  "powers": [
+   {
+    "name": "Shadow Bolts",
+    "rank": "Amazing",
+    "attack": true
+   },
+   {
+    "name": "Umbral Shield",
+    "rank": "Incredible"
+   },
+   {
+    "name": "Gravity Pull",
+    "rank": "Incredible"
+   }
+  ],
+  "talents": [
+   "Leadership"
+  ],
+  "note": "The Eclipse Collective leader, a named mastermind self-empowered with raw shadow energy from the ritual. Phase 1 of the finale. Regardless of how the fight goes, he is consumed or sacrifices himself to complete the Void Emperor's awakening.",
+  "health": 150
+ },
+ {
+  "id": "void_emperor",
+  "name": "The Void Emperor",
+  "aliases": [
+   "the void emperor",
+   "void emperor",
+   "emperor"
+  ],
+  "adventures": [
+   "shadows_eclipse"
+  ],
+  "stats": {
+   "Fighting Ability": "Incredible",
+   "Agility": "Excellent",
+   "Strength": "Amazing",
+   "Endurance": "Amazing",
+   "Reason": "Incredible",
+   "Intuition": "Amazing",
+   "Psyche": "Monstrous"
+  },
+  "powers": [
+   {
+    "name": "Entropy Bolt",
+    "rank": "Amazing",
+    "attack": true
+   },
+   {
+    "name": "Reality Warp",
+    "rank": "Incredible"
+   },
+   {
+    "name": "Duplication",
+    "rank": "Excellent"
+   },
+   {
+    "name": "Gravity Reversal",
+    "rank": "Remarkable"
+   }
+  ],
+  "talents": [],
+  "note": "Cosmic, reality-warping entity of total entropy. He CANNOT be defeated by combat: his power is fed by the crystal gateway, and dropping his Health to zero only staggers him. He is ended by destroying the crystals and overloading the gateway with the black crystal (or, at the hero's choice, trapping him with it). The hero must be told this before the final fight and reminded if they keep trading blows.",
+  "staggerOnly": true,
+  "health": 160
+ }
+]

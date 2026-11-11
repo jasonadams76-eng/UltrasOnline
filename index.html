@@ -783,37 +783,81 @@ function enemyMaxHealth(statRanks){
   return ['Fighting Ability','Agility','Strength','Endurance']
     .reduce((sum,s)=>sum + rankNumberForName(statRanks[s]), 0);
 }
-/* Named enemies with fixed sheets. When the rules check names one of these
-   (case-insensitive), the game uses this sheet instead of inventing one, so
-   they play the same every run and for every hero. Add new entries here. */
-const NAMED_ENEMIES = {
-  'warden ash': {
-    name: 'Warden Ash',
-    aliases: ['ash', 'the warden'],
-    stats: { 'Fighting Ability':'Excellent', Agility:'Excellent', Strength:'Good', Endurance:'Excellent', Reason:'Remarkable', Intuition:'Excellent', Psyche:'Excellent' },
-    powers: [
-      { name: 'Ceramic Plate Armor', rank: 'Excellent' },
-      { name: 'Arc Baton', rank: 'Excellent' },
-      { name: 'Signal Jammer', rank: 'Good' },
-      { name: 'Remote Charges', rank: 'Incredible' }
-    ],
-    note: 'Only the Arc Baton is used to attack. The Remote Charges are the substation explosives (a story device, never swung at the hero), the Signal Jammer only disrupts radios and phones, and the Ceramic Plate Armor is purely defensive.'
+/* Named enemies with fixed sheets. Sheets live in enemies/enemies.json (one
+   per villain: seven stats as rank names, powers with an "attack" flag on the
+   ones that can hurt someone, plus a note for the narrator). When the rules
+   check names one of these, the game uses the sheet instead of inventing one,
+   so they play the same every run and for every hero. The embedded Warden Ash
+   below is only a fallback if the file cannot be loaded. */
+const ENEMY_FALLBACK = [{
+  id:'warden_ash', name:'Warden Ash', aliases:['ash','the warden'], adventures:['meridian'],
+  stats:{ 'Fighting Ability':'Excellent', Agility:'Excellent', Strength:'Good', Endurance:'Excellent', Reason:'Remarkable', Intuition:'Excellent', Psyche:'Excellent' },
+  powers:[ {name:'Ceramic Plate Armor', rank:'Excellent'}, {name:'Arc Baton', rank:'Excellent', attack:true}, {name:'Signal Jammer', rank:'Good'}, {name:'Remote Charges', rank:'Incredible'} ],
+  note:'Only the Arc Baton is used to attack. The Remote Charges are the substation explosives (a story device, never swung at the hero), the Signal Jammer only disrupts radios and phones, and the Ceramic Plate Armor is purely defensive.'
+}];
+let NAMED_ENEMIES = {};
+function setNamedEnemies(list){
+  NAMED_ENEMIES = {};
+  for(const e of list){
+    if(e && e.name && e.stats) NAMED_ENEMIES[String(e.name).toLowerCase()] = e;
   }
-};
+}
+setNamedEnemies(ENEMY_FALLBACK);
+async function loadEnemies(){
+  try{
+    const data = await fetchJson('enemies/enemies.json');
+    if(Array.isArray(data) && data.length) setNamedEnemies(data);
+  }catch(e){ console.warn('Enemy sheets not loaded, using built-in fallback:', e.message); }
+}
+function normalizeEnemyLabel(name){
+  return String(name || '').toLowerCase().replace(/\(.*?\)/g,' ').replace(/["“”]/g,'').replace(/#\s*\d+/g,' ').replace(/\b\d+\b/g,' ').replace(/\s+/g,' ').trim();
+}
 function namedEnemyFor(name){
-  const key = String(name || '').trim().toLowerCase();
-  if(NAMED_ENEMIES[key]) return NAMED_ENEMIES[key];
-  for(const k of Object.keys(NAMED_ENEMIES)){
-    if((NAMED_ENEMIES[k].aliases || []).includes(key)) return NAMED_ENEMIES[k];
+  const raw = String(name || '').trim().toLowerCase();
+  const norm = normalizeEnemyLabel(name);
+  for(const key of [raw, norm]){
+    if(!key) continue;
+    if(NAMED_ENEMIES[key]) return NAMED_ENEMIES[key];
+    for(const k of Object.keys(NAMED_ENEMIES)){
+      const e = NAMED_ENEMIES[k];
+      if((e.aliases || []).map(a=>a.toLowerCase()).includes(key)) return e;
+      if(normalizeEnemyLabel(e.name) === key) return e;
+    }
   }
   return null;
 }
-function namedEnemiesPromptText(){
-  const lines = Object.keys(NAMED_ENEMIES).map(k => {
-    const e = NAMED_ENEMIES[k];
-    return `- "${e.name}": enemyTier "super"; powers (use these EXACT names for enemyPowerUsed): ${e.powers.map(p => p.name + ' (' + p.rank + ')').join(', ')}. ${e.note}`;
+/* A power counts as an attack only if marked so (sheets with no marked
+   power at all treat every power as usable in an attack, as invented sheets do). */
+function isAttackPower(enemy, p){
+  return !(enemy.powers || []).some(x => x.attack) ? true : p.attack === true;
+}
+/* Villains relevant right now: those listed for this adventure, those already
+   in the fight, and any whose name shows up in the recent story. */
+function relevantNamedEnemies(adventureId, log){
+  const text = ((log || []).slice(-8).map(e=>e.text).join(' ') + ' ' + Object.keys(STATE.enemies || {}).join(' ')).toLowerCase();
+  return Object.values(NAMED_ENEMIES).filter(e => {
+    if((e.adventures || []).includes(adventureId)) return true;
+    const names = [e.name].concat(e.aliases || []).map(n=>String(n).toLowerCase()).filter(n=>n.length >= 4);
+    return names.some(n => text.includes(n));
   });
+}
+function sheetLine(e){
+  const stats = ['Fighting Ability','Agility','Strength','Endurance','Reason','Intuition','Psyche'].map(k=>`${k} ${e.stats[k]}`).join(', ');
+  const powers = (e.powers || []).map(p => `${p.name} (${p.rank}${p.attack ? ', attack' : ', NOT an attack'})`).join(', ') || 'none';
+  return `- "${e.name}": ${stats}. Powers: ${powers}. ${e.note || ''}`;
+}
+function namedEnemiesPromptText(adventureId, log){
+  const list = relevantNamedEnemies(adventureId, log);
+  const lines = list.map(e => `- "${e.name}"${e.template ? ' (a template: label each one "' + e.name + ' #1", "#2" and so on)' : ''}: enemyTier "super"; powers (use these EXACT names for enemyPowerUsed, and only powers marked attack can be used to hurt someone): ${(e.powers||[]).map(p => p.name + ' (' + p.rank + (p.attack ? ', attack' : ', not an attack') + ')').join(', ') || 'none'}. ${e.note || ''}`);
   return lines.length ? 'NAMED ENEMIES WITH FIXED SHEETS (use the exact label given, and for these enemies the game supplies the stats and powers itself):\n' + lines.join('\n') + '\n\n' : '';
+}
+function namedEnemiesNarratorText(adventureId, log){
+  const list = relevantNamedEnemies(adventureId, log);
+  if(!list.length) return '';
+  return `
+
+VILLAIN SHEETS (fixed — never invent different stats, powers or abilities for these characters, and never give them a power that is not listed; ones marked NOT an attack are never used to hurt the hero):
+${list.map(sheetLine).join('\n')}`;
 }
 /* Looks up (or creates) a tracked enemy/threat for this session. Enemies
    persist by name within a chapter so repeated hits accumulate damage
@@ -824,13 +868,13 @@ function namedEnemiesPromptText(){
 function getOrCreateEnemy(name, details){
   if(!STATE.enemies) STATE.enemies = {};
   const named = namedEnemyFor(name);
-  const key = named ? named.name.toLowerCase() : String(name).trim().toLowerCase();
+  const key = (named && !named.template) ? named.name.toLowerCase() : String(name).trim().toLowerCase();
   if(!STATE.enemies[key]){
     let stats, powers = [];
     if(named){
       stats = Object.assign({}, named.stats);
       powers = named.powers.map(p => Object.assign({}, p));
-      name = named.name;
+      if(!named.template) name = named.name;
     } else if(details && details.tier === 'super' && details.stats){
       stats = details.stats;
       powers = details.powers || [];
@@ -1257,7 +1301,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-11.2';
+const APP_VERSION = '2026-11-11.3';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -1442,7 +1486,7 @@ const KARMA_MAX_AWARDS = 60;
 const KARMA_GUIDE = `HOW TO RECOGNIZE EACH AWARD IN THE STORY (read the whole transcript once for each group below):
 - Crimes, Conspiracies and Offenses: the hero stops/prevents the crime or plot before it succeeds ("Stop or Prevent"), or captures/turns in the criminals ("Arrest"). A villain attack on a city, a bomb plot, a heist and a murder are examples.
 - Rescue: the hero protects people from imminent danger: pulling someone out of a fire, shielding a crowd, stopping a villain who was about to destroy a building, a city or a crowd (the people in danger are the ones rescued). Report one "Rescue" event for each separate rescue and give "people_saved", the number of people whose lives were saved (use your best estimate; 1 for one person, 5 or more for a crowd, a building, a city, a hostage group).
-- Defeating Powerful Foe: the hero defeats, captures or drives off a dangerous opponent. Give "points" from 30 to 100 by how dangerous the foe was (a street thug is not a Powerful Foe; a super-powered villain who threatened a city is 70 to 100).
+- Defeating Powerful Foe: the hero defeats, captures or drives off a dangerous opponent. Give "points" from 30 to 100 by how dangerous the foe was (a street thug is not a Powerful Foe; a super-powered villain who threatened a city is 70 to 100). THE VOID EMPEROR cannot be beaten in combat: if the hero destroys the crystals / the gateway and so ends him, award Defeating Powerful Foe with 100 points whatever the combat results were; if the hero trapped him instead, award 70; if the crystals were not destroyed or trapped, award nothing for him.
 - Role-Playing: a clever, in-character, memorable decision or line (a smart plan, a persuasive bluff, staying true to the hero's personality and motives). Be generous: report each distinct moment.
 - Showing Off: the hero uses powers flashily or heroically in front of a crowd or witnesses.
 - Humor: ANY joke, quip, pun, wisecrack or funny line the PLAYER'S HERO says or does. Humor is subjective, so award it when the line was clearly meant to be funny. Report each distinct moment.
@@ -1554,7 +1598,7 @@ function ensureKarmaReview(){
     STATE.karmaReview = result;
     STATE.karmaReviewStatus = 'done';
     pushKarma(hero.id, STATE.adventureId, result, STATE.fullLog);
-    saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, karmaReview: result}).catch(()=>{});
+    saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, karmaReview: result}).catch(()=>{});
     render();
   }).catch(()=>{
     STATE.karmaReviewStatus = 'error';
@@ -1564,8 +1608,29 @@ function ensureKarmaReview(){
 
 /* Canon look and per-hero narration notes, appended to the hero sheet the narrator reads. */
 const HERO_CANON_NOTES = {
-  premade_traumahawk: 'He flies through his Flight power alone. He has NO wings, feathers or flapping: never describe wings on him. Hawk imagery such as talons, a sharp gaze or swooping is fine.'
+  premade_traumahawk: 'He flies through his Flight power alone. He has NO wings, feathers or flapping: never describe wings on him. Hawk imagery such as talons, a sharp gaze or swooping is fine. When he strikes a foe, the damage is always that of his Talons or his Strength, whichever is higher. Calling on or channeling the spirits or gods he speaks with (Elemental Communication) can bring guidance, warnings or atmosphere but NEVER adds damage, extra power or new attacks, so narrate such moments as helping him aim, sense or time a blow, not as a blast of divine energy.'
 };
+/* Hero damage rules. TraumaHawk: everything he does to an enemy hurts for the
+   higher of Talons or Strength; his utility powers can never be the attack. */
+const HERO_DAMAGE_RULES = {
+  premade_traumahawk: { damageFrom: ['Talons','Strength'], nonAttack: ['Elemental Communication','Healing','Flight'] }
+};
+function heroNonAttackPowers(hero){
+  const r = HERO_DAMAGE_RULES[hero.id];
+  return r ? r.nonAttack : [];
+}
+function nonAttackRuleText(hero){
+  const list = heroNonAttackPowers(hero);
+  return `GENERAL RULE for items 2 and 3: a power is only an attack if it plainly hurts things (claws, blasts, weapons, super-strength). Utility powers such as communication, healing, flying or sensing are NEVER an attack: if a player describes "channeling" or "calling on" such a power to strike a foe, set powerUsed to null and use "Fighting Ability" (or "Strength" for a heavy blow).${list.length ? ` For this hero these powers are NOT attacks: ${list.join(', ')}.` : ''}
+
+`;
+}
+function heroDamageRank(hero, usedPowerNumber, abilityNumber){
+  const r = HERO_DAMAGE_RULES[hero.id];
+  if(!r) return abilityNumber;
+  const nums = r.damageFrom.map(n => getPowerRank(hero, n) != null ? getPowerRank(hero, n) : (hero.stats[n] != null ? hero.stats[n] : 0));
+  return Math.max.apply(null, nums);
+}
 function heroLookText(hero){
   let out = '';
   if(hero.appearance) out += `\nAppearance: ${hero.appearance}`;
@@ -1592,7 +1657,9 @@ Bio: ${hero.bio}${heroLookText(hero)}`;
   if(mechanics && mechanics.enemyResult){
     const er = mechanics.enemyResult;
     const pct = er.maxHealth ? er.currentHealth/er.maxHealth : 1;
-    const condition = er.knockedOut ? 'This foe is now beaten — knocked out/down and out of the fight. Narrate them going down for good this exchange.'
+    const condition = er.staggered ? 'This foe is staggered and reeling, but force alone CANNOT end him: he recovers and keeps coming. He is only ended by destroying the crystals and the gateway that feed him. Do NOT narrate him as defeated, dead or sealed away, and do not end the story because of this.'
+      : (er.knockedOut && er.nonLethal) ? 'This foe is down and out of the fight: narrate them subdued, restrained or disarmed. They are an ordinary human, so NEVER describe a severe injury, blood loss or a killing blow.'
+      : er.knockedOut ? 'This foe is now beaten — knocked out/down and out of the fight. Narrate them going down for good this exchange.'
       : pct <= 0.25 ? 'This foe is badly battered, barely hanging on.'
       : pct <= 0.5 ? 'This foe has taken real damage and is visibly hurting.'
       : 'This foe is still standing strong.';
@@ -1617,7 +1684,7 @@ ${heroSheet}
 
 CURRENT CHAPTER (hidden from player — never quote this verbatim):
 Title: ${chapter.title}
-${chapter.gmInstructions}${mechanicsBlock}${healthContext ? `
+${chapter.gmInstructions}${namedEnemiesNarratorText(STATE.adventureId, log)}${mechanicsBlock}${healthContext ? `
 
 HERO'S CURRENT CONDITION (never state numbers or the word "Health" — reflect this only as physical wear/breathlessness/injury in the prose when relevant): ${healthContext}` : ''}`;
 
@@ -1746,6 +1813,44 @@ THE HERO HAS JUST BEEN OVERWHELMED — battered past the point of continuing to 
   return text;
 }
 
+/* Final-chapter second wind: the first time the hero is beaten in the LAST
+   chapter of an adventure, ORACLE pulls them to safety and holds the threat
+   off while they recover; the story is NOT over. Only a second defeat ends
+   the chapter through the normal rescue. */
+async function callOracleSecondWind(hero, chapter, log){
+  const heroSheet = `Name: ${hero.name}
+Alias: ${hero.alias}
+Origin: ${hero.origin}
+Age and build: ${heroBuildText(hero)}
+Powers: ${hero.powers.map(powerLabel).join(', ')}
+Bio: ${hero.bio}${heroLookText(hero)}`;
+  const systemInstruction = `You are the Game Master for THE ULTRAS, a conversational superhero text-adventure. Stay in the fiction; never mention "AI," "prompt," "instructions," "Health," or game mechanics by name.
+
+HERO SHEET:
+${heroSheet}
+
+CURRENT CHAPTER (hidden from player — never quote this verbatim):
+Title: ${chapter.title}
+${chapter.gmInstructions}${namedEnemiesNarratorText(STATE.adventureId, log)}
+
+THE HERO HAS JUST BEEN OVERWHELMED in the final confrontation of the whole adventure. Write a vivid 2-3 paragraph beat where Victor Cross and ORACLE agents surge in at the last second, pull the hero out of the killing blow and drag them to cover, then engage or hold off the threat (using the heavy weapons, shields or distraction that fit the scene) while the hero catches their breath and recovers enough to fight again. This is NOT the end: the threat is still very much alive, the crisis is NOT resolved, the chapter is NOT over, and the hero is not rescued out of the story. Close with the hero back on their feet, hurting but able to act, the danger still ahead, and Victor telling them they have one more chance. Do NOT write the line "[CHAPTER_COMPLETE]" and do not end the story.`;
+  const contents = [];
+  for(const entry of log.slice(-20)){
+    contents.push({ role: entry.who==='player' ? 'user' : 'model', parts:[{text: entry.text}] });
+  }
+  contents.push({ role:'user', parts:[{text: 'ORACLE pulls the hero to safety and holds the threat back.'}] });
+  const response = await fetchGeminiWithFallback({
+    systemInstruction: { parts: [{ text: systemInstruction }] },
+    contents,
+    generationConfig: { temperature: 0.9, topP: 0.95, topK: 40, maxOutputTokens: 500 }
+  });
+  if(!response.ok) throw new Error(`ORACLE second-wind connection failed (${response.status} from ${response.usedModel})`);
+  const data = await response.json();
+  const text = data.candidates?.[0]?.content?.parts?.map(p=>p.text).join('').trim();
+  if(!text) throw new Error('ORACLE second-wind call returned nothing');
+  return text.replace('[CHAPTER_COMPLETE]','').trim();
+}
+
 /* Called once a chapter completes and the player clicks "Continue," right
    before the next chapter's static `opening` text is shown. A chapter's
    `opening` is a fixed, pre-written scene-setter — it has no idea how the
@@ -1845,7 +1950,7 @@ Determine:
 12. "enemyPowerUsed" — ONLY when enemyTier is "super" and the enemy is attacking with one of their listed enemyPowers this turn: that power's exact name as given in enemyPowers. Null otherwise.
 13. "targetsEnemy" — boolean, true ONLY when the hero is the one attacking/pressuring a specific enemy (used to track that enemy's Health toward a knockout). False if the hero is just defending, dodging, or not engaging an enemy directly.
 
-${namedEnemiesPromptText()}Return exactly: {"requiresFeat":bool,"heroIsTarget":bool,"powerUsed":"..."|null,"ability":"...","actionType":"...","columnShift":int,"intensity":"..."|null,"enemyName":"..."|null,"enemyTier":"..."|null,"enemyStats":{...}|null,"enemyPowers":[...],"enemyWeapon":"..."|null,"enemyPowerUsed":"..."|null,"targetsEnemy":bool}`;
+${namedEnemiesPromptText(STATE.adventureId, log)}${nonAttackRuleText(hero)}Return exactly: {"requiresFeat":bool,"heroIsTarget":bool,"powerUsed":"..."|null,"ability":"...","actionType":"...","columnShift":int,"intensity":"..."|null,"enemyName":"..."|null,"enemyTier":"..."|null,"enemyStats":{...}|null,"enemyPowers":[...],"enemyWeapon":"..."|null,"enemyPowerUsed":"..."|null,"targetsEnemy":bool}`;
 
   const response = await fetchGeminiWithFallback({
     contents: [{ role:"user", parts:[{text: prompt}] }],
@@ -1900,6 +2005,11 @@ async function resolveMechanics(hero, chapter, log, playerLine){
   const classification = await classifyAction(hero, chapter, log, playerLine);
   if(!classification.requiresFeat) return null;
 
+  const nonAttackList = heroNonAttackPowers(hero).map(n=>n.toLowerCase());
+  if(classification.actionType !== 'feat' && classification.powerUsed && nonAttackList.includes(String(classification.powerUsed).toLowerCase())){
+    classification.powerUsed = null;
+    classification.ability = (classification.ability === 'Strength') ? 'Strength' : 'Fighting Ability';
+  }
   const usedPower = classification.powerUsed ? getPowerRank(hero, classification.powerUsed) : null;
   const abilityNumber = usedPower != null ? usedPower : hero.stats[classification.ability];
   const displayName = usedPower != null ? classification.powerUsed : classification.ability;
@@ -1939,7 +2049,11 @@ async function resolveMechanics(hero, chapter, log, playerLine){
       const wantedPower = String(classification.enemyPowerUsed).toLowerCase();
       const usedPowerEntry = enemy.powers.find(p => p.name.toLowerCase() === wantedPower)
         || enemy.powers.find(p => p.name.toLowerCase().includes(wantedPower) || wantedPower.includes(p.name.toLowerCase()));
-      if(usedPowerEntry) attackerRankNumber = rankNumberForName(usedPowerEntry.rank);
+      if(usedPowerEntry && isAttackPower(enemy, usedPowerEntry)) attackerRankNumber = rankNumberForName(usedPowerEntry.rank);
+      else if(usedPowerEntry){
+        const meleeStat0 = enemy.stats['Fighting Ability'];
+        attackerRankNumber = rankNumberForName(meleeStat0);
+      }
     } else if(enemy){
       const meleeStat = classification.actionType === 'edged' || classification.actionType === 'blunt' || classification.actionType === 'charge'
         ? enemy.stats['Strength'] : enemy.stats['Fighting Ability'];
@@ -1952,14 +2066,18 @@ async function resolveMechanics(hero, chapter, log, playerLine){
   // resolved rank/power, tracked against that enemy's Health pool.
   let enemyResult = null;
   if(isCombatType && isHarmfulColor && classification.targetsEnemy && enemy){
-    const enemyDamage = damageForAttack(abilityNumber, feat.color);
+    const enemyDamage = damageForAttack(heroDamageRank(hero, usedPower, abilityNumber), feat.color);
     if(enemyDamage > 0) enemy.currentHealth = Math.max(0, enemy.currentHealth - enemyDamage);
+    const sheet = namedEnemyFor(enemy.name) || {};
+    const atZero = enemy.currentHealth <= 0;
     enemyResult = {
       name: enemy.name,
       damage: enemyDamage,
       currentHealth: enemy.currentHealth,
       maxHealth: enemy.maxHealth,
-      knockedOut: enemy.currentHealth <= 0
+      knockedOut: atZero && !sheet.staggerOnly,
+      staggered: atZero && !!sheet.staggerOnly,
+      nonLethal: !!sheet.nonLethal
     };
   }
 
@@ -3097,6 +3215,7 @@ function applySavedGame(hero, saved){
   STATE.currentHealth = (typeof saved.currentHealth === 'number') ? saved.currentHealth : maxHealth(hero);
   STATE.currentKarma = (typeof saved.currentKarma === 'number') ? saved.currentKarma : maxKarma(hero);
   STATE.enemies = (saved.enemies && typeof saved.enemies === 'object') ? saved.enemies : {};
+  STATE.secondWindUsed = !!saved.secondWindUsed;
   STATE.karmaReview = saved.karmaReview || null;
   STATE.karmaReviewStatus = saved.karmaReview ? 'done' : null;
 }
@@ -3211,10 +3330,11 @@ function renderAdventureSelect(){
       STATE.currentHealth = maxHealth(STATE.activeHero);
       STATE.currentKarma = maxKarma(STATE.activeHero);
       STATE.enemies = {};
+      STATE.secondWindUsed = false;
       STATE.karmaReview = null;
       STATE.karmaReviewStatus = null;
       STATE.screen='PLAY';
-      await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies});
+      await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed});
       render();
     };
   });
@@ -3607,7 +3727,7 @@ async function advanceChapter(){
     pushFullLog('gm', nextChapter.opening, null);
   }
   try{
-    await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies});
+    await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed});
   }catch(e){ /* saving is best-effort */ }
   render();
 }
@@ -3654,7 +3774,19 @@ async function submitAction(){
 
     const knockedOut = STATE.currentHealth <= 0 && !complete;
 
-    if(knockedOut){
+    const isLastChapter = (() => { const cs = currentAdventureChapters(); return cs.length && cs[cs.length-1].id === chapter.id; })();
+    if(knockedOut && isLastChapter && !STATE.secondWindUsed){
+      // Final chapter, first defeat: a second wind instead of the end.
+      STATE.secondWindUsed = true;
+      let windText;
+      try{ windText = await callOracleSecondWind(hero, chapter, STATE.log); }
+      catch(e){ windText = 'Victor Cross\'s voice cuts through the roar: "Hold on, I\'ve got you!" ORACLE agents drag you behind cover and throw everything they have at the threat while you gasp for breath. "Get up," Victor says. "You have one more chance."'; }
+      const windEntry = {who:'gm', text: windText, mechanics:null};
+      STATE.log.push(windEntry);
+      pushFullLog('gm', windText, null);
+      generateEntryImage(windEntry, windText, hero);
+      STATE.currentHealth = Math.ceil(maxHealth(hero)/2);
+    } else if(knockedOut){
       // The hero went down before finishing the chapter's own objectives —
       // ORACLE steps in. This forces the chapter complete regardless of
       // what the player was mid-attempting.
@@ -3687,7 +3819,7 @@ async function submitAction(){
       STATE.pendingAdvance = next ? next.id : 'FINISHED';
     }
 
-    await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: STATE.pendingAdvance, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies});
+    await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: STATE.pendingAdvance, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed});
   }catch(e){
     STATE.error = 'The signal dropped: ' + e.message + '. Try again.';
   }finally{
@@ -3710,6 +3842,7 @@ function escapeHtml(str){
   app.innerHTML = '<div class="panel"><div class="thinking">Loading…</div></div>';
   try{
     await loadAdventures();
+    await loadEnemies();
   }catch(e){
     app.innerHTML = '<div class="panel"><h2>Could not load the adventures</h2><p>' + escapeHtml(e.message) + '</p><p><button id="retry-adv">Try again</button></p></div>';
     document.getElementById('retry-adv').onclick = () => location.reload();
