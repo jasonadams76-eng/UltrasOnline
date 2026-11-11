@@ -405,6 +405,14 @@
   .status-tag.done, .badge.done{ background:#2c6b3f; border-color:#2c6b3f; color:#fff; }
   .title-screen .sub{ color:var(--blue-dark); }
   .hero-tile, .adv-card, .karma-hero{ border-color:var(--ink); }
+  .combat-panel{ margin-top:14px; padding:10px 12px; border:1px solid #b33; border-radius:8px; background:rgba(180,40,40,0.08); }
+  .combat-head{ margin-bottom:6px; }
+  .combat-sub{ font-size:0.8rem; opacity:0.75; }
+  .foe-row{ display:flex; align-items:center; gap:10px; margin:4px 0; font-size:0.9rem; }
+  .foe-name{ flex:0 0 30%; }
+  .foe-bar{ flex:1; height:10px; background:rgba(0,0,0,0.25); border-radius:5px; overflow:hidden; }
+  .foe-bar i{ display:block; height:100%; background:#c33; }
+  .foe-cond{ flex:0 0 34%; text-align:right; }
 </style>
 </head>
 <body>
@@ -1118,6 +1126,8 @@ RULES YOU MUST FOLLOW:
 - Judge the player's stated plan fairly against their hero sheet (stats, powers, bio). Clever, well-suited plans should go well; reckless or ill-suited plans can go wrong, but keep the story moving — failure should complicate, not dead-end.
 - A hero can only do what their listed Powers, Talents, Stats and gear allow, exactly as described on the sheet. If the player tries something the sheet does not give them (a force field, an energy beam, telekinesis, a new power, or a listed power used for something it does not do), it DOES NOT WORK: narrate the attempt failing or the hero doing the nearest ordinary physical thing instead (dodging, blocking, striking). Never invent a power, never stretch a power past its description, and never reward the attempt with a success. Do not lecture the player; just let the fiction show it did not work.
 - When real time passes with no foe attacking or threatening the hero (a rest, a conversation, a trip, a search, an interlude after a fight), end your reply with a line such as "[TIME: 5 minutes]" (units: seconds, minutes, hours or days) giving how much time passed, so the hero can recover. Never use it while a fight or danger is ongoing, and never mention that the line exists.
+- When the hero is suddenly attacked or an ambush or fight breaks out, end your reply with the line "[COMBAT]" so turn-based combat can begin. Do not use it for a threat that has not yet attacked. Never mention that the line exists.
+- Nobody dies from a combat result. A gravely wounded foe or hero is badly hurt, unconscious and survivable, never dead. When a foe is gravely wounded, let the hero notice and have the chance to check on them.
 - Never invent physical features the hero does not have. Describe the hero only as the Appearance and Canon note on the hero sheet say: no wings, capes, armor, masks or weapons that are not listed. Powers work as the sheet describes them.
 - Never simply reject or block the player ("you can't do that") — instead narrate what happens when they try, good or bad.
 - Keep responses tight: 2-4 short paragraphs of vivid, active narration. End most responses with the scene held in suspension so the player has something to react to (do not ask "what do you do?" every single time verbatim — vary it, or let the scene itself imply the question).
@@ -1300,7 +1310,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-11.9';
+const APP_VERSION = '2026-11-11.10';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -1598,7 +1608,7 @@ function ensureKarmaReview(){
     STATE.karmaReview = result;
     STATE.karmaReviewStatus = 'done';
     pushKarma(hero.id, STATE.adventureId, result, STATE.fullLog);
-    saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, karmaReview: result}).catch(()=>{});
+    saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || [], karmaReview: result}).catch(()=>{});
     render();
   }).catch(()=>{
     STATE.karmaReviewStatus = 'error';
@@ -1692,7 +1702,7 @@ function stepsBlockText(mechanics){
     return `Step ${i+1} (${st.text}): ${m.usedPower ? 'Power' : 'Ability'} ${m.ability} (${m.effectiveRank}${m.columnShift ? ', shifted from '+m.baseRank+' by '+(m.columnShift>0?'+':'')+m.columnShift+' CS' : ''}), action type ${m.actionType}. Roll ${m.roll}, result color ${m.color.toUpperCase()}. Outcome: ${m.label}${mechNotes(m)}`;
   }).join('\n');
 }
-async function callGM(hero, chapter, log, newPlayerLine, mechanics, healthContext) {
+async function callGM(hero, chapter, log, newPlayerLine, mechanics, healthContext, extraBlock) {
 
   const heroSheet = `Name: ${hero.name}
 Alias: ${hero.alias}
@@ -1711,7 +1721,8 @@ Bio: ${hero.bio}${heroLookText(hero)}`;
   if(mechanics && mechanics.enemyResult){
     const er = mechanics.enemyResult;
     const pct = er.maxHealth ? er.currentHealth/er.maxHealth : 1;
-    const condition = er.escaped ? 'This foe is beaten for now but is NOT captured or knocked out: narrate them slipping away wounded (smoke, a jammer burst, a hidden exit, allies covering them) and vowing to finish their plan. They stay alive and free for a later chapter.'
+    const condition = er.seriousWound ? 'This foe has taken a devastating blow: gravely wounded, down and out of the fight but ALIVE. It looks life-threatening but they will survive if tended. Do NOT say they died.'
+      : er.escaped ? 'This foe is beaten for now but is NOT captured or knocked out: narrate them slipping away wounded (smoke, a jammer burst, a hidden exit, allies covering them) and vowing to finish their plan. They stay alive and free for a later chapter.'
       : er.staggered ? 'This foe is staggered and reeling, but force alone CANNOT end him: he recovers and keeps coming. He is only ended by destroying the crystals and the gateway that feed him. Do NOT narrate him as defeated, dead or sealed away, and do not end the story because of this.'
       : (er.knockedOut && er.nonLethal) ? 'This foe is down and out of the fight: narrate them subdued, restrained or disarmed. They are an ordinary human, so NEVER describe a severe injury, blood loss or a killing blow.'
       : er.knockedOut ? 'This foe is now beaten — knocked out/down and out of the fight. Narrate them going down for good this exchange.'
@@ -1741,7 +1752,7 @@ ${heroSheet}
 
 CURRENT CHAPTER (hidden from player — never quote this verbatim):
 Title: ${chapter.title}
-${chapter.gmInstructions}${namedEnemiesNarratorText(STATE.adventureId, log)}${mechanicsBlock}${healthContext ? `
+${chapter.gmInstructions}${namedEnemiesNarratorText(STATE.adventureId, log)}${mechanicsBlock}${extraBlock || ''}${healthContext ? `
 
 HERO'S CURRENT CONDITION (never state numbers or the word "Health" — reflect this only as physical wear/breathlessness/injury in the prose when relevant): ${healthContext}` : ''}`;
 
@@ -1968,7 +1979,8 @@ TASK: Write 1-3 short paragraphs of connective narration that bridge the gap bet
    instead of the GM just narrating success/failure freely. */
 const ACTION_TYPES = ['feat','blunt','edged','shooting','energy','force','grapple','grab','charge','dodge','evade'];
 
-async function classifyAction(hero, chapter, log, playerLine){
+async function classifyAction(hero, chapter, log, playerLine, opts){
+  opts = opts || {};
   const heroSheet = `Name: ${hero.name}
 Alias: ${hero.alias}
 Powers: ${hero.powers.map(powerLabel).join(', ')}
@@ -1991,7 +2003,7 @@ ${recentLog}
 PLAYER'S STATED ACTION:
 "${playerLine}"
 
-The player may describe up to 3 separate actions in one command (for example "climb the fence, then open the door, then talk to the guard"). Produce one object per distinct action, in order, up to 3; if there is only one action, return one object. Each object has the fields below, plus "stepText": a short phrase naming that action. Do not split one continuous action into several.
+The player may describe up to 3 separate actions in one command (for example "climb the fence, then open the door, then talk to the guard"). Produce one object per distinct action, in order, up to 3; if there is only one action, return one object. Each object has the fields below, plus "stepText": a short phrase naming that action. Do not split one continuous action into several.${opts.combat ? `\n\nCOMBAT TURN: the hero is in a fight. They take exactly ONE action this turn, so return exactly ONE action object even if the player lists several. The hero is fighting: ${(opts.foes || []).join(', ')}. When the hero targets one of them use that EXACT label as enemyName. Set heroIsTarget to false (the foes act on their own turns).` : ''}
 
 Determine (for each action):
 1. "requiresFeat" (boolean) — true if this action is difficult/uncertain enough to need a dice roll (combat, risky stunts, using powers under pressure, tricky social/technical challenges). False for simple/routine actions, pure roleplay/dialogue with no risk, or things automatically within the hero's ability.
@@ -2009,10 +2021,11 @@ Determine (for each action):
 12. "enemyPowerUsed" — ONLY when enemyTier is "super" and the enemy is attacking with one of their listed enemyPowers this turn: that power's exact name as given in enemyPowers. Null otherwise.
 13. "targetsEnemy" — boolean, true ONLY when the hero is the one attacking/pressuring a specific enemy (used to track that enemy's Health toward a knockout). False if the hero is just defending, dodging, or not engaging an enemy directly.
 
+16. "retreats" (boolean) — true ONLY if the hero deliberately breaks off, flees, withdraws or leaves the fight or the scene on purpose. False otherwise (dodging or defending is NOT retreating).
 14. "claimsUnlistedPower" (boolean) — true if the player's action relies on an ability this hero does NOT have: a power not on the sheet, or a listed power used for something its description does not allow (a force field, protective bubble, energy blast or beam, telekinesis, extra damage from a utility or communication power, etc.). Otherwise false.
 15. "taskSummary" — a very short plain label of the exact task being attempted (e.g. "lift the one-ton weight", "pick the vault lock"). Use the SAME label when the player simply tries the same thing again, and a DIFFERENT label when the player changes their approach (a lever, a different power, help from someone).
 ${heroPowerLimitsText(hero)}
-${namedEnemiesPromptText(STATE.adventureId, log)}${nonAttackRuleText(hero)}Return exactly: {"actions":[{"stepText":"...","requiresFeat":bool,"heroIsTarget":bool,"powerUsed":"..."|null,"ability":"...","actionType":"...","columnShift":int,"intensity":"..."|null,"enemyName":"..."|null,"enemyTier":"..."|null,"enemyStats":{...}|null,"enemyPowers":[...],"enemyWeapon":"..."|null,"enemyPowerUsed":"..."|null,"targetsEnemy":bool,"claimsUnlistedPower":bool,"taskSummary":"..."|null}, ...up to 3 items]}`;
+${namedEnemiesPromptText(STATE.adventureId, log)}${nonAttackRuleText(hero)}Return exactly: {"actions":[{"stepText":"...","requiresFeat":bool,"heroIsTarget":bool,"powerUsed":"..."|null,"ability":"...","actionType":"...","columnShift":int,"intensity":"..."|null,"enemyName":"..."|null,"enemyTier":"..."|null,"enemyStats":{...}|null,"enemyPowers":[...],"enemyWeapon":"..."|null,"enemyPowerUsed":"..."|null,"targetsEnemy":bool,"claimsUnlistedPower":bool,"taskSummary":"..."|null,"retreats":bool}, ...up to 3 items]}`;
 
   const response = await fetchGeminiWithFallback({
     contents: [{ role:"user", parts:[{text: prompt}] }],
@@ -2040,6 +2053,7 @@ function normalizeClassification(parsed, hero, i){
   if(parsed.intensity && !RANK_ORDER.includes(parsed.intensity)) parsed.intensity = null;
   parsed.requiresFeat = !!parsed.requiresFeat;
   parsed.heroIsTarget = !!parsed.heroIsTarget;
+  parsed.retreats = !!parsed.retreats;
   parsed.targetsEnemy = !!parsed.targetsEnemy;
   if(!parsed.enemyName || typeof parsed.enemyName !== 'string' || !parsed.enemyName.trim()) parsed.enemyName = null;
   if(!['civilian','trained','super'].includes(parsed.enemyTier)) parsed.enemyTier = parsed.enemyName ? 'civilian' : null;
@@ -3347,6 +3361,9 @@ function applySavedGame(hero, saved){
   STATE.currentKarma = (typeof saved.currentKarma === 'number') ? saved.currentKarma : maxKarma(hero);
   STATE.enemies = (saved.enemies && typeof saved.enemies === 'object') ? saved.enemies : {};
   STATE.secondWindUsed = !!saved.secondWindUsed;
+  STATE.combat = (saved.combat && typeof saved.combat === 'object' && Array.isArray(saved.combat.order)) ? saved.combat : null;
+  STATE.checkPrompts = Array.isArray(saved.checkPrompts) ? saved.checkPrompts : [];
+  STATE.heroStunned = false;
   STATE.karmaReview = saved.karmaReview || null;
   STATE.karmaReviewStatus = saved.karmaReview ? 'done' : null;
 }
@@ -3463,10 +3480,11 @@ function renderAdventureSelect(){
       STATE.enemies = {};
       STATE.failedTasks = {};
       STATE.secondWindUsed = false;
+      STATE.combat = null; STATE.checkPrompts = []; STATE.heroStunned = false;
       STATE.karmaReview = null;
       STATE.karmaReviewStatus = null;
       STATE.screen='PLAY';
-      await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed});
+      await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || []});
       render();
     };
   });
@@ -3781,8 +3799,9 @@ function renderPlay(){
           <button id="btn-continue">${STATE.pendingAdvance === 'FINISHED' ? 'View epilogue' : 'Continue to next chapter'}</button>
         </div>
       ` : `
+        ${combatPanelHtml()}${checkPromptsHtml()}
         <div class="input-row">
-          <textarea id="player-input" placeholder="What does ${escapeHtml(hero.alias)} do?" ${STATE.busy?'disabled':''}></textarea>
+          <textarea id="player-input" placeholder="${STATE.combat ? 'Your action this turn (Round ' + STATE.combat.round + ')' : 'What does ' + escapeHtml(hero.alias) + ' do?'}" ${STATE.busy?'disabled':''}></textarea>
           <button id="btn-send" ${STATE.busy?'disabled':''}>${STATE.busy?'…':'Act'}</button>
         </div>
         ${STATE.busy ? `<div class="thinking">The Game Master is weighing the outcome…</div>` : ''}
@@ -3821,6 +3840,9 @@ function renderPlay(){
   const sendBtn = document.getElementById('btn-send');
   if(sendBtn){
     sendBtn.onclick = ()=> submitAction();
+    const retreatBtn = document.getElementById('btn-retreat');
+    if(retreatBtn) retreatBtn.onclick = ()=>{ document.getElementById('player-input').value = 'I retreat from the fight.'; STATE.retreatNow = true; submitAction(); };
+    document.querySelectorAll('.btn-check').forEach(b => { b.onclick = ()=>{ document.getElementById('player-input').value = 'I check on ' + b.getAttribute('data-name') + ' and stabilize them.'; submitAction(); }; });
     const ta = document.getElementById('player-input');
     ta.addEventListener('keydown', (e)=>{
       if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); submitAction(); }
@@ -3841,6 +3863,7 @@ async function advanceChapter(){
   STATE.log = []; // fresh log for the new chapter; opening narration re-renders from chapter data
   STATE.enemies = {}; // new chapter, new set of threats to track
   STATE.failedTasks = {};
+  STATE.combat = null; STATE.checkPrompts = []; STATE.heroStunned = false;
   if(STATE.chapterId !== 'FINISHED'){
     const nextChapter = currentChapter();
     STATE.busy = true;
@@ -3863,9 +3886,308 @@ async function advanceChapter(){
     if(recNote){ STATE.log.push({who:'gm', text:recNote, mechanics:null}); pushFullLog('gm', recNote, null); }
   }
   try{
-    await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed});
+    await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || []});
   }catch(e){ /* saving is best-effort */ }
   render();
+}
+
+/* ---------- Combat mode ----------
+   Regular play lets the hero chain a few actions per command. When the hero
+   attacks, or is attacked, the game switches to turn-based combat: initiative
+   is rolled once, the hero acts once per round (a round is about 6 seconds),
+   every foe then acts on its own FEAT roll, and one narration covers the
+   whole round. It ends when every foe is down, surrenders or flees, when the
+   hero falls (ORACLE) or when the hero retreats on purpose. */
+const COMBAT_MAX_FOES = 6;
+const AFTEREFFECTS = {
+  blunt:{yellow:'slam', red:'stun'}, edged:{yellow:'stun', red:'kill'}, shooting:{red:'kill'},
+  energy:{red:'kill'}, force:{red:'stun'}, charge:{yellow:'slam', red:'stun'}
+};
+function aftereffectFor(type, color){ return (AFTEREFFECTS[type] || {})[color] || null; }
+const WEAPON_ACTION = {
+  'unarmed strike':'blunt', 'club or blunt object':'blunt', 'knife or blade':'edged', 'light pistol':'shooting',
+  'heavy pistol or revolver':'shooting', 'submachine gun':'shooting', 'rifle':'shooting', 'shotgun (close range)':'shooting',
+  'machine gun':'shooting', 'grenade or explosive':'energy', 'rocket or heavy launcher':'energy'
+};
+function rollD10(){ return Math.floor(Math.random() * 10) + 1; }
+function foeStatus(e){ return e.status || 'active'; }
+function conditionWord(e){
+  const pct = e.maxHealth ? e.currentHealth / e.maxHealth : 1;
+  return pct > 0.75 ? 'Unhurt' : pct > 0.5 ? 'Hurt' : pct > 0.25 ? 'Badly hurt' : 'Barely standing';
+}
+function enemyKey(e){ return Object.keys(STATE.enemies || {}).find(k => STATE.enemies[k] === e); }
+function activeFoes(){
+  const c = STATE.combat;
+  if(!c) return [];
+  return c.order.map(o => STATE.enemies[o.key]).filter(e => e && foeStatus(e) === 'active');
+}
+function foeAttackProfile(enemy){
+  const powers = (enemy.powers || []).filter(p => isAttackPower(enemy, p));
+  if(enemy.weapon && WEAPON_DAMAGE_RANK[enemy.weapon]){
+    const type = WEAPON_ACTION[enemy.weapon] || 'blunt';
+    const rollStat = type === 'shooting' ? 'Agility' : 'Fighting Ability';
+    return { name: enemy.weapon, type, rollRank: rankNumberForName(enemy.stats[rollStat]), damageRank: rankNumberForName(WEAPON_DAMAGE_RANK[enemy.weapon]) };
+  }
+  if(powers.length){
+    const p = powers.slice().sort((a, b) => rankNumberForName(b.rank) - rankNumberForName(a.rank))[0];
+    const n = String(p.name).toLowerCase();
+    const type = /(baton|blade|knife|claw|sword|fang|talon|stinger)/.test(n) ? 'edged'
+      : /(pistol|gun|rifle|shot|sniper|bullet)/.test(n) ? 'shooting'
+      : /(blow|crush|quake|punch|smash|fist|slam)/.test(n) ? 'blunt' : 'energy';
+    const r = rankNumberForName(p.rank);
+    return { name: p.name, type, rollRank: r, damageRank: r };
+  }
+  return { name: 'a heavy blow', type: 'blunt', rollRank: rankNumberForName(enemy.stats['Fighting Ability']), damageRank: rankNumberForName(enemy.stats['Strength']) };
+}
+function resolveFoeTurn(enemy, shift){
+  const prof = foeAttackProfile(enemy);
+  const feat = resolveFeat(prof.rollRank, shift || 0);
+  const damage = damageForAttack(prof.damageRank, feat.color);
+  return { kind:'attack', name: enemy.name, attack: prof.name, type: prof.type, roll: feat.roll, color: feat.color,
+           label: actionLabel(prof.type, feat.color), damage, after: damage > 0 ? aftereffectFor(prof.type, feat.color) : null };
+}
+/* An ordinary foe surrenders once it is clearly overmatched. Named villains
+   never do unless their sheet says "surrenders". */
+function foeSurrenders(enemy, activeCount){
+  const sheet = namedEnemyFor(enemy.name);
+  if(sheet && sheet.surrenders !== true) return false;
+  const pct = enemy.maxHealth ? enemy.currentHealth / enemy.maxHealth : 1;
+  return pct <= 0.3 || (activeCount <= 1 && pct <= 0.5);
+}
+function matchCombatFoe(label, mustPick){
+  const act = activeFoes();
+  if(!act.length) return label;
+  const raw = String(label || '').trim().toLowerCase();
+  let m = raw && act.find(e => String(e.name).toLowerCase() === raw);
+  if(!m && raw) m = act.find(e => String(e.name).toLowerCase().includes(raw) || raw.includes(String(e.name).toLowerCase()));
+  if(!m && raw){ const n = normalizeEnemyLabel(raw); if(n) m = act.find(e => normalizeEnemyLabel(e.name) === n); }
+  if(!m && mustPick) m = act[0];
+  return m ? m.name : label;
+}
+/* Applies the table's after-effects of a hero's hit to the foe it struck. */
+function applyHitAftereffects(mechanics){
+  if(!mechanics) return;
+  const list = mechanics.steps ? mechanics.steps.filter(s => s.m).map(s => s.m) : [mechanics];
+  const lastCh = (() => { const cs = currentAdventureChapters(); return cs.length ? cs[cs.length-1].id : null; })();
+  for(const m of list){
+    const er = m.enemyResult;
+    if(!er) continue;
+    const key = Object.keys(STATE.enemies).find(k => STATE.enemies[k].name === er.name);
+    const e = key && STATE.enemies[key];
+    if(!e) continue;
+    const sheet = namedEnemyFor(e.name) || {};
+    const after = er.damage > 0 ? aftereffectFor(m.actionType, m.color) : null;
+    if(after === 'kill' && e.currentHealth > 0){ e.currentHealth = 0; er.currentHealth = 0; er.knockedOut = !sheet.staggerOnly; er.staggered = !!sheet.staggerOnly; }
+    if(e.currentHealth <= 0){
+      if(sheet.staggerOnly){ e.staggerSkip = true; er.staggered = true; er.knockedOut = false; }
+      else if(sheet.escapesBeforeFinal && STATE.chapterId !== lastCh){ e.status = 'escaped'; er.escaped = true; er.knockedOut = false; }
+      else {
+        e.status = 'down';
+        if(after === 'kill' && !sheet.nonLethal){
+          e.seriousWound = true; er.seriousWound = true;
+          STATE.checkPrompts = STATE.checkPrompts || [];
+          if(!STATE.checkPrompts.includes(e.name)) STATE.checkPrompts.push(e.name);
+        }
+      }
+    } else if(after === 'stun'){ e.stunned = true; er.stunned = true; }
+  }
+}
+async function callCombatSetup(hero, chapter, log){
+  const recent = log.slice(-8).map(e => `${e.who==='player'?'Player':'GM'}: ${e.text}`).join('\n');
+  const prompt = `You are setting up a combat encounter in a MARVEL SUPER HEROES (FASERIP) tabletop game. List every opponent now actively fighting the hero in the latest scene (never bystanders, allies, or foes already clearly beaten). Respond with ONLY a raw JSON object, no markdown.
+
+HERO: ${hero.alias}
+CURRENT SCENE: ${chapter.title} — ${String(chapter.gmInstructions).slice(0,500)}
+RECENT LOG:
+${recent}
+
+For each foe give: "name" (a short unique label; for several ordinary foes of one kind use "thug #1", "thug #2" and so on, up to 12 foes), "tier" ("civilian", "trained" or "super" — "super" ONLY for named supervillains and powered threats), "weapon" (one of ${WEAPON_KEYS.map(k => '"'+k+'"').join(', ')} or null), "stats" (only for tier super: all seven abilities as rank names from ${RANK_ORDER.join(', ')}) and "powers" (only for tier super: 1-3 {"name":"...","rank":"..."}).
+
+${namedEnemiesPromptText(STATE.adventureId, log)}Return exactly: {"foes":[{"name":"...","tier":"...","weapon":"..."|null,"stats":{...}|null,"powers":[...]}]}`;
+  const response = await fetchGeminiWithFallback({
+    contents: [{ role:'user', parts:[{text: prompt}] }],
+    generationConfig: { temperature: 0.2, maxOutputTokens: 900 }
+  });
+  if(!response.ok) throw new Error('Combat setup failed (' + response.status + ')');
+  const data = await response.json();
+  let text = (data.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '').replace(/```json|```/g, '').trim();
+  const parsed = JSON.parse(text);
+  const foes = Array.isArray(parsed.foes) ? parsed.foes.slice(0, 12) : [];
+  return foes.filter(f => f && typeof f.name === 'string' && f.name.trim()).map(f => ({
+    name: f.name.trim(),
+    tier: ['civilian','trained','super'].includes(f.tier) ? f.tier : 'civilian',
+    weapon: WEAPON_KEYS.includes(f.weapon) ? f.weapon : null,
+    stats: (f.tier === 'super' && f.stats && typeof f.stats === 'object') ? STAT_NAMES.reduce((o, s) => { o[s] = RANK_ORDER.includes(f.stats[s]) ? f.stats[s] : 'Good'; return o; }, {}) : null,
+    powers: (f.tier === 'super' && Array.isArray(f.powers)) ? f.powers.filter(p => p && p.name).slice(0,3).map(p => ({ name: String(p.name), rank: RANK_ORDER.includes(p.rank) ? p.rank : 'Good' })) : []
+  }));
+}
+function foeLinesText(){
+  return activeFoes().map(e => `${e.name}: ${conditionWord(e)}${e.stunned ? ' (stunned)' : ''}${e.staggerSkip ? ' (staggered)' : ''}`).join('; ');
+}
+function pushCombatNote(text){
+  STATE.log.push({ who:'gm', text, mechanics:null });
+  pushFullLog('gm', text, null);
+}
+async function startCombat(hero, chapter, log){
+  if(STATE.combat) return false;
+  let foes = [];
+  try{ foes = await callCombatSetup(hero, chapter, log); }catch(e){ foes = []; }
+  let list = [];
+  for(const f of foes){
+    const e = getOrCreateEnemy(f.name, { tier: f.tier, stats: f.stats, powers: f.powers });
+    if(f.weapon && !e.weapon) e.weapon = f.weapon;
+    if(e.currentHealth > 0 && ['active', 'queued', undefined].includes(e.status) && !list.includes(e)) list.push(e);
+  }
+  if(!list.length){
+    list = Object.values(STATE.enemies).filter(e => e.currentHealth > 0 && ['active', 'queued', undefined].includes(e.status));
+  }
+  if(!list.length) return false;
+  const active = list.slice(0, COMBAT_MAX_FOES), queue = list.slice(COMBAT_MAX_FOES);
+  const heroInit = rollD10() + ((hero.stats && hero.stats.Intuition) || 0);
+  const order = active.map(e => { e.status = 'active'; e.stunned = false; return { key: enemyKey(e), init: rollD10() + rankNumberForName(e.stats.Intuition) }; });
+  order.sort((a, b) => b.init - a.init);
+  queue.forEach(e => { e.status = 'queued'; });
+  STATE.combat = { round: 1, heroInit, order, queue: queue.map(enemyKey) };
+  pushCombatNote(`Combat begins — Round 1. ${foeLinesText()}.`);
+  return true;
+}
+function endCombat(reason){
+  if(!STATE.combat) return;
+  STATE.combat = null;
+  if(reason) pushCombatNote(reason);
+}
+/* One full round: foes ahead of the hero in initiative, the hero's single
+   action, then the remaining foes. Returns what the narrator must show. */
+async function resolveCombatRound(hero, chapter, text){
+  const c = STATE.combat;
+  const events = [];
+  let mechanics = null, retreated = false, ended = null;
+  let postShift = 0;
+  const lastCh = (() => { const cs = currentAdventureChapters(); return cs.length ? cs[cs.length-1].id : null; })();
+  const runFoe = (o, shift) => {
+    const e = STATE.enemies[o.key];
+    if(!e || foeStatus(e) !== 'active' || STATE.currentHealth <= 0) return;
+    if(e.staggerSkip){ events.push({ kind:'staggered', name: e.name }); e.staggerSkip = false; e.currentHealth = Math.ceil(e.maxHealth / 2); return; }
+    if(e.stunned){ events.push({ kind:'stunned', name: e.name }); e.stunned = false; return; }
+    if(foeSurrenders(e, activeFoes().length)){ e.status = 'surrendered'; events.push({ kind:'surrender', name: e.name }); return; }
+    const r = resolveFoeTurn(e, shift);
+    if(r.damage > 0){
+      if(r.after === 'kill'){ STATE.currentHealth = 0; r.devastating = true; }
+      else STATE.currentHealth = Math.max(0, STATE.currentHealth - r.damage);
+      if(r.after === 'stun') STATE.heroStunned = true;
+    }
+    events.push(r);
+  };
+  const pre = c.order.filter(o => o.init > c.heroInit);
+  const post = c.order.filter(o => !(o.init > c.heroInit));
+  pre.forEach(o => runFoe(o, 0));
+  if(STATE.currentHealth > 0){
+    const regen = getPowerRank(hero, 'Regeneration') || 0;
+    if(regen > 0 && STATE.currentHealth < maxHealth(hero)){
+      const gain = Math.min(regen, maxHealth(hero) - STATE.currentHealth);
+      STATE.currentHealth += gain;
+      events.push({ kind:'regen', amount: gain });
+    }
+    if(STATE.retreatNow){
+      retreated = true;
+    } else {
+      const list = await classifyAction(hero, chapter, STATE.log.slice(0, -1), text, { combat: true, foes: activeFoes().map(e => e.name) });
+      const c0 = list[0];
+      if(c0.retreats){ retreated = true; }
+      else {
+        c0.heroIsTarget = false;
+        if(c0.enemyName || c0.targetsEnemy) c0.enemyName = matchCombatFoe(c0.enemyName, c0.targetsEnemy);
+        if(STATE.heroStunned){ c0.columnShift = Math.max(-4, (c0.columnShift || 0) - 2); events.push({ kind:'dazed' }); STATE.heroStunned = false; }
+        mechanics = resolveOne(hero, chapter, c0);
+        if(mechanics){
+          applyHitAftereffects(mechanics);
+          if(mechanics.color !== 'white'){
+            if(mechanics.actionType === 'dodge') postShift = -2 * ({green:1, yellow:2, red:3}[mechanics.color] || 0);
+            else if(mechanics.actionType === 'evade') postShift = -4;
+          }
+        }
+      }
+    }
+    events.push({ kind:'hero' });
+  } else {
+    events.push({ kind:'hero-down-first' });
+  }
+  STATE.retreatNow = false;
+  if(retreated){
+    events.push({ kind:'retreat' });
+  } else {
+    post.forEach(o => runFoe(o, postShift));
+  }
+  // New foes step in as others fall.
+  const joined = [];
+  while(c.queue.length && activeFoes().length < COMBAT_MAX_FOES){
+    const k = c.queue.shift(); const e = STATE.enemies[k];
+    if(!e || e.currentHealth <= 0) continue;
+    e.status = 'active'; e.stunned = false;
+    c.order.push({ key: k, init: rollD10() + rankNumberForName(e.stats.Intuition) });
+    joined.push(e.name);
+    events.push({ kind:'join', name: e.name });
+  }
+  if(retreated) ended = 'retreat';
+  else if(STATE.currentHealth <= 0) ended = 'hero-down';
+  else if(!activeFoes().length && !c.queue.length) ended = 'victory';
+  c.round += 1;
+  return { mechanics, events, retreated, ended, round: c.round - 1 };
+}
+function combatBlockText(cr){
+  const lines = cr.events.map(ev => {
+    switch(ev.kind){
+      case 'attack': return `${ev.name} attacks with ${ev.attack}: ${ev.label} (${ev.color.toUpperCase()}). ${ev.damage > 0 ? 'It HITS the hero.' : 'It MISSES.'}${ev.devastating ? ' This is a DEVASTATING blow: the hero is gravely wounded and goes down.' : ev.after === 'stun' ? ' The hero is left reeling and dazed.' : ev.after === 'slam' ? ' The hero is knocked back or down.' : ''}`;
+      case 'stunned': return `${ev.name} is stunned and loses their turn.`;
+      case 'staggered': return `${ev.name} is staggered and loses their turn, then pulls himself together.`;
+      case 'surrender': return `${ev.name} sees they are hopelessly beaten and SURRENDERS (drops their weapon or raises their hands). Narrate a clear surrender beat; the fight with them is over. Do NOT end the chapter just because of this.`;
+      case 'regen': return `The hero's Regeneration knits their wounds at the start of their turn (a quick visible recovery).`;
+      case 'dazed': return `The hero is still dazed from the last blow (this action is harder).`;
+      case 'hero': return `HERO ACTION: the hero's one action this round (its resolved result is given above — match it exactly).`;
+      case 'hero-down-first': return `The hero was struck down before they could act.`;
+      case 'retreat': return `The hero breaks off and RETREATS from the fight on purpose. No foe gets a parting attack and the foes stay where they are.`;
+      case 'join': return `${ev.name} joins the fight.`;
+      default: return '';
+    }
+  }).filter(Boolean).map((t, i) => `${i + 1}. ${t}`).join('\n');
+  return `
+
+COMBAT ROUND ${cr.round} (a round is about six seconds). Narrate the whole round as ONE flowing scene, in exactly this order. These results are FIXED: match them exactly, invent no extra hits, damage, escapes or defeats, and never mention dice, colors, ranks or numbers.
+${lines}
+After this round the foes still in the fight: ${foeLinesText() || 'none'}.`;
+}
+function woundedBlockText(){
+  return (STATE.checkPrompts || []).length ? `\nGRAVELY WOUNDED (alive): ${STATE.checkPrompts.join(', ')}. A Kill result is a serious wound, never a death. Show them down and badly hurt but alive; the hero should be given the chance to check on them. Unless the hero tends to them, a responder or ORACLE will stabilize them later.` : '';
+}
+function mechanicsStartCombat(m){
+  if(!m) return false;
+  const list = m.steps ? m.steps.filter(x => x.m).map(x => x.m) : [m];
+  return list.some(x => x.enemyResult || (x.heroIsTarget && x.enemyName));
+}
+function applyHeroKill(m){
+  if(!m) return false;
+  const list = m.steps ? m.steps.filter(x => x.m).map(x => x.m) : [m];
+  let hit = false;
+  for(const x of list){
+    if(x.heroIsTarget && x.damage > 0 && aftereffectFor(x.actionType, x.color) === 'kill'){ hit = true; }
+  }
+  if(hit) STATE.currentHealth = 0;
+  return hit;
+}
+function combatPanelHtml(){
+  const c = STATE.combat;
+  if(!c) return '';
+  const foes = activeFoes();
+  const rows = foes.map(e => {
+    const pct = e.maxHealth ? Math.max(0, Math.min(100, Math.round(e.currentHealth / e.maxHealth * 100))) : 0;
+    return `<div class="foe-row"><span class="foe-name">${escapeHtml(e.name)}</span><span class="foe-bar"><i style="width:${pct}%"></i></span><span class="foe-cond">${escapeHtml(conditionWord(e))}${e.stunned ? ' · Stunned' : ''}${e.staggerSkip ? ' · Staggered' : ''}</span></div>`;
+  }).join('');
+  return `<div class="combat-panel"><div class="combat-head"><strong>COMBAT — Round ${c.round}</strong> <span class="combat-sub">one action per turn</span></div>${rows}${c.queue.length ? `<div class="combat-sub">${c.queue.length} more foe${c.queue.length > 1 ? 's' : ''} waiting to join</div>` : ''}<div style="margin-top:8px;"><button id="btn-retreat" class="secondary" ${STATE.busy ? 'disabled' : ''}>Retreat</button></div></div>`;
+}
+function checkPromptsHtml(){
+  const names = STATE.checkPrompts || [];
+  if(!names.length) return '';
+  return `<div class="combat-panel check-panel">${names.map(n => `<button class="btn-check secondary" data-name="${escapeHtml(n)}" ${STATE.busy ? 'disabled' : ''}>Check on ${escapeHtml(n)}</button>`).join(' ')}<div class="combat-sub">They are gravely wounded. You can see to them.</div></div>`;
 }
 
 async function submitAction(){
@@ -3882,24 +4204,42 @@ async function submitAction(){
   const chapter = currentChapter();
 
   try{
-    let mechanics = null;
-    try{
-      mechanics = await resolveMechanics(hero, chapter, STATE.log.slice(0,-1), text);
-    }catch(e){
-      // Classifier hiccups shouldn't block the story — fall back to no roll.
-      mechanics = null;
+    let mechanics = null, extraBlock = '', cr = null, devastating = false;
+    let checkedName = null;
+    if((STATE.checkPrompts || []).length && /(check|stabili|tend|treat|heal|aid)/i.test(text)){
+      const low = text.toLowerCase();
+      checkedName = STATE.checkPrompts.find(n => low.includes(String(n).toLowerCase())) || null;
+      if(checkedName) STATE.checkPrompts = STATE.checkPrompts.filter(n => n !== checkedName);
     }
-
-    if(mechanics && mechanics.damage){
-      STATE.currentHealth = Math.max(0, STATE.currentHealth - mechanics.damage);
+    if(STATE.combat){
+      cr = await resolveCombatRound(hero, chapter, text);
+      mechanics = cr.mechanics;
+      extraBlock = combatBlockText(cr);
+    } else {
+      try{
+        mechanics = await resolveMechanics(hero, chapter, STATE.log.slice(0,-1), text);
+      }catch(e){
+        // Classifier hiccups shouldn't block the story — fall back to no roll.
+        mechanics = null;
+      }
+      applyHitAftereffects(mechanics);
+      if(mechanics && mechanics.damage){
+        STATE.currentHealth = Math.max(0, STATE.currentHealth - mechanics.damage);
+      }
+      devastating = applyHeroKill(mechanics);
+      if(devastating) extraBlock += '\nA foe has landed a DEVASTATING blow: the hero is gravely wounded and goes down.';
     }
+    if(checkedName) extraBlock += `\nThe hero is checking on ${checkedName}: they are stabilized, alive but unconscious, and will recover.`;
+    extraBlock += woundedBlockText();
 
     const healthPct = STATE.currentHealth / maxHealth(hero);
     const healthContext = healthPct <= 0.25 ? 'Badly hurt, running on fumes.' : healthPct <= 0.5 ? 'Taken real damage, feeling it.' : null;
-    const reply = await callGM(hero, chapter, STATE.log.slice(0,-1), text, mechanics, healthContext);
+    const reply = await callGM(hero, chapter, STATE.log.slice(0,-1), text, mechanics, healthContext, extraBlock);
     let cleaned = reply;
     const timeSeconds = parseTimeTag(cleaned);
     cleaned = cleaned.replace(/\[TIME:[^\]]*\]/gi, '').trim();
+    const wantsCombatTag = /\[COMBAT\]/i.test(cleaned);
+    cleaned = cleaned.replace(/\[COMBAT\]/gi, '').trim();
     let complete = false;
     if(cleaned.includes('[CHAPTER_COMPLETE]')){
       complete = true;
@@ -3909,7 +4249,17 @@ async function submitAction(){
     STATE.log.push(gmEntry);
     pushFullLog('gm', cleaned, mechanics);
     generateEntryImage(gmEntry, cleaned, hero);
-    if(timeSeconds && !(mechanics && mechanics.heroIsTarget)){
+    if(cr){
+      const surrendered = cr.events.some(ev => ev.kind === 'surrender');
+      const reg = cr.events.find(ev => ev.kind === 'regen');
+      if(reg) pushCombatNote(`Regeneration: +${reg.amount} HP.`);
+      if(cr.ended === 'victory') endCombat('Combat ends — no foes are left standing.');
+      else if(cr.ended === 'retreat') endCombat('You break off and retreat. The foes remain.');
+      else if(cr.ended === 'hero-down') endCombat(null);
+      else if(STATE.combat) pushCombatNote(`Round ${STATE.combat.round} — ${foeLinesText()}.`);
+      if(complete && (STATE.combat || surrendered)) complete = false;
+    }
+    if(timeSeconds && !STATE.combat && !(mechanics && mechanics.heroIsTarget)){
       const note = applyRecovery(hero, timeSeconds);
       if(note){ STATE.log.push({who:'gm', text:note, mechanics:null}); pushFullLog('gm', note, null); }
     }
@@ -3928,6 +4278,7 @@ async function submitAction(){
       pushFullLog('gm', windText, null);
       generateEntryImage(windEntry, windText, hero);
       STATE.currentHealth = Math.ceil(maxHealth(hero)/2);
+      STATE.combat = null; STATE.heroStunned = false;
     } else if(knockedOut){
       // The hero went down before finishing the chapter's own objectives —
       // ORACLE steps in. This forces the chapter complete regardless of
@@ -3951,6 +4302,11 @@ async function submitAction(){
       // ORACLE patches the hero up enough to continue the story; Health
       // resets to half of max going into the next chapter rather than 0.
       STATE.currentHealth = Math.ceil(maxHealth(hero)/2);
+      STATE.combat = null; STATE.heroStunned = false;
+    }
+
+    if(!STATE.combat && !complete && !knockedOut && STATE.currentHealth > 0 && (wantsCombatTag || mechanicsStartCombat(mechanics))){
+      await startCombat(hero, chapter, STATE.log);
     }
 
     if(complete){
@@ -3961,10 +4317,11 @@ async function submitAction(){
       STATE.pendingAdvance = next ? next.id : 'FINISHED';
     }
 
-    await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: STATE.pendingAdvance, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed});
+    await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: STATE.pendingAdvance, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || []});
   }catch(e){
     STATE.error = 'The signal dropped: ' + e.message + '. Try again.';
   }finally{
+    STATE.retreatNow = false;
     STATE.busy = false;
     render();
   }

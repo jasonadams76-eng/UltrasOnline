@@ -431,7 +431,8 @@
    "Finance"
   ],
   "note": "Not a fighter: talks, bribes, stalls and destroys evidence rather than physically resisting. Flees if he can.",
-  "health": 22
+  "health": 22,
+  "surrenders": true
  },
  {
   "id": "nathaniel_mercer",
@@ -469,7 +470,8 @@
   ],
   "note": "Brilliant, idealistic, obsessive; argues and stalls rather than fights. He may attack the hero with the Stun Injector, but he remains an ordinary human. The hero should be able to end the threat without severely injuring him; if he goes down he is subdued, restrained or disarmed, never badly hurt. The control system is a story device, not an attack.",
   "nonLethal": true,
-  "health": 28
+  "health": 28,
+  "surrenders": true
  },
  {
   "id": "project_director",
@@ -497,7 +499,8 @@
   ],
   "note": "An ordinary scientist who believes the project can still be controlled; argues and obstructs, not a fighter. Not a recurring villain. If force is used he is subdued or restrained, never badly hurt.",
   "nonLethal": true,
-  "health": 24
+  "health": 24,
+  "surrenders": true
  },
  {
   "id": "the_hunter",
