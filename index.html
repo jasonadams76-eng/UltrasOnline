@@ -799,29 +799,37 @@ function foeArmor(enemy){
 }
 /* One hit through armor. armor may be null. Returns damage after armor,
    the after-effect that still applies, and whether the armor cracks. */
-function armorOutcome(armor, rawDamage, type, color, mental){
+function armorOutcome(armor, rawDamage, type, color, mental, resist){
   if(!(rawDamage > 0)) return { damage: 0, absorbed: 0, cracked: false, after: null };
   let after = aftereffectFor(type, color);
-  if(!armor || !armor.active || !(armor.rank > 0) || mental) return { damage: rawDamage, absorbed: 0, cracked: false, after };
-  const damage = Math.max(0, rawDamage - armor.rank);
+  const aRank = (armor && armor.active && armor.rank > 0 && !mental) ? armor.rank : 0;
+  const rRank = resist > 0 ? resist : 0;
+  const red = Math.max(aRank, rRank);
+  if(!red) return { damage: rawDamage, absorbed: 0, cracked: false, after };
+  const damage = Math.max(0, rawDamage - red);
   if(damage === 0 && after !== 'slam') after = null;
-  const gap = colIdxForNumber(rawDamage) - colIdxForNumber(armor.rank);
-  const cracked = (type === 'edged' && (color === 'yellow' || color === 'red')) || (gap >= 2 && color === 'red');
-  return { damage, absorbed: rawDamage - damage, cracked, after };
+  let cracked = false;
+  if(aRank >= rRank){
+    const gap = colIdxForNumber(rawDamage) - colIdxForNumber(aRank);
+    cracked = (type === 'edged' && (color === 'yellow' || color === 'red')) || (gap >= 2 && color === 'red');
+  }
+  return { damage, absorbed: rawDamage - damage, cracked, after, resisted: rRank > aRank };
 }
 function armorHitNote(subject, armorName, ao, rankAfter){
   if(!ao || !(ao.absorbed > 0 || ao.cracked)) return '';
+  const kind = ao.resisted ? 'resistance' : 'armor';
   let t = '';
-  if(ao.absorbed > 0 && ao.damage === 0) t += `${subject}'s armor (${armorName}) completely stopped the blow: no wound at all${ao.after === 'slam' ? ', though the force still throws them back or off their feet' : ''}.`;
-  else if(ao.absorbed > 0) t += `${subject}'s armor (${armorName}) soaked up most of the blow, so only a lighter injury got through.`;
+  if(ao.absorbed > 0 && ao.damage === 0) t += `${subject}'s ${kind} (${armorName}) completely stopped the blow: no wound at all${ao.after === 'slam' ? ', though the force still throws them back or off their feet' : ''}.`;
+  else if(ao.absorbed > 0) t += `${subject}'s ${kind} (${armorName}) soaked up most of the blow, so only a lighter injury got through.`;
   if(ao.cracked) t += ` The armor cracks and gives way a little under the hit${rankAfter === 0 ? ' and is destroyed entirely' : ', and is weaker from now on'}.`;
   return t.trim();
 }
 /* Runs a hit against the hero (side 'hero') or an enemy through armor,
    records any armor loss, and returns the outcome plus narrator text. */
-function armorHit(side, hero, enemy, rawDamage, type, color, powerName){
+function armorHit(side, hero, enemy, rawDamage, type, color, powerName, source){
   const armor = side === 'hero' ? heroArmorNow(hero) : foeArmor(enemy);
-  const ao = armorOutcome(armor, rawDamage, type, color, isMentalName(powerName));
+  const res = resistFor(side === 'hero' ? heroResists(hero) : foeResists(enemy), source);
+  const ao = armorOutcome(armor, rawDamage, type, color, isMentalName(powerName), res.rank);
   let rankAfter = armor ? armor.rank : 0;
   if(ao.cracked && armor){
     const cap = colIdxForNumber(armor.base);
@@ -829,8 +837,39 @@ function armorHit(side, hero, enemy, rawDamage, type, color, powerName){
     else enemy.armorLost = Math.min(cap, (enemy.armorLost || 0) + 1);
     rankAfter = armorRankNumber(armor.base, armor.lost + 1);
   }
-  ao.text = armor ? armorHitNote(side === 'hero' ? 'The hero' : enemy.name, shortArmorName(armor.name), ao, rankAfter) : '';
+  const who = side === 'hero' ? 'The hero' : enemy.name;
+  ao.text = ao.resisted ? armorHitNote(who, res.name, ao, 0) : (armor ? armorHitNote(who, shortArmorName(armor.name), ao, rankAfter) : '');
   return ao;
+}
+/* ---------- Resistance powers ----------
+   "Resistance to X" works like armor against one kind of source only: it cuts
+   damage from that source by its rank number, never degrades, and is always on. */
+function sourceOf(name, heroId){
+  const n = String(name || '').toLowerCase();
+  if(heroId && HERO_POWER_SOURCES[heroId] && HERO_POWER_SOURCES[heroId][n]) return HERO_POWER_SOURCES[heroId][n];
+  if(/\b(electri\w*|lightning|taser|thunder\w*|volts?)\b/.test(n)) return 'electric';
+  if(/\b(fire\w*|flames?|heat|burn\w*|inferno|incendiary)\b/.test(n)) return 'fire';
+  if(/\b(frost\w*|ice|cold|freez\w*|chill\w*|cryo\w*|blizzard)\b/.test(n)) return 'cold';
+  return null;
+}
+const HERO_POWER_SOURCES = { premade_thunderbolt: { 'energy generation - energy arrows': 'electric' } };
+function isResistPower(p){ return !!p && /^resistance to /i.test(String(typeof p === 'string' ? p : p.name)); }
+function resistList(powers, rankOf){
+  return (powers || []).filter(isResistPower).map(p => ({ name: powerName(p), source: sourceOf(powerName(p).replace(/^resistance to /i, '')), rank: rankOf(p) })).filter(r => r.source && r.rank > 0);
+}
+function heroResists(hero){ return resistList(hero && hero.powers, p => typeof p === 'string' ? 0 : p.rank); }
+function foeResists(enemy){ return resistList(enemy && enemy.powers, p => rankNumberForName(p.rank)); }
+function resistFor(list, source){
+  const m = source ? list.filter(r => r.source === source).sort((a, b) => b.rank - a.rank)[0] : null;
+  return m ? { rank: m.rank, name: m.name } : { rank: 0, name: null };
+}
+function resistHudText(hero){
+  const l = heroResists(hero);
+  return l.length ? l.map(r => 'Resists ' + r.name.replace(/^resistance to /i, '') + ' ' + r.rank).join(' · ') : '';
+}
+function resistNarratorText(hero){
+  const l = heroResists(hero);
+  return l.length ? '\nRESISTANCE (never state numbers): ' + l.map(r => `The hero shrugs off ${r.name.replace(/^resistance to /i, '').toLowerCase()} attacks: they do little or nothing to him, though other kinds of attack hurt normally.`).join(' ') : '';
 }
 function armorHudText(hero){
   const a = heroArmorNow(hero);
@@ -949,7 +988,7 @@ function enemyMaxHealth(statRanks){
 const ENEMY_FALLBACK = [{
   id:'warden_ash', name:'Warden Ash', aliases:['ash','the warden'], adventures:['meridian'], escapesBeforeFinal:true,
   stats:{ 'Fighting Ability':'Excellent', Agility:'Excellent', Strength:'Good', Endurance:'Excellent', Reason:'Remarkable', Intuition:'Excellent', Psyche:'Excellent' },
-  powers:[ {name:'Ceramic Plate Armor', rank:'Excellent', armor:true}, {name:'Arc Baton', rank:'Excellent', attack:true}, {name:'Signal Jammer', rank:'Good'}, {name:'Remote Charges', rank:'Incredible'} ],
+  powers:[ {name:'Ceramic Plate Armor', rank:'Excellent', armor:true}, {name:'Arc Baton', rank:'Excellent', attack:true, source:'electric'}, {name:'Signal Jammer', rank:'Good'}, {name:'Remote Charges', rank:'Incredible'} ],
   note:'Only the Arc Baton is used to attack. The Remote Charges are the substation explosives (a story device, never swung at the hero), the Signal Jammer only disrupts radios and phones, and the Ceramic Plate Armor is purely defensive.'
 }];
 let NAMED_ENEMIES = {};
@@ -1464,7 +1503,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-11.11';
+const APP_VERSION = '2026-11-11.12';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -2364,7 +2403,9 @@ function resolveOne(hero, chapter, classification){
       attackerRankNumber = rankNumberForName(meleeStat);
     }
     const rawDamage = damageForAttack(attackerRankNumber, feat.color);
-    const ao = armorHit('hero', hero, null, rawDamage, classification.actionType, feat.color, classification.enemyPowerUsed);
+    const foePow = enemy && classification.enemyPowerUsed ? (enemy.powers || []).find(pp => String(pp.name).toLowerCase() === String(classification.enemyPowerUsed).toLowerCase()) : null;
+    const foeSource = foePow ? (foePow.source || sourceOf(foePow.name)) : sourceOf(classification.enemyPowerUsed);
+    const ao = armorHit('hero', hero, null, rawDamage, foeSource && classification.actionType === 'edged' ? 'energy' : classification.actionType, feat.color, classification.enemyPowerUsed, foeSource);
     damage = ao.damage; heroAfter = ao.after; heroArmorInfo = ao;
   }
 
@@ -2373,7 +2414,7 @@ function resolveOne(hero, chapter, classification){
   let enemyResult = null;
   if(isCombatType && isHarmfulColor && classification.targetsEnemy && enemy){
     const rawEnemyDamage = damageForAttack(heroDamageRank(hero, usedPower, abilityNumber), feat.color);
-    const eao = armorHit('foe', hero, enemy, rawEnemyDamage, classification.actionType, feat.color, classification.powerUsed);
+    const eao = armorHit('foe', hero, enemy, rawEnemyDamage, classification.actionType, feat.color, classification.powerUsed, sourceOf(classification.powerUsed, hero.id));
     const enemyDamage = eao.damage;
     if(enemyDamage > 0) enemy.currentHealth = Math.max(0, enemy.currentHealth - enemyDamage);
     const sheet = namedEnemyFor(enemy.name) || {};
@@ -3919,7 +3960,7 @@ function renderPlay(){
   app.innerHTML = `
     <div class="top-bar">
       <button class="secondary" id="btn-menu">← Roster</button>
-      <div class="mono" style="font-size:0.75rem; color:var(--paper-dim);">${escapeHtml(hero.alias)} · HP ${STATE.currentHealth ?? maxHealth(hero)}/${maxHealth(hero)} · Karma ${STATE.currentKarma ?? maxKarma(hero)}/${maxKarma(hero)}${armorHudText(hero) ? ' · ' + escapeHtml(armorHudText(hero)) : ''}</div>
+      <div class="mono" style="font-size:0.75rem; color:var(--paper-dim);">${escapeHtml(hero.alias)} · HP ${STATE.currentHealth ?? maxHealth(hero)}/${maxHealth(hero)} · Karma ${STATE.currentKarma ?? maxKarma(hero)}/${maxKarma(hero)}${[armorHudText(hero), resistHudText(hero)].filter(Boolean).length ? ' · ' + escapeHtml([armorHudText(hero), resistHudText(hero)].filter(Boolean).join(' · ')) : ''}</div>
       <button class="secondary" id="btn-print" title="Open a print-friendly transcript of the whole adventure so far (use your browser's Print → Save as PDF)">🖨 Print Adventure</button>
     </div>
     <div class="panel">
@@ -4109,11 +4150,12 @@ function foeAttackProfile(enemy){
   if(powers.length){
     const p = powers.slice().sort((a, b) => rankNumberForName(b.rank) - rankNumberForName(a.rank))[0];
     const n = String(p.name).toLowerCase();
-    const type = /(baton|blade|knife|claw|sword|fang|talon|stinger)/.test(n) ? 'edged'
+    const src = p.source || sourceOf(p.name);
+    const type = src ? 'energy' : /(baton|blade|knife|claw|sword|fang|talon|stinger)/.test(n) ? 'edged'
       : /(pistol|gun|rifle|shot|sniper|bullet)/.test(n) ? 'shooting'
       : /(blow|crush|quake|punch|smash|fist|slam)/.test(n) ? 'blunt' : 'energy';
     const r = rankNumberForName(p.rank);
-    return { name: p.name, type, rollRank: r, damageRank: r };
+    return { name: p.name, type, source: src, rollRank: r, damageRank: r };
   }
   return { name: 'a heavy blow', type: 'blunt', rollRank: rankNumberForName(enemy.stats['Fighting Ability']), damageRank: rankNumberForName(enemy.stats['Strength']) };
 }
@@ -4121,7 +4163,7 @@ function resolveFoeTurn(enemy, shift){
   const prof = foeAttackProfile(enemy);
   const feat = resolveFeat(prof.rollRank, shift || 0);
   const raw = damageForAttack(prof.damageRank, feat.color);
-  const ao = armorHit('hero', STATE.activeHero, null, raw, prof.type, feat.color, prof.name);
+  const ao = armorHit('hero', STATE.activeHero, null, raw, prof.type, feat.color, prof.name, prof.source || null);
   return { kind:'attack', name: enemy.name, attack: prof.name, type: prof.type, roll: feat.roll, color: feat.color,
            label: actionLabel(prof.type, feat.color), damage: ao.damage, after: ao.after, armorText: ao.text, armorAbsorbed: ao.absorbed };
 }
@@ -4433,7 +4475,7 @@ async function submitAction(opts){
       devastating = applyHeroKill(mechanics);
       if(devastating) extraBlock += '\nA foe has landed a DEVASTATING blow: the hero is gravely wounded and goes down.';
     }
-    extraBlock += armorNarratorText(hero);
+    extraBlock += armorNarratorText(hero) + resistNarratorText(hero);
     if(checkedName) extraBlock += `\nThe hero is checking on ${checkedName}: they are stabilized, alive but unconscious, and will recover.`;
     extraBlock += woundedBlockText();
 

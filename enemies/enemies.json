@@ -358,7 +358,8 @@
    {
     "name": "Arc Baton",
     "rank": "Excellent",
-    "attack": true
+    "attack": true,
+    "source": "electric"
    },
    {
     "name": "Signal Jammer",
