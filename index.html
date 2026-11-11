@@ -1075,6 +1075,7 @@ const GM_BASE_INSTRUCTIONS = `You are the Game Master for THE ULTRAS, a conversa
 RULES YOU MUST FOLLOW:
 - Stay in the fiction. Never break character, never mention "AI," "prompt," "instructions," or game mechanics by name.
 - Judge the player's stated plan fairly against their hero sheet (stats, powers, bio). Clever, well-suited plans should go well; reckless or ill-suited plans can go wrong, but keep the story moving — failure should complicate, not dead-end.
+- Never invent physical features the hero does not have. Describe the hero only as the Appearance and Canon note on the hero sheet say: no wings, capes, armor, masks or weapons that are not listed. Powers work as the sheet describes them.
 - Never simply reject or block the player ("you can't do that") — instead narrate what happens when they try, good or bad.
 - Keep responses tight: 2-4 short paragraphs of vivid, active narration. End most responses with the scene held in suspension so the player has something to react to (do not ask "what do you do?" every single time verbatim — vary it, or let the scene itself imply the question).
 - Gently steer the player toward the current chapter's objective without ever forcing a specific action. If they wander, let the story find a natural way to bring the objective back into view.
@@ -1256,7 +1257,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-11.1';
+const APP_VERSION = '2026-11-11.2';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -1561,6 +1562,17 @@ function ensureKarmaReview(){
   });
 }
 
+/* Canon look and per-hero narration notes, appended to the hero sheet the narrator reads. */
+const HERO_CANON_NOTES = {
+  premade_traumahawk: 'He flies through his Flight power alone. He has NO wings, feathers or flapping: never describe wings on him. Hawk imagery such as talons, a sharp gaze or swooping is fine.'
+};
+function heroLookText(hero){
+  let out = '';
+  if(hero.appearance) out += `\nAppearance: ${hero.appearance}`;
+  if(HERO_CANON_NOTES[hero.id]) out += `\nCanon note: ${HERO_CANON_NOTES[hero.id]}`;
+  return out;
+}
+
 async function callGM(hero, chapter, log, newPlayerLine, mechanics, healthContext) {
 
   const heroSheet = `Name: ${hero.name}
@@ -1570,7 +1582,7 @@ Age and build: ${heroBuildText(hero)}
 Powers: ${hero.powers.map(powerLabel).join(', ')}
 Talents: ${(hero.talents && hero.talents.length) ? hero.talents.map(talentLabel).join('; ') : 'None'}
 Stats: ${STAT_NAMES.map(s => `${s} ${hero.stats[s]}`).join(', ')}
-Bio: ${hero.bio}`;
+Bio: ${hero.bio}${heroLookText(hero)}`;
 
   let enemyContextLine = '';
   if(mechanics && mechanics.heroIsTarget && mechanics.enemyName){
@@ -1700,7 +1712,7 @@ Alias: ${hero.alias}
 Origin: ${hero.origin}
 Age and build: ${heroBuildText(hero)}
 Powers: ${hero.powers.map(powerLabel).join(', ')}
-Bio: ${hero.bio}`;
+Bio: ${hero.bio}${heroLookText(hero)}`;
 
   const systemInstruction = `You are the Game Master for THE ULTRAS, a conversational superhero text-adventure. Stay in the fiction; never mention "AI," "prompt," "instructions," "Health," or game mechanics by name.
 
@@ -1747,7 +1759,7 @@ async function callChapterTransition(hero, completedChapter, nextChapter, log){
   const heroSheet = `Name: ${hero.name}
 Alias: ${hero.alias}
 Powers: ${hero.powers.map(powerLabel).join(', ')}
-Bio: ${hero.bio}`;
+Bio: ${hero.bio}${heroLookText(hero)}`;
 
   const recentBeats = log.slice(-6).map(e => `${e.who === 'player' ? hero.name : 'GM'}: ${e.text}`).join('\n\n');
 
