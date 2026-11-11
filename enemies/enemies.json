@@ -367,7 +367,8 @@
   ],
   "talents": [],
   "note": "Only the Arc Baton is used to attack. The Remote Charges are the substation explosives (a story device, never swung at the hero), the Signal Jammer only disrupts radios and phones, and the Ceramic Plate Armor is purely defensive.",
-  "health": 70
+  "health": 70,
+  "escapesBeforeFinal": true
  },
  {
   "id": "dominic_corvetti",

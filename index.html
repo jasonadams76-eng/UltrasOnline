@@ -790,7 +790,7 @@ function enemyMaxHealth(statRanks){
    so they play the same every run and for every hero. The embedded Warden Ash
    below is only a fallback if the file cannot be loaded. */
 const ENEMY_FALLBACK = [{
-  id:'warden_ash', name:'Warden Ash', aliases:['ash','the warden'], adventures:['meridian'],
+  id:'warden_ash', name:'Warden Ash', aliases:['ash','the warden'], adventures:['meridian'], escapesBeforeFinal:true,
   stats:{ 'Fighting Ability':'Excellent', Agility:'Excellent', Strength:'Good', Endurance:'Excellent', Reason:'Remarkable', Intuition:'Excellent', Psyche:'Excellent' },
   powers:[ {name:'Ceramic Plate Armor', rank:'Excellent'}, {name:'Arc Baton', rank:'Excellent', attack:true}, {name:'Signal Jammer', rank:'Good'}, {name:'Remote Charges', rank:'Incredible'} ],
   note:'Only the Arc Baton is used to attack. The Remote Charges are the substation explosives (a story device, never swung at the hero), the Signal Jammer only disrupts radios and phones, and the Ceramic Plate Armor is purely defensive.'
@@ -1301,7 +1301,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-11.3';
+const APP_VERSION = '2026-11-11.4';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -1657,7 +1657,8 @@ Bio: ${hero.bio}${heroLookText(hero)}`;
   if(mechanics && mechanics.enemyResult){
     const er = mechanics.enemyResult;
     const pct = er.maxHealth ? er.currentHealth/er.maxHealth : 1;
-    const condition = er.staggered ? 'This foe is staggered and reeling, but force alone CANNOT end him: he recovers and keeps coming. He is only ended by destroying the crystals and the gateway that feed him. Do NOT narrate him as defeated, dead or sealed away, and do not end the story because of this.'
+    const condition = er.escaped ? 'This foe is beaten for now but is NOT captured or knocked out: narrate them slipping away wounded (smoke, a jammer burst, a hidden exit, allies covering them) and vowing to finish their plan. They stay alive and free for a later chapter.'
+      : er.staggered ? 'This foe is staggered and reeling, but force alone CANNOT end him: he recovers and keeps coming. He is only ended by destroying the crystals and the gateway that feed him. Do NOT narrate him as defeated, dead or sealed away, and do not end the story because of this.'
       : (er.knockedOut && er.nonLethal) ? 'This foe is down and out of the fight: narrate them subdued, restrained or disarmed. They are an ordinary human, so NEVER describe a severe injury, blood loss or a killing blow.'
       : er.knockedOut ? 'This foe is now beaten — knocked out/down and out of the fight. Narrate them going down for good this exchange.'
       : pct <= 0.25 ? 'This foe is badly battered, barely hanging on.'
@@ -2070,12 +2071,15 @@ async function resolveMechanics(hero, chapter, log, playerLine){
     if(enemyDamage > 0) enemy.currentHealth = Math.max(0, enemy.currentHealth - enemyDamage);
     const sheet = namedEnemyFor(enemy.name) || {};
     const atZero = enemy.currentHealth <= 0;
+    const chs = currentAdventureChapters();
+    const escapes = atZero && !!sheet.escapesBeforeFinal && chs.length && chs[chs.length-1].id !== chapter.id;
     enemyResult = {
       name: enemy.name,
       damage: enemyDamage,
       currentHealth: enemy.currentHealth,
       maxHealth: enemy.maxHealth,
-      knockedOut: atZero && !sheet.staggerOnly,
+      knockedOut: atZero && !sheet.staggerOnly && !escapes,
+      escaped: escapes,
       staggered: atZero && !!sheet.staggerOnly,
       nonLethal: !!sheet.nonLethal
     };
