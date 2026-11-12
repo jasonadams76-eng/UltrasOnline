@@ -1663,7 +1663,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-12.14';
+const APP_VERSION = '2026-11-12.15';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -1780,7 +1780,12 @@ Other Crimes (Stop or Prevent): 15
 Other Crimes (Arrest): 5
 Rescue: 20
 Five or more Rescues (in one adventure): 100
-Defeating Powerful Foe: 30 to 100 (scale to how dangerous the foe was)
+Defeating (or neutralizing) a Foe, by the foe's single highest attribute or power rank number:
+  Rank 30 or below (Remarkable, D-Class villain) = 25 points
+  Rank 31 to 40 (Incredible, C-Class villain) = 50 points
+  Rank 41 to 50 (Amazing, B-Class villain) = 100 points
+  Rank 51 to 75 (Monstrous, A-Class villain) = 125 points
+  Rank 76 or more (Unearthly, S-Class villain) = 150 points
 Personal Commitment (fulfilling a stated personal goal): 5
 Role-Playing (especially in-character, clever, or memorable moments): 10
 Showing Off (using powers flashily/heroically in front of a crowd): 15
@@ -1841,6 +1846,34 @@ const KARMA_TABLE = (()=>{
   });
   return t;
 })();
+/* Foe awards are fixed by the foe's sheet, never chosen by the narrator. */
+const KARMA_FOE_CATEGORY = 'Defeating Foe';
+const KARMA_FOE_TIERS = [
+  { upTo: 30,  name: 'Remarkable', cls: 'D', points: 25 },
+  { upTo: 40,  name: 'Incredible', cls: 'C', points: 50 },
+  { upTo: 50,  name: 'Amazing',    cls: 'B', points: 100 },
+  { upTo: 75,  name: 'Monstrous',  cls: 'A', points: 125 },
+  { upTo: 1e9, name: 'Unearthly',  cls: 'S', points: 150 }
+];
+function foeHighestRank(sheet){
+  let top = 0;
+  Object.values(sheet.stats || {}).forEach(r => { top = Math.max(top, rankNumberForName(r) || 0); });
+  (sheet.powers || []).forEach(pw => { top = Math.max(top, rankNumberForName(pw.rank) || 0); });
+  return top;
+}
+function foeKarmaTier(sheet){ const top = foeHighestRank(sheet); return KARMA_FOE_TIERS.find(t => top <= t.upTo); }
+/* Finds a sheet for a foe by name: a named villain, or (during live play) an invented super foe the game tracked.
+   Ordinary thugs and unnamed foes have no sheet and earn nothing here. */
+function karmaFoeSheet(name){
+  const named = namedEnemyFor(name);
+  if(named && named.stats) return { key: String(named.name).toLowerCase(), name: named.name, sheet: named };
+  const list = Object.values((typeof STATE !== 'undefined' && STATE.enemies) || {});
+  const norm = String(name || '').trim().toLowerCase();
+  const e = list.find(x => String(x.name).toLowerCase() === norm || normalizeEnemyLabel(x.name) === normalizeEnemyLabel(name));
+  if(!e || !e.stats) return null;
+  const ordinary = ['civilian','trained'].some(k => JSON.stringify(NPC_TIER_STATS[k]) === JSON.stringify(e.stats));
+  return ordinary ? null : { key: String(e.name).toLowerCase(), name: e.name, sheet: e };
+}
 const KARMA_CAPS = {'Humor':5, 'Role-Playing':5, 'Showing Off':2};   // most moments that can be rewarded in one story
 const KARMA_MASS_RESCUE = 'Five or more Rescues (in one adventure)';
 const KARMA_MAX_AWARDS = 60;
@@ -1849,7 +1882,7 @@ const KARMA_GUIDE = `HOW TO RECOGNIZE EACH AWARD IN THE STORY (read the whole tr
 - Only count what actually happened in the story: attempts the narration shows failing (including impossible feats) earn nothing.
 - Crimes, Conspiracies and Offenses: the hero stops/prevents the crime or plot before it succeeds ("Stop or Prevent"), or captures/turns in the criminals ("Arrest"). A villain attack on a city, a bomb plot, a heist and a murder are examples.
 - Rescue: the hero protects people from imminent danger: pulling someone out of a fire, shielding a crowd, stopping a villain who was about to destroy a building, a city or a crowd (the people in danger are the ones rescued). Report one "Rescue" event for each separate rescue and give "people_saved", the number of people whose lives were saved (use your best estimate; 1 for one person, 5 or more for a crowd, a building, a city, a hostage group).
-- Defeating Powerful Foe: the hero defeats, captures or drives off a dangerous opponent. Give "points" from 30 to 100 by how dangerous the foe was (a street thug is not a Powerful Foe; a super-powered villain who threatened a city is 70 to 100). THE VOID EMPEROR cannot be beaten in combat: if the hero destroys the crystals / the gateway and so ends him, award Defeating Powerful Foe with 100 points whatever the combat results were; if the hero trapped him instead, award 70; if the crystals were not destroyed or trapped, award nothing for him.
+- Defeating Foe: report one event per NAMED or super-powered opponent whose threat the hero ENDED: knocked out, captured, surrendered, talked down, tricked, trapped or otherwise neutralized, or who fled and is never seen again (their part in the story is over). Put the opponent's exact name in "foe" (the name the story uses). Do NOT give points: the code looks the foe up and sets the award. Do NOT report ordinary thugs, guards or unnamed foes, and do NOT report a foe who escaped but returns later in the story (only report them when they are finally neutralized, if ever). Report each foe once. THE VOID EMPEROR cannot be beaten in combat: report him as defeated if the hero destroys the crystals / the gateway or traps him; if the crystals were neither destroyed nor trapped, report nothing for him. A street criminal committing a crime still earns the crime award (Stop or Prevent or Arrest) as usual.
 - Role-Playing: a clever, in-character, memorable decision or line (a smart plan, a persuasive bluff, staying true to the hero's personality and motives). Be generous: report each distinct moment.
 - Showing Off: the hero uses powers flashily or heroically in front of a crowd or witnesses.
 - Humor: ANY joke, quip, pun, wisecrack or funny line the PLAYER'S HERO says or does. Humor is subjective, so award it when the line was clearly meant to be funny. Report each distinct moment.
@@ -1869,13 +1902,21 @@ function karmaEntriesToText(entries, alias){
 /* Turns the model's list of events into awards. Pure function (testable). */
 function applyKarmaEvents(events){
   if(!Array.isArray(events)) events = [];
-  const counts = {}, awards = [], rescues = [];
+  const counts = {}, awards = [], rescues = [], foesDone = {};
   let rescueAt = -1;
   events.slice(0, 200).forEach(ev=>{
     if(!ev || typeof ev.category !== 'string') return;
+    const note = String(ev.note || ev.quote || '').slice(0, 300);
+    if(/^defeating (powerful )?foe$/i.test(ev.category.trim())){
+      const f = karmaFoeSheet(String(ev.foe || ev.enemy || ev.name || ''));
+      if(!f || foesDone[f.key]) return;
+      foesDone[f.key] = true;
+      const tier = foeKarmaTier(f.sheet);
+      awards.push({category: `Defeating ${tier.name} Foe (${tier.cls}-Class villain)`, points: tier.points, note: (f.name + (note ? ' — ' + note : '')).slice(0, 300)});
+      return;
+    }
     const cat = KARMA_TABLE[ev.category.trim().toLowerCase()];
     if(!cat) return;
-    const note = String(ev.note || ev.quote || '').slice(0, 300);
     if(cat.name === 'Rescue' || cat.name === KARMA_MASS_RESCUE){
       if(rescueAt < 0) rescueAt = awards.length;
       const n = Math.max(1, Math.floor(Number(ev.people_saved) || 1));
@@ -1912,7 +1953,7 @@ function applyKarmaEvents(events){
 async function reviewKarmaText(heroDesc, transcript){
   // A full 10-chapter chronicle is ~73k characters; this cap is only a backstop against a pathological save.
   transcript = transcript.slice(0, 100000);
-  const names = Object.values(KARMA_TABLE).map(c=>c.name).filter(n=>n !== KARMA_MASS_RESCUE).join('; ');
+  const names = Object.values(KARMA_TABLE).map(c=>c.name).filter(n=>n !== KARMA_MASS_RESCUE).concat([KARMA_FOE_CATEGORY]).join('; ');
   const prompt = `You are the referee reviewing a completed MARVEL SUPER HEROES (FASERIP) tabletop adventure to award Karma. Read the transcript and list every moment where the hero earned or lost Karma. The code that receives your answer looks up the points, so do NOT add up points yourself.
 
 ${KARMA_GUIDE}
@@ -1928,7 +1969,7 @@ ADVENTURE TRANSCRIPT:
 ${transcript}
 
 Respond with ONLY a raw JSON object, no markdown, no commentary:
-{"events": [{"category": "<allowed name>", "quote": "short quote or paraphrase of the moment", "note": "one short sentence", "points": <only for Defeating Powerful Foe and Act of Charity>, "people_saved": <only for Rescue>}]}`;
+{"events": [{"category": "<allowed name>", "quote": "short quote or paraphrase of the moment", "note": "one short sentence", "points": <only for Act of Charity>, "foe": "<opponent's name, only for Defeating Foe>", "people_saved": <only for Rescue>}]}`;
 
   const response = await fetchGeminiWithFallback({
     contents: [{ role: "user", parts: [{ text: prompt }] }],
