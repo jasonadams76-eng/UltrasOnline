@@ -319,6 +319,8 @@
   }
 
   .contact-list{ display:grid; gap:12px; }
+  .contact-grid{ grid-template-columns:repeat(auto-fill, minmax(110px, 1fr)); }
+  .contact-tile .hist-tile-name{ font-size:0.85rem; }
   .contact-card{ display:grid; grid-template-columns:96px 1fr; gap:14px; border:2px solid var(--ink); background:var(--paper); padding:10px; }
   .contact-pic{ position:relative; width:96px; aspect-ratio:4/5; overflow:hidden; background:var(--ink); border:2px solid var(--ink); }
   .contact-pic img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 20%; z-index:2; }
@@ -1587,7 +1589,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-12.6';
+const APP_VERSION = '2026-11-12.7';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -3272,6 +3274,7 @@ function renderHistoryPerson(){
   if(p.popularity) chips.push(`<span class="chip">Popularity ${escapeHtml(rankNameForNumber(p.popularity))}</span>`);
   if(p.stats.Strength >= 40) chips.push(`<span class="chip strength">${escapeHtml(rankNameForNumber(p.stats.Strength))} Strength</span>`);
   const back = STATE.historyBack || 'HISTORY';
+  const backLabel = (back==='HERO_DETAIL' && STATE.detailHero) ? '← Back to ' + escapeHtml(STATE.detailHero.alias) : '← Back';
   app.innerHTML = `<div class="panel menu-panel hero-detail">
     ${accountBar()}
     <div class="detail-top">
@@ -3284,9 +3287,9 @@ function renderHistoryPerson(){
         <div class="facts">${factsHtml}</div>
       </div>
     </div>
-    <div class="detail-actions"><button id="btn-hp-back" class="secondary">← Back</button></div>
+    <div class="detail-actions"><button id="btn-hp-back" class="secondary">${backLabel}</button></div>
     <div class="detail-grid">
-      <section class="detail-sec"><h3>FASERIP Stats</h3>${statsHtml}</section>
+      <section class="detail-sec"><h3>Attributes</h3>${statsHtml}</section>
       <section class="detail-sec"><h3>Powers</h3><ul>${powersHtml || '<li>None</li>'}</ul><h3 style="margin-top:14px;">Talents</h3><ul>${talentsHtml || '<li>None</li>'}</ul></section>
     </div>
     ${p.line ? `<section class="detail-sec"><h3>Role</h3><p>${escapeHtml(p.line)}</p></section>` : ''}
@@ -3294,7 +3297,7 @@ function renderHistoryPerson(){
     ${p.appearance ? `<section class="detail-sec"><h3>Appearance</h3><p>${escapeHtml(p.appearance)}</p></section>` : ''}
     ${p.story ? `<section class="detail-sec"><h3>In the story</h3><p>${escapeHtml(p.story)}</p></section>` : ''}
     ${(p.contacts && p.contacts.length) ? `<section class="detail-sec"><h3>Contacts</h3><ul>${p.contacts.map(c=>`<li>${escapeHtml(c)}</li>`).join('')}</ul></section>` : ''}
-    <div class="detail-actions"><button id="btn-hp-back2" class="secondary">← Back</button></div>
+    <div class="detail-actions"><button id="btn-hp-back2" class="secondary">${backLabel}</button></div>
   </div>`;
   wireAccountBar();
   ['btn-hp-back','btn-hp-back2'].forEach(id=>{ document.getElementById(id).onclick = ()=>{ STATE.screen = back; render(); window.scrollTo(0,0); }; });
@@ -3700,24 +3703,9 @@ function renderHeroDetail(){
   const talentsHtml = (h.talents || []).map(t => `<li><b>${escapeHtml(t.name)}</b> — ${escapeHtml(t.effect)}</li>`).join('');
   const extraContacts = (h.contacts || []).filter(c => !CONTACT_PROFILES.some(cp => String(c).startsWith(cp.name)));
   const extraHtml = extraContacts.length ? `<ul class="extra-contacts">${extraContacts.map(c => `<li>${escapeHtml(c)}</li>`).join('')}</ul>` : '';
-  const contactCards = CONTACT_PROFILES.map(c => {
-    const st = STAT_NAMES.map(n => `${n.split(' ')[0]} ${rankNameForNumber(c.stats[n])} (${c.stats[n]})`).join(' · ');
-    return `<div class="contact-card">
-      <div class="contact-pic">
-        <div class="portrait-fallback small">${escapeHtml(initials(c.name))}</div>
-        ${lookupImg('portraits/'+c.id, c.name)}
-      </div>
-      <div class="contact-body">
-        <div class="contact-name">${escapeHtml(c.name)}</div>
-        <div class="tag">${escapeHtml(c.role)} · Age ${c.age} · ${escapeHtml(c.height)} · ${escapeHtml(c.weight)}</div>
-        <p>${escapeHtml(c.bio)}</p>
-        <div class="contact-meta"><b>Talents:</b> ${escapeHtml(c.talents.join(', '))}</div>
-        <div class="contact-meta"><b>Powers/Gear:</b> ${escapeHtml(c.powers.join(', '))}</div>
-        <div class="contact-meta"><b>Stats:</b> ${escapeHtml(st)}</div>
-        <div class="contact-meta"><b>Health</b> ${c.health} · <b>Karma</b> ${c.karma} · <b>Resources</b> ${escapeHtml(rankNameForNumber(c.resources))} (${c.resources}) · <b>Popularity</b> ${c.popularity ? escapeHtml(rankNameForNumber(c.popularity)) + ' (' + c.popularity + ')' : '0'}</div>
-      </div>
-    </div>`;
-  }).join('');
+  const contactCards = CONTACT_PROFILES.map(c => `<button class="hist-tile contact-tile" data-contact="${escapeHtml(c.id)}">
+      <div class="hist-pic"><div class="portrait-fallback small">${escapeHtml(initials(c.name))}</div>${lookupImg('portraits/'+c.id, c.name)}</div>
+      <div class="hist-tile-name">${escapeHtml(c.name)}</div><div class="hist-tile-sub">${escapeHtml(c.role)}</div></button>`).join('');
   const contactsHtml = contactCards;
   app.innerHTML = `
     <div class="panel menu-panel hero-detail">
@@ -3751,7 +3739,7 @@ function renderHeroDetail(){
         <section class="detail-sec"><h3>Attributes</h3>${statsHtml}</section>
         <section class="detail-sec"><h3>Powers</h3><ul>${powersHtml}</ul><h3 style="margin-top:14px;">Talents</h3><ul>${talentsHtml || '<li>None</li>'}</ul></section>
       </div>
-      <section class="detail-sec"><h3>Contacts</h3>${extraHtml}<div class="contact-list">${contactsHtml}</div></section>
+      <section class="detail-sec"><h3>Contacts</h3>${extraHtml}<div class="hist-people contact-grid">${contactsHtml}</div></section>
       <div class="detail-actions">
         <button id="btn-detail-play2" class="play-btn">Play as ${escapeHtml(h.alias)}</button>
         <button id="btn-detail-back2" class="secondary">← Back to roster</button>
@@ -3759,6 +3747,13 @@ function renderHeroDetail(){
     </div>
   `;
   wireAccountBar();
+  document.querySelectorAll('.contact-tile').forEach(el=>{
+    el.onclick = async ()=>{
+      try{ await loadHistory(); }catch(e){ STATE.error = 'Could not load the contact page (' + e.message + ').'; return; }
+      STATE.detailHero = h; STATE.historyPersonId = el.getAttribute('data-contact'); STATE.historyBack = 'HERO_DETAIL';
+      STATE.screen = 'HISTORY_PERSON'; render(); window.scrollTo(0, 0);
+    };
+  });
   ['btn-detail-back', 'btn-detail-back2'].forEach(id => {
     document.getElementById(id).onclick = ()=>{ STATE.screen = 'HERO_SELECT'; STATE.error = null; render(); window.scrollTo(0, 0); };
   });
