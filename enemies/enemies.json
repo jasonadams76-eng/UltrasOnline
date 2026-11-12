@@ -82,6 +82,13 @@
     "name": "Venom",
     "rank": "Excellent",
     "attack": true
+   },
+   {
+    "name": "Armor-Eating Venom",
+    "rank": "Excellent",
+    "attack": true,
+    "vsHeavyArmor": true,
+    "effect": "pierce"
    }
   ],
   "talents": [
@@ -118,6 +125,13 @@
     "name": "Ranged Sound Attack",
     "rank": "Amazing",
     "attack": true
+   },
+   {
+    "name": "Resonance Pulse",
+    "rank": "Amazing",
+    "attack": true,
+    "vsHeavyArmor": true,
+    "effect": "sonic"
    }
   ],
   "talents": [
@@ -202,6 +216,13 @@
    {
     "name": "Sound Generation",
     "rank": "Excellent"
+   },
+   {
+    "name": "Sonic Whine",
+    "rank": "Remarkable",
+    "attack": true,
+    "vsHeavyArmor": true,
+    "effect": "sonic"
    }
   ],
   "talents": [
@@ -368,6 +389,13 @@
    {
     "name": "Remote Charges",
     "rank": "Incredible"
+   },
+   {
+    "name": "Tungsten-Core Rounds",
+    "rank": "Excellent",
+    "attack": true,
+    "vsHeavyArmor": true,
+    "effect": "pierce"
    }
   ],
   "talents": [],
@@ -538,6 +566,13 @@
    {
     "name": "Tracking Darts",
     "rank": "Good"
+   },
+   {
+    "name": "Armor-Piercing Rounds",
+    "rank": "Remarkable",
+    "attack": true,
+    "vsHeavyArmor": true,
+    "effect": "pierce"
    }
   ],
   "talents": [

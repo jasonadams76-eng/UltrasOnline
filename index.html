@@ -490,6 +490,8 @@ const STATE = {
   currentHealth: null, // current Health pool for the active hero's session (see maxHealth())
   currentKarma: null,  // current Karma pool for the active hero's session (see maxKarma())
   armorLost: 0,        // ranks of body armor lost this adventure (see armorRankNumber())
+  armorAreas: {},      // extra ranks lost per body area to armor-piercing rounds (head, torso, arms, legs)
+  heroDisrupt: 0,      // sonic disruption: 1 dazed, 2 badly dazed, 3 loses the next action
   transformed: false,  // Tungsten Titan: true while in tungsten form
   villainsSeen: [],    // 'adventure/chapter/villain' keys whose portrait card has already been shown
   atWorkshop: false,   // true once the story puts the hero in a workshop with tools
@@ -827,14 +829,26 @@ function heroArmor(hero){
   return { name: p.name, base: p.rank, natural, needsForm: natural && getPowerRank(hero, 'Body Transformation') != null };
 }
 function heroCanTransform(hero){ const a = heroArmor(hero); return !!(a && a.needsForm); }
+function areaLost(area){ return (STATE.armorAreas && area && STATE.armorAreas[area]) || 0; }
+function pickArmorArea(){ const r = rollD10(); return r === 1 ? 'head' : r <= 5 ? 'torso' : r <= 7 ? 'arms' : 'legs'; }
+function armorAreaSummary(hero){
+  const a = heroArmor(hero); if(!a) return { gone: [], weak: [] };
+  const cap = colIdxForNumber(a.base), gone = [], weak = [];
+  for(const ar of ['head','torso','arms','legs']){ const l = areaLost(ar); if(l <= 0) continue; ((STATE.armorLost || 0) + l >= cap ? gone : weak).push(ar); }
+  return { gone, weak };
+}
 function syncNaturalArmor(hero){
   const a = heroArmor(hero);
-  if(a && a.natural && STATE.armorLost && STATE.currentHealth >= maxHealth(hero)) STATE.armorLost = 0;
+  if(a && a.natural && (STATE.armorLost || Object.keys(STATE.armorAreas || {}).length) && STATE.currentHealth >= maxHealth(hero)){ STATE.armorLost = 0; STATE.armorAreas = {}; }
 }
-function heroArmorNow(hero){
+function heroHeavyArmored(){
+  const h = STATE.activeHero; const a = h && heroArmorNow(h);
+  return !!(a && a.active && a.base >= 30);
+}
+function heroArmorNow(hero, area){
   const a = heroArmor(hero);
   if(!a) return null;
-  const lost = STATE.armorLost || 0;
+  const lost = Math.min(colIdxForNumber(a.base), (STATE.armorLost || 0) + areaLost(area));
   const rank = armorRankNumber(a.base, lost);
   return Object.assign({}, a, { lost, rank, active: !a.needsForm || !!STATE.transformed, rankName: rank ? rankNameForNumber(rank) : 'gone' });
 }
@@ -873,10 +887,12 @@ function armorHitNote(subject, armorName, ao, rankAfter){
 }
 /* Runs a hit against the hero (side 'hero') or an enemy through armor,
    records any armor loss, and returns the outcome plus narrator text. */
-function armorHit(side, hero, enemy, rawDamage, type, color, powerName, source){
-  const armor = side === 'hero' ? heroArmorNow(hero) : foeArmor(enemy);
+function armorHit(side, hero, enemy, rawDamage, type, color, powerName, source, opts){
+  opts = opts || {};
+  const area = side === 'hero' ? (opts.area || null) : null;
+  const armor = side === 'hero' ? heroArmorNow(hero, area) : foeArmor(enemy);
   const res = resistFor(side === 'hero' ? heroResists(hero) : foeResists(enemy), source);
-  const ao = armorOutcome(armor, rawDamage, type, color, isMentalName(powerName), res.rank);
+  const ao = armorOutcome(armor, rawDamage, type, color, isMentalName(powerName) || !!opts.sonic, res.rank);
   let rankAfter = armor ? armor.rank : 0;
   if(ao.cracked && armor){
     const cap = colIdxForNumber(armor.base);
@@ -886,6 +902,15 @@ function armorHit(side, hero, enemy, rawDamage, type, color, powerName, source){
   }
   const who = side === 'hero' ? 'The hero' : enemy.name;
   ao.text = ao.resisted ? armorHitNote(who, res.name, ao, 0) : (armor ? armorHitNote(who, shortArmorName(armor.name), ao, rankAfter) : '');
+  if(side === 'hero' && opts.pierce && area && armor && armor.active && armor.rank > 0 && color !== 'white' && rawDamage > 0){
+    const drop = (color === 'yellow' || color === 'red') ? 4 : 2;
+    const cap = Math.max(0, colIdxForNumber(armor.base) - (STATE.armorLost || 0));
+    STATE.armorAreas = STATE.armorAreas || {};
+    const cur = areaLost(area), next = Math.min(cap, cur + drop);
+    STATE.armorAreas[area] = next;
+    ao.pierced = true; ao.areaGone = next >= cap;
+    ao.text = ((ao.text || '') + ` The armor-piercing round punches into the armor on the hero's ${area}: it is ${ao.areaGone ? 'torn open there and gives no protection at all' : 'badly weakened there'}.`).trim();
+  }
   return ao;
 }
 /* ---------- Resistance powers ----------
@@ -963,7 +988,9 @@ function armorHudText(hero){
   if(!a) return '';
   const nm = shortArmorName(a.name);
   if(a.needsForm && !a.active) return `${nm}: inactive (human form)`;
-  return `${nm}: ${a.rank ? a.rankName + (a.lost ? ' (damaged)' : '') : 'destroyed'}`;
+  const as = armorAreaSummary(hero);
+  const areaTxt = (as.gone.length ? ' · stripped: ' + as.gone.join(', ') : '') + (as.weak.length ? ' · weakened: ' + as.weak.join(', ') : '');
+  return `${nm}: ${a.rank ? a.rankName + (a.lost ? ' (damaged)' : '') : 'destroyed'}${areaTxt}`;
 }
 function armorNarratorText(hero){
   const a = heroArmorNow(hero);
@@ -978,6 +1005,9 @@ function armorNarratorText(hero){
   if(a.rank === 0) t += ` The ${nm} has been destroyed and gives no protection.`;
   else if(a.lost) t += a.natural ? ` The ${nm} is cracked, pitted and weaker than normal; it mends fully once he has recovered.` : ` The ${nm} is damaged (dented, torn or cracked plating) and gives less protection. Light damage can be fixed in the field with basic tools given an hour, but heavy damage needs a workshop with proper tools and equipment, such as the hero's own lab or ORACLE's facilities.`;
   else t += ` The ${nm} is undamaged.`;
+  const as = armorAreaSummary(hero);
+  if(as.gone.length) t += ` Armor-piercing rounds have torn the armor open on the hero's ${as.gone.join(', ')}: blows there find bare, unprotected body.`;
+  if(as.weak.length) t += ` The armor on the hero's ${as.weak.join(', ')} has been weakened by armor-piercing rounds.`;
   return t;
 }
 function repairIntent(text){ return /\b(repair|fix|mend|patch|rebuild|refit|recalibrate|service)\b[^.!?]{0,40}\b(armou?r|suit)\b/i.test(text); }
@@ -1001,7 +1031,7 @@ function doArmorRepair(hero){
   const shift = repairTalentShift(hero);
   const feat = resolveFeat(hero.stats.Reason, shift);
   const ok = feat.color !== 'white';
-  if(ok) STATE.armorLost = 0;
+  if(ok){ STATE.armorLost = 0; STATE.armorAreas = {}; }
   const mechanics = Object.assign({ ability:'Reason', usedPower:false, actionType:'feat', columnShift:shift, intensity:null, heroIsTarget:false, enemyName:null, damage:0, enemyResult:null,
     label: ok ? `Repair succeeded (${feat.color} result)` : `Repair failed (${feat.color} result)` }, feat);
   return {
@@ -1018,7 +1048,7 @@ function applyArmorBreakRepair(hero, hrs){
   const lost = STATE.armorLost || 0;
   if(!a || a.natural || lost <= 0) return null;
   const nm = shortArmorName(a.name);
-  if(hrs >= 12){ STATE.armorLost = 0; return `Repairs: with time in a workshop, your ${nm} is back to full strength.`; }
+  if(hrs >= 12){ STATE.armorLost = 0; STATE.armorAreas = {}; return `Repairs: with time in a workshop, your ${nm} is back to full strength.`; }
   if(hrs >= 1){
     STATE.armorLost = lost - 1;
     return STATE.armorLost > 0 ? `Repairs: a field fix restores one rank of your ${nm}, but it still needs a proper workshop.` : `Repairs: a field fix restores your ${nm} to full strength.`;
@@ -1112,7 +1142,7 @@ function namedEnemyFor(name){
 /* A power counts as an attack only if marked so (sheets with no marked
    power at all treat every power as usable in an attack, as invented sheets do). */
 function isAttackPower(enemy, p){
-  return !(enemy.powers || []).some(x => x.attack) ? true : p.attack === true;
+  return !(enemy.powers || []).some(x => x.attack && !x.vsHeavyArmor) ? true : (p.attack === true || !!p.vsHeavyArmor);
 }
 /* Villains relevant right now: those listed for this adventure, those already
    in the fight, and any whose name shows up in the recent story. */
@@ -1633,7 +1663,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-12.13';
+const APP_VERSION = '2026-11-12.14';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -1931,7 +1961,7 @@ function ensureKarmaReview(){
     STATE.karmaReview = result;
     STATE.karmaReviewStatus = 'done';
     pushKarma(hero.id, STATE.adventureId, result, STATE.fullLog);
-    saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || [], armorLost: STATE.armorLost || 0, transformed: !!STATE.transformed, atWorkshop: !!STATE.atWorkshop, villainsSeen: STATE.villainsSeen || [], karmaReview: result}).catch(()=>{});
+    saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || [], armorLost: STATE.armorLost || 0, armorAreas: STATE.armorAreas || {}, transformed: !!STATE.transformed, atWorkshop: !!STATE.atWorkshop, villainsSeen: STATE.villainsSeen || [], karmaReview: result}).catch(()=>{});
     render();
   }).catch(()=>{
     STATE.karmaReviewStatus = 'error';
@@ -3932,7 +3962,7 @@ function applySavedGame(hero, saved){
   STATE.combat = (saved.combat && typeof saved.combat === 'object' && Array.isArray(saved.combat.order)) ? saved.combat : null;
   STATE.checkPrompts = Array.isArray(saved.checkPrompts) ? saved.checkPrompts : [];
   STATE.heroStunned = false;
-  STATE.armorLost = Number(saved.armorLost) || 0; STATE.transformed = !!saved.transformed; STATE.atWorkshop = !!saved.atWorkshop; STATE.villainsSeen = Array.isArray(saved.villainsSeen) ? saved.villainsSeen.slice(0,200) : [];
+  STATE.armorLost = Number(saved.armorLost) || 0; STATE.armorAreas = (saved.armorAreas && typeof saved.armorAreas === 'object') ? saved.armorAreas : {}; STATE.heroDisrupt = 0; STATE.transformed = !!saved.transformed; STATE.atWorkshop = !!saved.atWorkshop; STATE.villainsSeen = Array.isArray(saved.villainsSeen) ? saved.villainsSeen.slice(0,200) : [];
   STATE.karmaReview = saved.karmaReview || null;
   STATE.karmaReviewStatus = saved.karmaReview ? 'done' : null;
 }
@@ -4050,11 +4080,11 @@ function renderAdventureSelect(){
       STATE.failedTasks = {};
       STATE.secondWindUsed = false;
       STATE.combat = null; STATE.checkPrompts = []; STATE.heroStunned = false;
-      STATE.armorLost = 0; STATE.transformed = false; STATE.atWorkshop = false; STATE.villainsSeen = [];
+      STATE.armorLost = 0; STATE.armorAreas = {}; STATE.heroDisrupt = 0; STATE.transformed = false; STATE.atWorkshop = false; STATE.villainsSeen = [];
       STATE.karmaReview = null;
       STATE.karmaReviewStatus = null;
       STATE.screen='PLAY';
-      await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || [], armorLost: STATE.armorLost || 0, transformed: !!STATE.transformed, atWorkshop: !!STATE.atWorkshop, villainsSeen: STATE.villainsSeen || []});
+      await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || [], armorLost: STATE.armorLost || 0, armorAreas: STATE.armorAreas || {}, transformed: !!STATE.transformed, atWorkshop: !!STATE.atWorkshop, villainsSeen: STATE.villainsSeen || []});
       render();
     };
   });
@@ -4471,7 +4501,7 @@ async function advanceChapter(){
     if(armNote){ STATE.log.push({who:'gm', text:armNote, mechanics:null}); pushFullLog('gm', armNote, null); }
   }
   try{
-    await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || [], armorLost: STATE.armorLost || 0, transformed: !!STATE.transformed, atWorkshop: !!STATE.atWorkshop, villainsSeen: STATE.villainsSeen || []});
+    await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || [], armorLost: STATE.armorLost || 0, armorAreas: STATE.armorAreas || {}, transformed: !!STATE.transformed, atWorkshop: !!STATE.atWorkshop, villainsSeen: STATE.villainsSeen || []});
   }catch(e){ /* saving is best-effort */ }
   render();
 }
@@ -4508,7 +4538,15 @@ function activeFoes(){
   return c.order.map(o => STATE.enemies[o.key]).filter(e => e && foeStatus(e) === 'active');
 }
 function foeAttackProfile(enemy){
-  const powers = (enemy.powers || []).filter(p => isAttackPower(enemy, p));
+  const allPow = (enemy.powers || []).filter(p => isAttackPower(enemy, p));
+  const special = allPow.filter(p => p.vsHeavyArmor);
+  const powers = allPow.filter(p => !p.vsHeavyArmor);
+  if(special.length && heroHeavyArmored()){
+    const sonic = special.find(p => p.effect === 'sonic'), pierce = special.find(p => p.effect === 'pierce');
+    const p = sonic && pierce ? (rollD10() <= 3 ? sonic : pierce) : (sonic || pierce || special[0]);
+    const r = rankNumberForName(p.rank);
+    return { name: p.name, type: p.effect === 'sonic' ? 'sonic' : 'shooting', pierce: p.effect === 'pierce', sonic: p.effect === 'sonic', rollRank: r, damageRank: r };
+  }
   if(enemy.weapon && WEAPON_DAMAGE_RANK[enemy.weapon]){
     const type = WEAPON_ACTION[enemy.weapon] || 'blunt';
     const rollStat = type === 'shooting' ? 'Agility' : 'Fighting Ability';
@@ -4529,9 +4567,15 @@ function foeAttackProfile(enemy){
 function resolveFoeTurn(enemy, shift){
   const prof = foeAttackProfile(enemy);
   const feat = resolveFeat(prof.rollRank, shift || 0);
+  if(prof.sonic){
+    const lvl = feat.color === 'white' ? 0 : feat.color === 'green' ? 1 : feat.color === 'yellow' ? 2 : 3;
+    if(lvl) STATE.heroDisrupt = Math.max(STATE.heroDisrupt || 0, lvl);
+    return { kind:'sonic', name: enemy.name, attack: prof.name, roll: feat.roll, color: feat.color, level: lvl, damage: 0 };
+  }
   const raw = damageForAttack(prof.damageRank, feat.color);
-  const ao = armorHit('hero', STATE.activeHero, null, raw, prof.type, feat.color, prof.name, prof.source || null);
-  return { kind:'attack', name: enemy.name, attack: prof.name, type: prof.type, roll: feat.roll, color: feat.color,
+  const area = heroArmor(STATE.activeHero) ? pickArmorArea() : null;
+  const ao = armorHit('hero', STATE.activeHero, null, raw, prof.type, feat.color, prof.name, prof.source || null, { area, pierce: !!prof.pierce });
+  return { kind:'attack', name: enemy.name, attack: prof.name, type: prof.type, roll: feat.roll, color: feat.color, area: (feat.color !== 'white' && prof.pierce) ? area : null, pierced: !!ao.pierced,
            label: actionLabel(prof.type, feat.color), damage: ao.damage, after: ao.after, armorText: ao.text, armorAbsorbed: ao.absorbed };
 }
 /* An ordinary foe surrenders once it is clearly overmatched. Named villains
@@ -4649,6 +4693,16 @@ async function startCombat(hero, chapter, log){
     list = Object.values(STATE.enemies).filter(e => e.currentHealth > 0 && ['active', 'queued', undefined].includes(e.status));
   }
   if(!list.length) return false;
+  if(heroHeavyArmored()){
+    // Challenging foes need a way around heavy armor: armor-piercing rounds, and a sonic device on the first.
+    let first = true;
+    list.forEach(e => {
+      const sup = e.maxHealth >= 50 && !namedEnemyFor(e.name);
+      if(!sup || (e.powers || []).some(pp => pp.vsHeavyArmor)) return;
+      e.powers = (e.powers || []).concat([{ name:'Armor-Piercing Rounds', rank:'Excellent', attack:true, vsHeavyArmor:true, effect:'pierce' }]);
+      if(first){ e.powers.push({ name:'Sonic Disruptor', rank:'Excellent', attack:true, vsHeavyArmor:true, effect:'sonic' }); first = false; }
+    });
+  }
   const active = list.slice(0, COMBAT_MAX_FOES), queue = list.slice(COMBAT_MAX_FOES);
   const heroInit = rollD10() + ((hero.stats && hero.stats.Intuition) || 0);
   const order = active.map(e => { e.status = 'active'; e.stunned = false; return { key: enemyKey(e), init: rollD10() + rankNumberForName(e.stats.Intuition) }; });
@@ -4660,7 +4714,7 @@ async function startCombat(hero, chapter, log){
 }
 function endCombat(reason){
   if(!STATE.combat) return;
-  STATE.combat = null; STATE.heroHeld = null;
+  STATE.combat = null; STATE.heroHeld = null; STATE.heroDisrupt = 0;
   if(reason) pushCombatNote(reason);
 }
 /* One full round: foes ahead of the hero in initiative, the hero's single
@@ -4670,7 +4724,7 @@ async function resolveCombatRound(hero, chapter, text, opts){
   const c = STATE.combat;
   const events = [];
   let mechanics = null, retreated = false, ended = null;
-  let postShift = 0, didTransform = false, heroActionsUsed = 0;
+  let postShift = 0, didTransform = false, heroActionsUsed = 0, skippedAction = false;
   const lastCh = (() => { const cs = currentAdventureChapters(); return cs.length ? cs[cs.length-1].id : null; })();
   const runFoe = (o, shift) => {
     const e = STATE.enemies[o.key];
@@ -4711,6 +4765,9 @@ async function resolveCombatRound(hero, chapter, text, opts){
     }
     if(STATE.retreatNow){
       retreated = true;
+    } else if(STATE.heroDisrupt === 3){
+      STATE.heroDisrupt = 0; skippedAction = true;
+      events.push({ kind:'sonic-lost' });
     } else if(opts.transform){
       STATE.transformed = !STATE.transformed;
       events.push({ kind:'transform', to: STATE.transformed });
@@ -4727,6 +4784,7 @@ async function resolveCombatRound(hero, chapter, text, opts){
         if(c0.retreats){ retreated = true; steps.push({ text: stepText, attempted: false }); continue; }
         c0.heroIsTarget = false;
         if(c0.enemyName || c0.targetsEnemy) c0.enemyName = matchCombatFoe(c0.enemyName, c0.targetsEnemy);
+        if(STATE.heroDisrupt === 1 || STATE.heroDisrupt === 2){ c0.columnShift = Math.max(-6, (c0.columnShift || 0) - (STATE.heroDisrupt === 2 ? 3 : 2)); events.push({ kind:'sonic-dazed', level: STATE.heroDisrupt }); STATE.heroDisrupt = 0; }
         if(STATE.heroStunned){ c0.columnShift = Math.max(-4, (c0.columnShift || 0) - 2); events.push({ kind:'dazed' }); STATE.heroStunned = false; }
         const m = resolveOne(hero, chapter, c0);
         heroActionsUsed++;
@@ -4746,7 +4804,7 @@ async function resolveCombatRound(hero, chapter, text, opts){
       }
       mechanics = steps.length === 1 ? (steps[0].m || null) : combineSteps(steps);
     }
-    if(!didTransform) events.push({ kind:'hero', count: Math.max(1, heroActionsUsed) });
+    if(!didTransform && !skippedAction) events.push({ kind:'hero', count: Math.max(1, heroActionsUsed) });
   } else {
     events.push({ kind:'hero-down-first' });
   }
@@ -4775,7 +4833,10 @@ async function resolveCombatRound(hero, chapter, text, opts){
 function combatBlockText(cr){
   const lines = cr.events.map(ev => {
     switch(ev.kind){
-      case 'attack': return `${ev.name} attacks with ${ev.attack}: ${ev.label} (${ev.color.toUpperCase()}). ${ev.damage > 0 ? 'It HITS the hero.' : ev.armorAbsorbed > 0 ? 'It strikes the hero but does no damage.' : 'It MISSES.'}${ev.armorText ? ' ' + ev.armorText : ''}${ev.devastating ? ' This is a DEVASTATING blow: the hero is gravely wounded and goes down.' : ev.after === 'stun' ? ' The hero is left reeling and dazed.' : ev.after === 'slam' ? ' The hero is knocked back or down.' : ''}`;
+      case 'attack': return `${ev.name} attacks with ${ev.attack}: ${ev.label} (${ev.color.toUpperCase()}). ${ev.damage > 0 ? 'It HITS the hero.' : ev.armorAbsorbed > 0 ? 'It strikes the hero but does no damage.' : 'It MISSES.'}${ev.area && ev.pierced ? ' The round lands on the hero\'s ' + ev.area + '.' : ''}${ev.armorText ? ' ' + ev.armorText : ''}${ev.devastating ? ' This is a DEVASTATING blow: the hero is gravely wounded and goes down.' : ev.after === 'stun' ? ' The hero is left reeling and dazed.' : ev.after === 'slam' ? ' The hero is knocked back or down.' : ''}`;
+      case 'sonic': return ev.level ? `${ev.name} turns a sonic disruptor on the hero (${ev.attack}): a ${ev.level === 1 ? 'painful, rattling hum' : ev.level === 2 ? 'skull-shaking blast of sound' : 'crushing wave of sound'} that ignores his armor and does no wound but ${ev.level === 3 ? 'leaves him staggered and unable to act at all next round' : ev.level === 2 ? 'leaves him badly dazed, so his next action is much harder' : 'leaves him dazed, so his next action is harder'}.` : `${ev.name} aims a sonic disruptor at the hero (${ev.attack}) but he shakes it off.`;
+      case 'sonic-lost': return `The hero is still reeling from the sonic blast and cannot act this round: he staggers, clutching his head. He does nothing this round.`;
+      case 'sonic-dazed': return `The hero is still rattled by the sonic blast, so his action this round is harder and clumsier.`;
       case 'escape': return ev.freed ? `${ev.name} is HELD in the hero's grip, spends their action struggling, and BREAKS FREE${ev.power ? ' using ' + ev.power : ''}.${ev.damage > 0 ? ' That hurts the hero.' : ''}${ev.armorText ? ' ' + ev.armorText : ''}` : `${ev.name} is HELD in the hero's grip, spends their whole action struggling, and stays held. They cannot attack.`;
       case 'holding': return `${ev.name} keeps the hero HELD in a grapple and does nothing else this round.`;
       case 'grapple': return ev.held ? `${ev.name} grabs the hero and HOLDS them: the hero can do nothing next round except try to break free. No damage is done.` : `${ev.name} tries to grab the hero but the hero twists away.`;
@@ -4986,7 +5047,7 @@ async function submitAction(opts){
       STATE.pendingAdvance = next ? next.id : 'FINISHED';
     }
 
-    await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: STATE.pendingAdvance, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || [], armorLost: STATE.armorLost || 0, transformed: !!STATE.transformed, atWorkshop: !!STATE.atWorkshop, villainsSeen: STATE.villainsSeen || []});
+    await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: STATE.pendingAdvance, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || [], armorLost: STATE.armorLost || 0, armorAreas: STATE.armorAreas || {}, transformed: !!STATE.transformed, atWorkshop: !!STATE.atWorkshop, villainsSeen: STATE.villainsSeen || []});
   }catch(e){
     STATE.error = 'The signal dropped: ' + e.message + '. Try again.';
   }finally{
