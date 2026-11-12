@@ -1589,7 +1589,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-12.7';
+const APP_VERSION = '2026-11-12.8';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -3487,7 +3487,7 @@ function renderPlayers(){
       return `<div class="pl-card">
         <div class="pl-head"><span class="pl-email">${escapeHtml(p.email)}${p.is_admin?' (admin)':''}</span>
           <span class="tag">${p.confirmed ? 'confirmed' : 'NOT confirmed'}</span></div>
-        <div class="pl-meta">Joined ${escapeHtml(fmtDate(p.created_at))} · Last sign-in ${p.last_login ? escapeHtml(fmtDate(p.last_login)) : '—'}</div>
+        <div class="pl-meta">Joined ${escapeHtml(fmtDateTime(p.created_at))} · Last sign-in ${p.last_login ? escapeHtml(fmtDateTime(p.last_login)) : '—'}</div>
         ${heroHtml}
         <div class="pl-official"><label>Official player of:
           <select class="official-sel" data-user="${p.id}">${opts}</select></label></div>
@@ -3938,6 +3938,17 @@ function parseAwards(json){
   try{ const a = JSON.parse(json || '[]'); return Array.isArray(a) ? a : []; }catch(e){ return []; }
 }
 function fmtDate(s){ return s ? String(s).slice(0,10) : ''; }
+/* Full timestamp in Central time. Stored times are UTC ("YYYY-MM-DD HH:MM:SS" from the database). */
+function fmtDateTime(s){
+  if(!s) return '';
+  const raw = String(s).trim();
+  const iso = /[zZ]|[+-]\d\d:?\d\d$/.test(raw) ? raw.replace(' ','T') : raw.replace(' ','T') + 'Z';
+  const d = new Date(iso);
+  if(isNaN(d.getTime())) return raw;
+  try{
+    return d.toLocaleString('en-US', { timeZone:'America/Chicago', year:'numeric', month:'2-digit', day:'2-digit', hour:'numeric', minute:'2-digit', second:'2-digit', hour12:true, timeZoneName:'short' });
+  }catch(e){ return raw; }
+}
 function signed(n){ return (n>=0?'+':'') + n; }
 
 /* Rows -> [{owner, heroes:[{heroId, lifetime, rows:[...]}]}] */
