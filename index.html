@@ -402,6 +402,7 @@
   /* ---- Ultras Hub ---- */
   .account-bar .ab-right{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
   .adv-open{ margin-top:10px; font-weight:700; }
+  .speed-note{ font-size:0.8rem; opacity:0.85; margin:2px 0 6px; }
   .hub-grid{ display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:8px; }
   .hub-card{ border:3px solid var(--ink); background:#fff; box-shadow:6px 6px 0 rgba(10,31,68,.55); cursor:pointer; overflow:hidden; transition:transform .12s, box-shadow .12s; display:flex; flex-direction:column; }
   .hub-card:hover, .hub-card:focus-visible{ transform:translate(-2px,-2px); box-shadow:9px 9px 0 rgba(10,31,68,.55); outline:none; }
@@ -1181,6 +1182,47 @@ function powerLabel(p){
 }
 /* Case-insensitive lookup of a hero's power by name; returns the numeric
    rank, or null if the hero doesn't have that power or it has no rank. */
+/* ---------- Super speed (Lightning Speed / Super Speed) ----------
+   The power's rank (1) stands in for Agility on every Agility roll, (2) sets how
+   many actions the character takes for every one a normal character takes, and
+   (3) sets how far they move. Works for heroes (numeric ranks) and foes (rank names). */
+const SPEED_POWER_NAMES = ['lightning speed', 'super speed', 'super-speed', 'superspeed'];
+const SPEED_TABLE = {
+  'Feeble':[2,20,'300 mph (5 miles per minute)'], 'Poor':[2,40,'600 mph (10 miles per minute)'],
+  'Typical':[2,67,'1,000 mph (17 miles per minute)'], 'Good':[2,100,'1,500 mph (25 miles per minute)'],
+  'Excellent':[3,133,'2,000 mph (33 miles per minute)'], 'Remarkable':[3,267,'4,000 mph (67 miles per minute)'],
+  'Incredible':[4,400,'6,000 mph (100 miles per minute)'], 'Amazing':[4,667,'10,000 mph (167 miles per minute)'],
+  'Monstrous':[5,1333,'20,000 mph (333 miles per minute)'], 'Unearthly':[5,2667,'40,000 mph (666 miles per minute)'],
+  'Shift X':[6,5333,'80,000 mph (1,332 miles per minute)'], 'Shift Y':[7,10000,'150,000 mph (2,500 miles per minute)'],
+  'Shift Z':[8,20000,'300,000 mph (5,000 miles per minute)']
+};
+function speedRankNumber(who){
+  let best = 0;
+  for(const p of (who && who.powers) || []){
+    if(!p || typeof p === 'string') continue;
+    if(!SPEED_POWER_NAMES.includes(String(p.name).toLowerCase())) continue;
+    const n = typeof p.rank === 'number' ? p.rank : rankNumberForName(p.rank);
+    if(n > best) best = n;
+  }
+  return best;
+}
+function speedRow(who){ const n = speedRankNumber(who); return n > 0 ? SPEED_TABLE[rankNameForNumber(n)] || null : null; }
+function speedActions(who){ const r = speedRow(who); return r ? r[0] : 1; }
+function heroStat(hero, stat){
+  const base = hero.stats[stat];
+  return stat === 'Agility' ? Math.max(base, speedRankNumber(hero)) : base;
+}
+function speedSheetNote(hero){
+  const n = speedRankNumber(hero);
+  return n > hero.stats.Agility ? `\nSPEED RULE: ${hero.alias}'s super speed (rank ${n}) takes the place of Agility (${hero.stats.Agility}) for every Agility roll, so treat Agility as ${n}.` : '';
+}
+function speedNarratorText(hero){
+  const row = speedRow(hero);
+  if(!row) return '';
+  const n = speedRankNumber(hero);
+  return `\nSPEED RULES: ${hero.alias}'s super speed is ${rankNameForNumber(n)} (${n}). In a fight they take ${row[0]} actions for every one an ordinary foe takes. They cover ${row[1]} areas per six-second round, which is ${row[2]}. Narrate them as blindingly fast compared with ordinary people, and honor their listed actions each round. Speed makes them fast; it adds no damage by itself.`;
+}
+function speedPowerNote(pw){ if(typeof pw !== 'object' || !SPEED_POWER_NAMES.includes(String(pw.name).toLowerCase())) return ''; const r = SPEED_TABLE[rankNameForNumber(pw.rank)]; return r ? `<div class="speed-note">${r[0]} actions per round · ${r[1].toLocaleString()} areas per round · ${r[2]}<br>Takes the place of Agility on Agility rolls.</div>` : ''; }
 function getPowerRank(hero, name){
   if(!hero.powers || !name) return null;
   const match = hero.powers.find(p => powerName(p).toLowerCase() === String(name).toLowerCase());
@@ -1589,7 +1631,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-12.10';
+const APP_VERSION = '2026-11-12.11';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -1897,7 +1939,7 @@ function ensureKarmaReview(){
 
 /* Canon look and per-hero narration notes, appended to the hero sheet the narrator reads. */
 const HERO_CANON_NOTES = {
-  premade_silverstar: 'POWERS, exactly: Lightning Speed = he moves as fast as a vehicle at the same speed rating (about 105 miles per hour for rank 40), starting at that speed instantly with no acceleration; it makes him fast, it does not add punching damage. Regeneration = he heals his OWN injuries over time, never anyone else. Light Manipulation = he bends, dims, brightens and focuses light; it can never hurt anything, though a blindingly bright flash can dazzle or temporarily blind eyes. Silver Star CANNOT fly, throw lightning or electricity, fire damaging beams, heal others, or use any power not listed.',
+  premade_silverstar: 'POWERS, exactly: Lightning Speed = he moves at super speed (the SPEED RULES given with each turn say how fast and how many actions he takes), starting at that speed instantly with no acceleration; it makes him fast, it does not add punching damage. Regeneration = he heals his OWN injuries over time, never anyone else. Light Manipulation = he bends, dims, brightens and focuses light; it can never hurt anything, though a blindingly bright flash can dazzle or temporarily blind eyes. Silver Star CANNOT fly, throw lightning or electricity, fire damaging beams, heal others, or use any power not listed.',
   premade_steeltalon: 'POWERS, exactly: Flight = he flies. Air Control = he moves air: gusts that knock people over (never more than the power rank allows), updrafts, clearing smoke, and at most nudging the weather slightly; it never hurts anyone directly and never controls storms. Animal Control (Birds) = he influences birds only; it cannot hurt anyone directly, but he can influence birds to attack a target. Steel Talon CANNOT control other animals, people or weather, make lightning, fire energy blasts, or use any power not listed, and he has no steel body, armor or claws.',
   premade_thunderbolt: 'POWERS, exactly: Energy Arrows = he fires arrows of electricity from his custom energy bow, which is itself made entirely of electricity and generated by the same power. He can also electrify himself so that anyone touching him is shocked. Resistance to Electricity = he resists electrical damage only. Body Armor = his suit gives light armor only. Thunder Bolt CANNOT fly, throw lightning from his hands, control or absorb electricity, resist fire, bullets or blades beyond the suit, or use any power not listed.',
   premade_tungstentitan: 'POWERS, exactly: Body Transformation = changing into his tungsten form is an ACTION, quick but never free. Natural Body Armor (Tungsten Skin) = only while transformed, his skin is tungsten armor that REDUCES the damage done to him (it does not make him invulnerable); a powerful hit can still knock him down even if it does no damage. His Strength is 50 at all times, transformed or not. Tungsten Titan CANNOT fly, change into anything else, fire projectiles or beams, shape the tungsten into tools, or use any power not listed.',
@@ -1963,7 +2005,7 @@ function heroPowerLimitsText(hero){
 function heroDamageRank(hero, usedPowerNumber, abilityNumber){
   const r = HERO_DAMAGE_RULES[hero.id];
   if(!r || !r.damageFrom) return abilityNumber;
-  const nums = r.damageFrom.map(n => getPowerRank(hero, n) != null ? getPowerRank(hero, n) : (hero.stats[n] != null ? hero.stats[n] : 0));
+  const nums = r.damageFrom.map(n => getPowerRank(hero, n) != null ? getPowerRank(hero, n) : (hero.stats[n] != null ? heroStat(hero, n) : 0));
   return Math.max.apply(null, nums);
 }
 function heroLookText(hero){
@@ -2273,7 +2315,7 @@ async function classifyAction(hero, chapter, log, playerLine, opts){
 Alias: ${hero.alias}
 Powers: ${hero.powers.map(powerLabel).join(', ')}
 Talents: ${(hero.talents && hero.talents.length) ? hero.talents.map(talentLabel).join('; ') : 'None'}
-Stats: ${STAT_NAMES.map(s => `${s} ${hero.stats[s]}`).join(', ')}`;
+Stats: ${STAT_NAMES.map(s => `${s} ${hero.stats[s]}`).join(', ')}${speedSheetNote(hero)}`;
 
   const recentLog = log.slice(-6).map(e=>`${e.who==='player'?'Player':'GM'}: ${e.text}`).join('\n');
 
@@ -2291,7 +2333,7 @@ ${recentLog}
 PLAYER'S STATED ACTION:
 "${playerLine}"
 
-The player may describe up to 3 separate actions in one command (for example "climb the fence, then open the door, then talk to the guard"). Produce one object per distinct action, in order, up to 3; if there is only one action, return one object. Each object has the fields below, plus "stepText": a short phrase naming that action. Do not split one continuous action into several.${opts.combat ? `\n\nCOMBAT TURN: the hero is in a fight. They take exactly ONE action this turn, so return exactly ONE action object even if the player lists several. The hero is fighting: ${(opts.foes || []).join(', ')}. When the hero targets one of them use that EXACT label as enemyName. Set heroIsTarget to false (the foes act on their own turns).` : ''}
+The player may describe up to ${opts.maxActions || 3} separate actions in one command (for example "climb the fence, then open the door, then talk to the guard"). Produce one object per distinct action, in order, up to ${opts.maxActions || 3}; if there is only one action, return one object. Each object has the fields below, plus "stepText": a short phrase naming that action. Do not split one continuous action into several.${opts.combat ? `\n\nCOMBAT TURN: the hero is in a fight. ${(opts.maxActions || 1) > 1 ? 'They are super-fast and take up to ' + opts.maxActions + ' actions this round: return one action object per distinct action the player lists, in order, never more than ' + opts.maxActions + ' (fewer if the player lists fewer).' : 'They take exactly ONE action this turn, so return exactly ONE action object even if the player lists several.'} The hero is fighting: ${(opts.foes || []).join(', ')}. When the hero targets one of them use that EXACT label as enemyName. Set heroIsTarget to false (the foes act on their own turns).` : ''}
 
 Determine (for each action):
 1. "requiresFeat" (boolean) — true if this action is difficult/uncertain enough to need a dice roll (combat, risky stunts, using powers under pressure, tricky social/technical challenges). False for simple/routine actions, pure roleplay/dialogue with no risk, or things automatically within the hero's ability.
@@ -2317,7 +2359,7 @@ ${namedEnemiesPromptText(STATE.adventureId, log)}${nonAttackRuleText(hero)}Retur
 
   const response = await fetchGeminiWithFallback({
     contents: [{ role:"user", parts:[{text: prompt}] }],
-    generationConfig: { temperature: 0.2, maxOutputTokens: 900 }
+    generationConfig: { temperature: 0.2, maxOutputTokens: (opts.maxActions || 1) > 1 ? 1800 : 900 }
   });
 
   if(!response.ok) throw new Error('Classifier connection failed ('+response.status+' from '+response.usedModel+')');
@@ -2329,7 +2371,7 @@ ${namedEnemiesPromptText(STATE.adventureId, log)}${nonAttackRuleText(hero)}Retur
   try{ parsed = JSON.parse(text); }
   catch(e){ throw new Error('Classifier returned malformed JSON'); }
 
-  const rawList = Array.isArray(parsed.actions) && parsed.actions.length ? parsed.actions.slice(0,3) : [parsed];
+  const rawList = Array.isArray(parsed.actions) && parsed.actions.length ? parsed.actions.slice(0, opts.combat ? (opts.maxActions || 1) : 3) : [parsed];
   return rawList.map((one, i) => normalizeClassification(one, hero, i));
 }
 function normalizeClassification(parsed, hero, i){
@@ -2386,6 +2428,9 @@ async function resolveMechanics(hero, chapter, log, playerLine){
     steps.push({ text, attempted: true, m });
     if(m.color === 'white') stopped = true;
   });
+  return combineSteps(steps);
+}
+function combineSteps(steps){
   const rolled = steps.filter(s => s.m);
   if(!rolled.length) return null;
   const last = rolled[rolled.length - 1].m;
@@ -2416,7 +2461,7 @@ function resolveOne(hero, chapter, classification){
     classification.ability = classification.heroIsTarget ? 'Agility' : (classification.ability === 'Strength' ? 'Strength' : 'Fighting Ability');
   }
   const usedPower = classification.powerUsed ? getPowerRank(hero, classification.powerUsed) : null;
-  const abilityNumber = usedPower != null ? usedPower : hero.stats[classification.ability];
+  const abilityNumber = usedPower != null ? usedPower : heroStat(hero, classification.ability);
   const displayName = usedPower != null ? classification.powerUsed : classification.ability;
   const feat = resolveFeat(abilityNumber, classification.columnShift);
   // Impossible tasks: two or more ranks above the ability can never succeed,
@@ -3267,7 +3312,7 @@ function renderHistoryPerson(){
     return `<div class="stat-row"><span class="stat-name">${escapeHtml(n)}</span><span class="stat-bar"><span style="width:${Math.min(100, v)}%"></span></span>
       <span class="stat-val">${escapeHtml(rankNameForNumber(v))} <b>${v}</b></span></div>`;
   }).join('');
-  const powersHtml = (p.powers||[]).map(pw=>`<li><b>${escapeHtml(powerName(pw))}</b>${typeof pw === 'object' ? ` — ${escapeHtml(rankNameForNumber(pw.rank))} (${pw.rank})` : ''}</li>`).join('');
+  const powersHtml = (p.powers||[]).map(pw=>`<li><b>${escapeHtml(powerName(pw))}</b>${typeof pw === 'object' ? ` — ${escapeHtml(rankNameForNumber(pw.rank))} (${pw.rank})` : ''}${speedPowerNote(pw)}</li>`).join('');
   const talentsHtml = (p.talents||[]).map(t=>`<li>${escapeHtml(typeof t === 'string' ? t : t.name)}</li>`).join('');
   const chips = [`<span class="chip">Health ${p.health}</span>`, `<span class="chip">Karma ${p.karma}</span>`,
     `<span class="chip">Resources ${escapeHtml(rankNameForNumber(p.resources))}</span>`];
@@ -3699,7 +3744,7 @@ function renderHeroDetail(){
       <span class="stat-bar"><span style="width:${Math.min(100, v)}%"></span></span>
       <span class="stat-val">${escapeHtml(rankNameForNumber(v))} <b>${v}</b></span></div>`;
   }).join('');
-  const powersHtml = h.powers.map(pw => `<li><b>${escapeHtml(powerName(pw))}</b>${typeof pw === 'object' ? ` — ${escapeHtml(rankNameForNumber(pw.rank))} (${pw.rank})` : ''}</li>`).join('');
+  const powersHtml = h.powers.map(pw => `<li><b>${escapeHtml(powerName(pw))}</b>${typeof pw === 'object' ? ` — ${escapeHtml(rankNameForNumber(pw.rank))} (${pw.rank})` : ''}${speedPowerNote(pw)}</li>`).join('');
   const talentsHtml = (h.talents || []).map(t => `<li><b>${escapeHtml(t.name)}</b> — ${escapeHtml(t.effect)}</li>`).join('');
   const extraContacts = (h.contacts || []).filter(c => !CONTACT_PROFILES.some(cp => String(c).startsWith(cp.name)));
   const extraHtml = extraContacts.length ? `<ul class="extra-contacts">${extraContacts.map(c => `<li>${escapeHtml(c)}</li>`).join('')}</ul>` : '';
@@ -4252,7 +4297,7 @@ function renderPlay(){
         ${combatPanelHtml()}${checkPromptsHtml()}
         ${heroCanTransform(hero) ? `<div style="margin-bottom:8px;"><button id="btn-transform" class="secondary" ${STATE.busy?'disabled':''}>Transform: ${STATE.transformed ? 'return to human form' : 'change to tungsten form'}${STATE.combat ? ' (uses your action)' : ''}</button></div>` : ''}
         <div class="input-row">
-          <textarea id="player-input" placeholder="${STATE.combat ? 'Your action this turn (Round ' + STATE.combat.round + ')' : 'What does ' + escapeHtml(hero.alias) + ' do?'}" ${STATE.busy?'disabled':''}></textarea>
+          <textarea id="player-input" placeholder="${STATE.combat ? (speedActions(hero) > 1 ? 'Your actions this round: up to ' + speedActions(hero) + ', one per line (Round ' + STATE.combat.round + ')' : 'Your action this turn (Round ' + STATE.combat.round + ')') : 'What does ' + escapeHtml(hero.alias) + ' do?'}" ${STATE.busy?'disabled':''}></textarea>
           <button id="btn-send" ${STATE.busy?'disabled':''}>${STATE.busy?'…':'Act'}</button>
         </div>
         ${STATE.busy ? `<div class="thinking">The Game Master is weighing the outcome…</div>` : ''}
@@ -4384,7 +4429,7 @@ function foeAttackProfile(enemy){
   if(enemy.weapon && WEAPON_DAMAGE_RANK[enemy.weapon]){
     const type = WEAPON_ACTION[enemy.weapon] || 'blunt';
     const rollStat = type === 'shooting' ? 'Agility' : 'Fighting Ability';
-    return { name: enemy.weapon, type, rollRank: rankNumberForName(enemy.stats[rollStat]), damageRank: rankNumberForName(WEAPON_DAMAGE_RANK[enemy.weapon]) };
+    return { name: enemy.weapon, type, rollRank: Math.max(rankNumberForName(enemy.stats[rollStat]), rollStat === 'Agility' ? speedRankNumber(enemy) : 0), damageRank: rankNumberForName(WEAPON_DAMAGE_RANK[enemy.weapon]) };
   }
   if(powers.length){
     const p = powers.slice().sort((a, b) => rankNumberForName(b.rank) - rankNumberForName(a.rank))[0];
@@ -4523,7 +4568,7 @@ async function resolveCombatRound(hero, chapter, text, opts){
   const c = STATE.combat;
   const events = [];
   let mechanics = null, retreated = false, ended = null;
-  let postShift = 0, didTransform = false;
+  let postShift = 0, didTransform = false, heroActionsUsed = 0;
   const lastCh = (() => { const cs = currentAdventureChapters(); return cs.length ? cs[cs.length-1].id : null; })();
   const runFoe = (o, shift) => {
     const e = STATE.enemies[o.key];
@@ -4531,13 +4576,16 @@ async function resolveCombatRound(hero, chapter, text, opts){
     if(e.staggerSkip){ events.push({ kind:'staggered', name: e.name }); e.staggerSkip = false; e.currentHealth = Math.ceil(e.maxHealth / 2); return; }
     if(e.stunned){ events.push({ kind:'stunned', name: e.name }); e.stunned = false; return; }
     if(foeSurrenders(e, activeFoes().length)){ e.status = 'surrendered'; events.push({ kind:'surrender', name: e.name }); return; }
-    const r = resolveFoeTurn(e, shift);
-    if(r.damage > 0){
-      if(r.after === 'kill'){ STATE.currentHealth = 0; r.devastating = true; }
-      else STATE.currentHealth = Math.max(0, STATE.currentHealth - r.damage);
-      if(r.after === 'stun') STATE.heroStunned = true;
+    const foeActs = speedActions(e);
+    for(let fa = 0; fa < foeActs && STATE.currentHealth > 0; fa++){
+      const r = resolveFoeTurn(e, shift);
+      if(r.damage > 0){
+        if(r.after === 'kill'){ STATE.currentHealth = 0; r.devastating = true; }
+        else STATE.currentHealth = Math.max(0, STATE.currentHealth - r.damage);
+        if(r.after === 'stun') STATE.heroStunned = true;
+      }
+      events.push(r);
     }
-    events.push(r);
   };
   const pre = c.order.filter(o => o.init > c.heroInit);
   const post = c.order.filter(o => !(o.init > c.heroInit));
@@ -4557,24 +4605,31 @@ async function resolveCombatRound(hero, chapter, text, opts){
       events.push({ kind:'transform', to: STATE.transformed });
       didTransform = true;
     } else {
-      const list = await classifyAction(hero, chapter, STATE.log.slice(0, -1), text, { combat: true, foes: activeFoes().map(e => e.name) });
-      const c0 = list[0];
-      if(c0.retreats){ retreated = true; }
-      else {
+      const nAct = speedActions(hero);
+      const list = await classifyAction(hero, chapter, STATE.log.slice(0, -1), text, { combat: true, foes: activeFoes().map(e => e.name), maxActions: nAct });
+      const acts = list.slice(0, nAct);
+      const steps = [];
+      for(let ai = 0; ai < acts.length; ai++){
+        const c0 = acts[ai];
+        const stepText = c0.stepText || ('action ' + (ai + 1));
+        if(retreated || !activeFoes().length){ steps.push({ text: stepText, attempted: false }); continue; }
+        if(c0.retreats){ retreated = true; steps.push({ text: stepText, attempted: false }); continue; }
         c0.heroIsTarget = false;
         if(c0.enemyName || c0.targetsEnemy) c0.enemyName = matchCombatFoe(c0.enemyName, c0.targetsEnemy);
         if(STATE.heroStunned){ c0.columnShift = Math.max(-4, (c0.columnShift || 0) - 2); events.push({ kind:'dazed' }); STATE.heroStunned = false; }
-        mechanics = resolveOne(hero, chapter, c0);
-        if(mechanics){
-          applyHitAftereffects(mechanics);
-          if(mechanics.color !== 'white'){
-            if(mechanics.actionType === 'dodge') postShift = -2 * ({green:1, yellow:2, red:3}[mechanics.color] || 0);
-            else if(mechanics.actionType === 'evade') postShift = -4;
-          }
+        const m = resolveOne(hero, chapter, c0);
+        heroActionsUsed++;
+        if(!m){ steps.push({ text: stepText, attempted: true, routine: true }); continue; }
+        steps.push({ text: stepText, attempted: true, m });
+        applyHitAftereffects(m);
+        if(m.color !== 'white'){
+          if(m.actionType === 'dodge') postShift = Math.min(postShift, -2 * ({green:1, yellow:2, red:3}[m.color] || 0));
+          else if(m.actionType === 'evade') postShift = Math.min(postShift, -4);
         }
       }
+      mechanics = steps.length === 1 ? (steps[0].m || null) : combineSteps(steps);
     }
-    if(!didTransform) events.push({ kind:'hero' });
+    if(!didTransform) events.push({ kind:'hero', count: Math.max(1, heroActionsUsed) });
   } else {
     events.push({ kind:'hero-down-first' });
   }
@@ -4610,7 +4665,7 @@ function combatBlockText(cr){
       case 'transform': return ev.to ? `The hero spends their whole action changing into their TUNGSTEN form: the skin hardens into gleaming tungsten armor. They do nothing else this round.` : `The hero spends their whole action changing back into their ordinary HUMAN form. They do nothing else this round.`;
       case 'regen': return `The hero's Regeneration knits their wounds at the start of their turn (a quick visible recovery).`;
       case 'dazed': return `The hero is still dazed from the last blow (this action is harder).`;
-      case 'hero': return `HERO ACTION: the hero's one action this round (its resolved result is given above — match it exactly).`;
+      case 'hero': return ev.count > 1 ? `HERO ACTIONS: the hero is super-fast and takes ${ev.count} actions this round, one after another, before the foes act again (their resolved results are given above, in order — match each exactly, and show them as a rapid blur of action).` : `HERO ACTION: the hero's one action this round (its resolved result is given above — match it exactly).`;
       case 'hero-down-first': return `The hero was struck down before they could act.`;
       case 'retreat': return `The hero breaks off and RETREATS from the fight on purpose. No foe gets a parting attack and the foes stay where they are.`;
       case 'join': return `${ev.name} joins the fight.`;
@@ -4714,7 +4769,7 @@ async function submitAction(opts){
       devastating = applyHeroKill(mechanics);
       if(devastating) extraBlock += '\nA foe has landed a DEVASTATING blow: the hero is gravely wounded and goes down.';
     }
-    extraBlock += armorNarratorText(hero) + resistNarratorText(hero) + villainNarratorText();
+    extraBlock += armorNarratorText(hero) + resistNarratorText(hero) + speedNarratorText(hero) + villainNarratorText();
     if(checkedName) extraBlock += `\nThe hero is checking on ${checkedName}: they are stabilized, alive but unconscious, and will recover.`;
     extraBlock += woundedBlockText();
 
