@@ -396,6 +396,18 @@
     .title-hero .th-btn{ margin-top:4vh; }
     .title-hero .th-btn button{ font-size:max(16px,5vw); }
   }
+
+  /* ---- Ultras Hub ---- */
+  .account-bar .ab-right{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+  .hub-grid{ display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:8px; }
+  .hub-card{ border:3px solid var(--ink); background:#fff; box-shadow:6px 6px 0 rgba(10,31,68,.55); cursor:pointer; overflow:hidden; transition:transform .12s, box-shadow .12s; display:flex; flex-direction:column; }
+  .hub-card:hover, .hub-card:focus-visible{ transform:translate(-2px,-2px); box-shadow:9px 9px 0 rgba(10,31,68,.55); outline:none; }
+  .hub-pic{ background:var(--ink); line-height:0; aspect-ratio:3/2; overflow:hidden; }
+  .hub-pic img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .hub-cap{ background:var(--ink); color:#fff; padding:14px 16px 16px; border-top:3px solid var(--hero-red); }
+  .hub-label{ font-size:1.5rem; letter-spacing:.04em; text-transform:uppercase; line-height:1.1; }
+  .hub-desc{ margin-top:4px; font-size:.95rem; color:#cfe0ff; }
+  @media (max-width:760px){ .hub-grid{ grid-template-columns:1fr; gap:20px; } .hub-label{ font-size:1.25rem; } }
   .title-screen.no-banner .title-banner{ display:none; }
   .title-screen.no-banner .title-fallback{ display:block; }
   .title-screen .sub{ margin:18px 0 20px; }
@@ -1574,7 +1586,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-12.4';
+const APP_VERSION = '2026-11-12.5';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -2657,9 +2669,10 @@ function render(){
   if(STATE.screen==='AUTH'){
     if(!bg){ bg = document.createElement('div'); bg.id = 'auth-backdrop'; bg.className = 'auth-backdrop'; document.body.prepend(bg); }
   } else if(bg){ bg.remove(); }
-  app.className = (STATE.screen==='HERO_SELECT' || STATE.screen==='HERO_DETAIL' || STATE.screen==='ADVENTURE_SELECT' || STATE.screen==='KARMA' || STATE.screen==='PLAYERS' || STATE.screen==='TRANSCRIPT' || STATE.screen==='HISTORY' || STATE.screen==='HISTORY_MISSION' || STATE.screen==='HISTORY_PERSON') ? 'wide' : '';
+  app.className = (STATE.screen==='HUB' || STATE.screen==='HERO_SELECT' || STATE.screen==='HERO_DETAIL' || STATE.screen==='ADVENTURE_SELECT' || STATE.screen==='KARMA' || STATE.screen==='PLAYERS' || STATE.screen==='TRANSCRIPT' || STATE.screen==='HISTORY' || STATE.screen==='HISTORY_MISSION' || STATE.screen==='HISTORY_PERSON') ? 'wide' : '';
   if(STATE.screen==='AUTH') return renderAuth();
   if(STATE.screen==='TITLE') return renderTitle();
+  if(STATE.screen==='HUB') return renderHub();
   if(STATE.screen==='HERO_SELECT') return renderHeroSelect();
   if(STATE.screen==='HERO_DETAIL') return renderHeroDetail();
   if(STATE.screen==='ADVENTURE_SELECT') return renderAdventureSelect();
@@ -2700,8 +2713,8 @@ function adventureLabel(id){
   const a = ADVENTURES.find(x=>x.id===id);
   return a ? a.title : id;
 }
-function accountBar(){
-  return `<div class="account-bar"><span>Logged in as <b>${escapeHtml(AUTH.email||'')}</b>${AUTH.isAdmin?' (admin)':''}</span><button id="btn-logout" class="secondary small">Log out</button></div>`;
+function accountBar(extra){
+  return `<div class="account-bar"><span>Logged in as <b>${escapeHtml(AUTH.email||'')}</b>${AUTH.isAdmin?' (admin)':''}</span><span class="ab-right">${extra||''}<button id="btn-logout" class="secondary small">Log out</button></span></div>`;
 }
 function wireAccountBar(){
   const b = document.getElementById('btn-logout');
@@ -2811,7 +2824,7 @@ async function afterLogin(){
     const n = await importOldSaves();
     if(n) STATE.notice = 'Moved ' + n + ' saved game' + (n===1?'':'s') + ' from this browser into your account.';
   }catch(e){ /* try again next login */ }
-  STATE.screen = 'HERO_SELECT';
+  STATE.screen = 'HUB';
   render();
 }
 
@@ -2844,7 +2857,7 @@ function renderTitle(){
   if(heroImg) heroImg.addEventListener('error', ()=>{ const h = document.getElementById('title-hero'); if(h) h.classList.add('failed'); });
   const startGame = ()=>{
     if(AUTH.token){
-      STATE.screen = 'HERO_SELECT';
+      STATE.screen = 'HUB';
     } else {
       STATE.authMode = 'login';
       STATE.authMessage = null;
@@ -2874,6 +2887,37 @@ async function refreshRosterInfo(){
     STATE.rosterInfo = info;
     if(STATE.screen==='HERO_SELECT') renderHeroSelect(true);
   }catch(e){ /* badges are optional */ }
+}
+
+/* ---------- Ultras Hub: the screen between the title and the roster ---------- */
+function renderHub(){
+  const card = (id, img, label, desc, alt) => `
+    <div class="hub-card" id="${id}" role="button" tabindex="0">
+      <div class="hub-pic"><img src="${img}" alt="${alt}" decoding="async" onerror="this.remove()"></div>
+      <div class="hub-cap"><div class="hub-label display">${label}</div><div class="hub-desc">${desc}</div></div>
+    </div>`;
+  app.innerHTML = `
+    <div class="panel menu-panel hub-panel">
+      ${accountBar(AUTH.isAdmin ? '<button id="btn-players" class="secondary small">Player Roster</button>' : '')}
+      ${STATE.notice ? `<div class="notice-box">${escapeHtml(STATE.notice)}</div>` : ''}
+      <div class="menu-head">
+        <div>
+          <div class="chapter-eyebrow display" style="color:var(--hero-red); font-size:0.8rem;">The Ultras</div>
+          <h2 class="display menu-title">Ultras Hub</h2>
+        </div>
+      </div>
+      <div class="hub-grid">
+        ${card('hub-history','images/hub-history.jpg','Ultras History','Explore the archives to learn the History of The Ultras','Preview of the Ultras History screen')}
+        ${card('hub-heroes','images/hub-heroes.jpg','Choose Your Hero','Pick an Ultra and go on a solo mission','The six Ultras')}
+      </div>
+    </div>
+  `;
+  wireAccountBar();
+  const go = (id, fn)=>{ const el = document.getElementById(id); el.onclick = fn; el.onkeydown = e=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); fn(); } }; };
+  go('hub-history', ()=>openHistory());
+  go('hub-heroes', ()=>{ STATE.screen = 'HERO_SELECT'; render(); window.scrollTo(0,0); });
+  const pl = document.getElementById('btn-players');
+  if(pl) pl.onclick = ()=>openPlayers();
 }
 
 function renderHeroSelect(isRefresh){
@@ -2921,9 +2965,8 @@ function renderHeroSelect(isRefresh){
           <h2 class="display menu-title">Choose your hero</h2>
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button id="btn-history" class="secondary">Ultras History</button>
+          <button id="btn-hub-back" class="secondary">← Hub</button>
           <button id="btn-karma" class="secondary">Karma Record</button>
-          ${AUTH.isAdmin ? '<button id="btn-players" class="secondary">Player Roster</button>' : ''}
         </div>
       </div>
       <div class="hero-grid">${tiles}</div>
@@ -2931,9 +2974,7 @@ function renderHeroSelect(isRefresh){
   `;
   wireAccountBar();
   document.getElementById('btn-karma').onclick = ()=>openKarma();
-  document.getElementById('btn-history').onclick = ()=>openHistory();
-  const plBtn = document.getElementById('btn-players');
-  if(plBtn) plBtn.onclick = ()=>openPlayers();
+  document.getElementById('btn-hub-back').onclick = ()=>{ STATE.screen='HUB'; render(); window.scrollTo(0,0); };
   document.querySelectorAll('.use-hero').forEach(el=>{
     el.onclick = ()=>{
       const hero = PREMADE_HEROES.find(h=>h.id===el.getAttribute('data-hero'));
@@ -3124,10 +3165,10 @@ function renderHistory(){
   if(STATE.historyErr || !HISTORY){
     app.innerHTML = `<div class="panel">${accountBar()}<h2 class="display">Ultras History</h2>
       <div class="error-box">${escapeHtml(STATE.historyErr || 'The history is not loaded.')}</div>
-      <div class="adv-actions" style="margin-top:12px;"><button id="btn-hist-retry">Try again</button> <button class="secondary" id="btn-hist-back">Back to roster</button></div></div>`;
+      <div class="adv-actions" style="margin-top:12px;"><button id="btn-hist-retry">Try again</button> <button class="secondary" id="btn-hist-back">Back to hub</button></div></div>`;
     wireAccountBar();
     document.getElementById('btn-hist-retry').onclick = ()=>openHistory();
-    document.getElementById('btn-hist-back').onclick = ()=>{ STATE.screen='HERO_SELECT'; render(); };
+    document.getElementById('btn-hist-back').onclick = ()=>{ STATE.screen='HUB'; render(); };
     return;
   }
   const vols = HISTORY.volumes.map((v, vi)=>{
@@ -3157,14 +3198,14 @@ function renderHistory(){
   const threads = HISTORY.openThreads.length ? `<div class="hist-sub">Open Threads</div>${HISTORY.openThreads.map(t=>`<div class="hist-thread"><b>${escapeHtml(t.title)}</b><div>${escapeHtml(t.text)}</div></div>`).join('')}` : '';
   app.innerHTML = `<div class="panel menu-panel">
     ${accountBar()}
-    <div class="top-back"><button class="secondary" id="btn-top-back">← Back to roster</button></div>
+    <div class="top-back"><button class="secondary" id="btn-top-back">← Back to hub</button></div>
     <div class="chapter-eyebrow display" style="color:var(--hero-red); font-size:0.8rem;">The Ultras</div>
     <h2 class="display menu-title">Ultras History</h2>
     ${vols}${threads}
-    <div style="margin-top:18px;"><button class="secondary" id="btn-hist-back">← Back to roster</button></div>
+    <div style="margin-top:18px;"><button class="secondary" id="btn-hist-back">← Back to hub</button></div>
   </div>`;
   wireAccountBar();
-  document.getElementById('btn-hist-back').onclick = ()=>{ STATE.screen='HERO_SELECT'; render(); window.scrollTo(0,0); };
+  document.getElementById('btn-hist-back').onclick = ()=>{ STATE.screen='HUB'; render(); window.scrollTo(0,0); };
   document.getElementById('btn-top-back').onclick = ()=>document.getElementById('btn-hist-back').click();
   document.querySelectorAll('.read-mission').forEach(b=>{
     b.onclick = ()=>{ STATE.historyMission = { vol: +b.getAttribute('data-vol'), mis: +b.getAttribute('data-mis') }; STATE.screen='HISTORY_MISSION'; render(); window.scrollTo(0,0); };
@@ -3473,15 +3514,15 @@ function renderPlayers(){
   app.innerHTML = `
     <div class="panel">
       ${accountBar()}
-      <div class="top-back"><button class="secondary" id="btn-top-back">← Back to roster</button></div>
+      <div class="top-back"><button class="secondary" id="btn-top-back">← Back to hub</button></div>
       <div class="chapter-eyebrow display" style="color:var(--hero-red); font-size:0.8rem;">Admin</div>
       <h2 class="display" style="margin-top:2px;">Player Roster</h2>
       ${pd.msg ? `<div class="notice-box">${escapeHtml(pd.msg)}</div>` : ''}
       ${body}
-      <div style="margin-top:18px;"><button class="secondary" id="btn-players-back">Back to roster</button></div>
+      <div style="margin-top:18px;"><button class="secondary" id="btn-players-back">Back to hub</button></div>
     </div>`;
   wireAccountBar();
-  document.getElementById('btn-players-back').onclick = ()=>{ STATE.screen='HERO_SELECT'; render(); window.scrollTo(0,0); };
+  document.getElementById('btn-players-back').onclick = ()=>{ STATE.screen='HUB'; render(); window.scrollTo(0,0); };
   document.getElementById('btn-top-back').onclick = ()=>document.getElementById('btn-players-back').click();
   document.querySelectorAll('.tr-view').forEach(b=>{
     b.onclick = ()=>openTranscript(parseInt(b.getAttribute('data-user'),10), b.getAttribute('data-hero'), b.getAttribute('data-adv'), 'current');
