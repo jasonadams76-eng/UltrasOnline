@@ -173,6 +173,8 @@
   }
   @keyframes pulseFade{ 0%,100%{opacity:0.55;} 50%{opacity:1;} }
   .entry .scene-image-wrap{ margin-top:0; margin-bottom:12px; }
+  .villain-card{ margin:12px 0 4px; }
+  .villain-cap{ font-family:'Anton',sans-serif; text-transform:uppercase; letter-spacing:1px; font-size:18px; text-align:center; margin-top:6px; color:var(--ink); }
 
   input[type=email], input[type=password]{
     width:100%; font-family:'Spectral',serif; font-size:1rem;
@@ -448,6 +450,7 @@ const STATE = {
   currentKarma: null,  // current Karma pool for the active hero's session (see maxKarma())
   armorLost: 0,        // ranks of body armor lost this adventure (see armorRankNumber())
   transformed: false,  // Tungsten Titan: true while in tungsten form
+  villainsSeen: [],    // 'adventure/chapter/villain' keys whose portrait card has already been shown
   atWorkshop: false,   // true once the story puts the hero in a workshop with tools
   oraclePending: false,// true while an ORACLE rescue narration is being generated after a Health knockout
   enemies: {},         // keyed by lowercase enemy name -> {name, rank, maxHealth, currentHealth}, tracked per chapter/session
@@ -870,6 +873,46 @@ function resistHudText(hero){
   const l = heroResists(hero);
   return l.length ? l.map(r => 'Resists ' + r.name.replace(/^resistance to /i, '') + ' ' + r.rank).join(' · ') : '';
 }
+/* ---------- Villain first-sight portraits ----------
+   A portrait card is shown the first time the hero actually SEES a villain in
+   the chapter where that happens. The narrator marks the moment with a hidden
+   [VILLAIN: id] line; the game only honours it in the chapters listed here, and
+   only once per save. A missing image file simply shows no card. */
+const VILLAIN_SIGHTINGS = {
+  meridian: {
+    ch2: [{id:'warden_ash', name:'Warden Ash', image:'images/villains/warden_ash.jpg',
+           cue:'Warden Ash, the armored broker running the auction'}],
+    ch3: [{id:'warden_ash', name:'Warden Ash', image:'images/villains/warden_ash_ch3.jpg',
+           cue:'Warden Ash, masked, on the scaffolding at the relay tower'}]
+  }
+};
+function villainKey(advId, chId, id){ return advId + '/' + chId + '/' + id; }
+function pendingSightings(advId, chId){
+  const list = (VILLAIN_SIGHTINGS[advId] && VILLAIN_SIGHTINGS[advId][chId]) || [];
+  return list.filter(v => !(STATE.villainsSeen || []).includes(villainKey(advId, chId, v.id)));
+}
+function villainNarratorText(){
+  return pendingSightings(STATE.adventureId, STATE.chapterId).map(v =>
+    `\nVILLAIN SIGHTING: ${v.name} is in this chapter. In the first reply where the hero actually SEES ${v.cue} with their own eyes (not just a name, a voice, a rumour, a shadow or something heard), end the reply with the line "[VILLAIN: ${v.id}]". Never use it before then, and never mention that the line exists.`
+  ).join('');
+}
+/* Strips every [VILLAIN: id] tag from a narrator reply and returns the first
+   portrait that is due (valid for this chapter and not yet shown), if any. */
+function takeVillainSighting(text){
+  let found = null;
+  const out = text.replace(/\[VILLAIN:\s*([a-z0-9_]+)\s*\]/gi, (m, id) => {
+    if(!found){
+      const v = pendingSightings(STATE.adventureId, STATE.chapterId).find(x => x.id === id.toLowerCase());
+      if(v){
+        found = {name: v.name, url: v.image};
+        (STATE.villainsSeen = STATE.villainsSeen || []).push(villainKey(STATE.adventureId, STATE.chapterId, v.id));
+      }
+    }
+    return '';
+  }).trim();
+  return {text: out, villain: found};
+}
+
 function resistNarratorText(hero){
   const l = heroResists(hero);
   return l.length ? '\nRESISTANCE (never state numbers): ' + l.map(r => `The hero shrugs off ${r.name.replace(/^resistance to /i, '').toLowerCase()} attacks: they do little or nothing to him, though other kinds of attack hurt normally.`).join(' ') : '';
@@ -1506,7 +1549,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-12.2';
+const APP_VERSION = '2026-11-12.3';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -1804,7 +1847,7 @@ function ensureKarmaReview(){
     STATE.karmaReview = result;
     STATE.karmaReviewStatus = 'done';
     pushKarma(hero.id, STATE.adventureId, result, STATE.fullLog);
-    saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || [], armorLost: STATE.armorLost || 0, transformed: !!STATE.transformed, atWorkshop: !!STATE.atWorkshop, karmaReview: result}).catch(()=>{});
+    saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || [], armorLost: STATE.armorLost || 0, transformed: !!STATE.transformed, atWorkshop: !!STATE.atWorkshop, villainsSeen: STATE.villainsSeen || [], karmaReview: result}).catch(()=>{});
     render();
   }).catch(()=>{
     STATE.karmaReviewStatus = 'error';
@@ -3648,7 +3691,7 @@ function applySavedGame(hero, saved){
   STATE.combat = (saved.combat && typeof saved.combat === 'object' && Array.isArray(saved.combat.order)) ? saved.combat : null;
   STATE.checkPrompts = Array.isArray(saved.checkPrompts) ? saved.checkPrompts : [];
   STATE.heroStunned = false;
-  STATE.armorLost = Number(saved.armorLost) || 0; STATE.transformed = !!saved.transformed; STATE.atWorkshop = !!saved.atWorkshop;
+  STATE.armorLost = Number(saved.armorLost) || 0; STATE.transformed = !!saved.transformed; STATE.atWorkshop = !!saved.atWorkshop; STATE.villainsSeen = Array.isArray(saved.villainsSeen) ? saved.villainsSeen.slice(0,200) : [];
   STATE.karmaReview = saved.karmaReview || null;
   STATE.karmaReviewStatus = saved.karmaReview ? 'done' : null;
 }
@@ -3766,11 +3809,11 @@ function renderAdventureSelect(){
       STATE.failedTasks = {};
       STATE.secondWindUsed = false;
       STATE.combat = null; STATE.checkPrompts = []; STATE.heroStunned = false;
-      STATE.armorLost = 0; STATE.transformed = false; STATE.atWorkshop = false;
+      STATE.armorLost = 0; STATE.transformed = false; STATE.atWorkshop = false; STATE.villainsSeen = [];
       STATE.karmaReview = null;
       STATE.karmaReviewStatus = null;
       STATE.screen='PLAY';
-      await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || [], armorLost: STATE.armorLost || 0, transformed: !!STATE.transformed, atWorkshop: !!STATE.atWorkshop});
+      await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || [], armorLost: STATE.armorLost || 0, transformed: !!STATE.transformed, atWorkshop: !!STATE.atWorkshop, villainsSeen: STATE.villainsSeen || []});
       render();
     };
   });
@@ -4019,6 +4062,7 @@ function renderPlay(){
       <div class="who">${e.who==='gm' ? 'Game Master' : hero.alias}</div>
       ${mechanicsHtml}
       <div class="text">${escapeHtml(e.text)}</div>
+      ${e.villain ? `<div class="scene-image-wrap villain-card"><img class="scene-image" src="${escapeHtml(e.villain.url)}" alt="${escapeHtml(e.villain.name)}" onerror="this.parentNode.remove()"><div class="villain-cap">${escapeHtml(e.villain.name)}</div></div>` : ''}
     </div>
   `;
   }).join('');
@@ -4171,7 +4215,7 @@ async function advanceChapter(){
     if(armNote){ STATE.log.push({who:'gm', text:armNote, mechanics:null}); pushFullLog('gm', armNote, null); }
   }
   try{
-    await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || [], armorLost: STATE.armorLost || 0, transformed: !!STATE.transformed, atWorkshop: !!STATE.atWorkshop});
+    await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: null, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || [], armorLost: STATE.armorLost || 0, transformed: !!STATE.transformed, atWorkshop: !!STATE.atWorkshop, villainsSeen: STATE.villainsSeen || []});
   }catch(e){ /* saving is best-effort */ }
   render();
 }
@@ -4541,7 +4585,7 @@ async function submitAction(opts){
       devastating = applyHeroKill(mechanics);
       if(devastating) extraBlock += '\nA foe has landed a DEVASTATING blow: the hero is gravely wounded and goes down.';
     }
-    extraBlock += armorNarratorText(hero) + resistNarratorText(hero);
+    extraBlock += armorNarratorText(hero) + resistNarratorText(hero) + villainNarratorText();
     if(checkedName) extraBlock += `\nThe hero is checking on ${checkedName}: they are stabilized, alive but unconscious, and will recover.`;
     extraBlock += woundedBlockText();
 
@@ -4553,6 +4597,8 @@ async function submitAction(opts){
     cleaned = cleaned.replace(/\[TIME:[^\]]*\]/gi, '').trim();
     if(/\[WORKSHOP\]/i.test(cleaned)) STATE.atWorkshop = true;
     cleaned = cleaned.replace(/\[WORKSHOP\]/gi, '').trim();
+    const sighting = takeVillainSighting(cleaned);
+    cleaned = sighting.text;
     const wantsCombatTag = /\[COMBAT\]/i.test(cleaned);
     cleaned = cleaned.replace(/\[COMBAT\]/gi, '').trim();
     let complete = false;
@@ -4561,6 +4607,7 @@ async function submitAction(opts){
       cleaned = cleaned.replace('[CHAPTER_COMPLETE]','').trim();
     }
     const gmEntry = {who:'gm', text: cleaned, mechanics};
+    if(sighting.villain) gmEntry.villain = sighting.villain;
     STATE.log.push(gmEntry);
     pushFullLog('gm', cleaned, mechanics);
     if(cr){
@@ -4634,7 +4681,7 @@ async function submitAction(opts){
       STATE.pendingAdvance = next ? next.id : 'FINISHED';
     }
 
-    await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: STATE.pendingAdvance, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || [], armorLost: STATE.armorLost || 0, transformed: !!STATE.transformed, atWorkshop: !!STATE.atWorkshop});
+    await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: STATE.pendingAdvance, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || [], armorLost: STATE.armorLost || 0, transformed: !!STATE.transformed, atWorkshop: !!STATE.atWorkshop, villainsSeen: STATE.villainsSeen || []});
   }catch(e){
     STATE.error = 'The signal dropped: ' + e.message + '. Try again.';
   }finally{
