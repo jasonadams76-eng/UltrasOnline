@@ -215,6 +215,9 @@
   .adv-table{ width:100%; border-collapse:collapse; font-size:0.9rem; margin:8px 0 16px; }
   .adv-table th, .adv-table td{ border-bottom:1px solid #bbb; padding:6px 4px; text-align:left; vertical-align:middle; }
   .adv-in{ width:80px; }
+  .tt-form{ display:flex; flex-wrap:wrap; gap:10px 14px; align-items:flex-end; margin:6px 0 12px; }
+  .tt-form label{ display:flex; flex-direction:column; gap:3px; font-size:0.85rem; }
+  .tt-form input[type=text], .tt-form input[type=date], .tt-form select{ font:inherit; padding:5px 8px; border:2px solid var(--ink); border-radius:6px; background:#fff; }
   .adv-line{ margin-top:10px; padding:8px 12px; border:2px solid var(--hero-red); border-radius:8px; display:inline-block; font-weight:700; }
   .hist-vol{ margin:22px 0 8px; }
   .top-back{ float:right; margin:4px 0 8px 12px; }
@@ -1503,7 +1506,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-11.12';
+const APP_VERSION = '2026-11-12.1';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -2914,6 +2917,32 @@ async function loadAdvLists(){
   ADV_LISTS = { powers: p.powers || [], talents: t.talents || [] };
   return ADV_LISTS;
 }
+async function loadAdvBreakdown(heroId){
+  try{
+    const r = await apiCall('GET','/api/advancement/breakdown?hero='+encodeURIComponent(heroId));
+    STATE.advBreakdown = STATE.advBreakdown || {};
+    STATE.advBreakdown[heroId] = r;
+    if(STATE.screen==='HERO_DETAIL' && STATE.detailHero && STATE.detailHero.id===heroId) render();
+  }catch(e){ /* the breakdown is a convenience; leave it out if it cannot load */ }
+}
+function advBreakdownHtml(h){
+  const b = STATE.advBreakdown && STATE.advBreakdown[h.id];
+  if(!b) return '';
+  const rows = [];
+  (b.online || []).forEach(o => rows.push({ date: fmtDate(o.credited_at), kind: 'Online', name: adventureLabel(o.adventure_id), pts: o.amount }));
+  (b.tabletop || []).forEach(t => rows.push({ date: t.session_date || fmtDate(t.created_at), kind: 'Tabletop', name: t.note, pts: t.amount }));
+  rows.sort((x, y) => String(y.date).localeCompare(String(x.date)));
+  const sumRow = (label, v) => `<tr><td colspan="3">${label}</td><td>${v}</td></tr>`;
+  return `<h3 style="margin-top:14px;">Where your Advancement Karma came from</h3>
+    <table class="adv-table"><tr><th>Date</th><th>Type</th><th>Mission</th><th>Karma</th></tr>
+      ${rows.length ? rows.map(r => `<tr><td>${escapeHtml(r.date)}</td><td>${r.kind}</td><td>${escapeHtml(r.name)}</td><td>${r.pts}</td></tr>`).join('') : '<tr><td colspan="4"><span class="tag">No missions counted yet.</span></td></tr>'}
+      ${sumRow('Starting total', b.starting_total)}
+      ${sumRow('Earned online', b.earned_online)}
+      ${sumRow('Earned at the table', b.earned_tabletop)}
+      ${sumRow('Spent on upgrades', '−' + b.spent)}
+      <tr><td colspan="3"><b>Balance</b></td><td><b>${b.balance}</b></td></tr>
+    </table>`;
+}
 function advanceSection(h){
   const bal = STATE.advancement[h.id];
   const conf = STATE.advConfirm && STATE.advConfirm.hero === h.id ? STATE.advConfirm : null;
@@ -2942,6 +2971,7 @@ function advanceSection(h){
   const histHtml = mine.length ? `<h3 style="margin-top:14px;">Purchases so far</h3><ul>${mine.map(u => `<li>${escapeHtml(upgradeText(u))} <span class="tag">${u.cost} Karma</span></li>`).join('')}</ul>` : '';
   return `<section class="detail-sec adv-sec"><h3>Advancement</h3>
     <div class="adv-line" style="margin:0 0 10px;">Advancement Karma available: ${bal}</div>
+    ${advBreakdownHtml(h)}
     ${STATE.advMsg ? `<div class="notice-box">${escapeHtml(STATE.advMsg)}</div>` : ''}
     ${conf ? `<div class="error-box" style="background:#fff7e0;color:#222;border-color:#c90;">Spend <b>${conf.cost}</b> Advancement Karma to ${escapeHtml(conf.label)}? You cannot undo this yourself (an admin can reverse it).
       <div class="adv-actions" style="margin-top:8px;"><button id="adv-confirm-yes">Confirm</button> <button class="secondary" id="adv-confirm-no">Cancel</button></div></div>` : ''}
@@ -2973,6 +3003,7 @@ function wireAdvanceSection(h){
     }catch(e){ STATE.advMsg = e.message; }
     STATE.advConfirm = null;
     try{ const a = await apiCall('GET','/api/advancement'); STATE.advancement = a.advancement || {}; }catch(e){}
+    loadAdvBreakdown(c.hero);
     await loadUpgrades();
     if(STATE.screen==='HERO_DETAIL') render();
   };
@@ -3166,8 +3197,9 @@ async function openPlayers(){
 async function loadPlayers(){
   const pd = STATE.playersData;
   try{
-    const [pl, adv, upg] = await Promise.all([ apiCall('GET','/api/admin/players'), apiCall('GET','/api/advancement'), apiCall('GET','/api/admin/upgrades').catch(()=>({upgrades:[]})) ]);
+    const [pl, adv, upg, tt] = await Promise.all([ apiCall('GET','/api/admin/players'), apiCall('GET','/api/advancement'), apiCall('GET','/api/admin/upgrades').catch(()=>({upgrades:[]})), apiCall('GET','/api/admin/tabletop').catch(()=>({entries:[]})) ]);
     pd.upgrades = upg.upgrades || [];
+    pd.tabletop = tt.entries || [];
     pd.players = pl.players || [];
     pd.adv = adv.admin || [];
     pd.error = null;
@@ -3316,9 +3348,11 @@ function renderPlayers(){
     const advRows = (pd.adv||[]).map(a=>`
       <tr><td><b>${escapeHtml(heroLabel(a.hero_id))}</b></td>
         <td>${a.email ? escapeHtml(a.email) : '<span class="tag">no official player</span>'}</td>
-        <td><input class="adv-in" type="number" step="1" data-base="${escapeHtml(a.hero_id)}" value="${a.base_total}"></td>
-        <td>${a.earned}</td><td>${a.spent}</td><td>${a.spent_upgrades || 0}</td><td><b>${a.total}</b></td>
-        <td><button class="secondary small adv-save" data-hero="${escapeHtml(a.hero_id)}">Save</button></td></tr>`).join('');
+        <td>${a.base_locked ? `${a.base_total} <span class="tag">🔒 Locked</span>` : `<input class="adv-in" type="number" step="1" data-base="${escapeHtml(a.hero_id)}" value="${a.base_total}">`}</td>
+        <td>${a.earned}</td><td>${a.tabletop || 0}</td><td>${a.spent}</td><td>${a.spent_upgrades || 0}</td><td><b>${a.total}</b></td>
+        <td>${a.base_locked ? '' : (pd.lockConfirm === a.hero_id
+          ? `<span class="tag">Lock ${a.base_total} for good?</span> <button class="small adv-lock-yes" data-hero="${escapeHtml(a.hero_id)}">Yes, lock</button> <button class="secondary small adv-lock-no">Cancel</button>`
+          : `<button class="secondary small adv-save" data-hero="${escapeHtml(a.hero_id)}">Save</button> <button class="secondary small adv-lock" data-hero="${escapeHtml(a.hero_id)}">Lock</button>`)}</td></tr>`).join('');
     const cards = list.map(p=>{
       const heroes = {};
       (p.missions||[]).forEach(m=>{ (heroes[m.hero_id] = heroes[m.hero_id] || []).push(m); });
@@ -3345,7 +3379,21 @@ function renderPlayers(){
     }).join('') || '<div class="hero-sheet-mini">No players match.</div>';
     body = `
       <h3 style="margin:14px 0 0;">Advancement Karma</h3>
-      <table class="adv-table"><tr><th>Hero</th><th>Official player</th><th>Starting total</th><th>Earned online</th><th>Spent</th><th>Upgrades</th><th>Balance</th><th></th></tr>${advRows}</table>
+      <table class="adv-table"><tr><th>Hero</th><th>Official player</th><th>Starting total</th><th>Earned online</th><th>Earned at the table</th><th>Spent</th><th>Upgrades</th><th>Balance</th><th></th></tr>${advRows}</table>
+      <h3 style="margin:14px 0 0;">Tabletop Karma</h3>
+      <div class="tag" style="margin:4px 0 8px;">Karma earned at the in-person game. It is added to the hero's Advancement Karma right away. Entries can be reversed but never deleted.</div>
+      <div class="tt-form">
+        <label>Hero <select id="tt-hero">${PREMADE_HEROES.map(h=>`<option value="${escapeHtml(h.id)}">${escapeHtml(h.alias)}</option>`).join('')}</select></label>
+        <label>Karma <input id="tt-amount" class="adv-in" type="number" min="1" step="1"></label>
+        <label>Session date <input id="tt-date" type="date" value="${new Date().toISOString().slice(0,10)}"></label>
+        <label>Note <input id="tt-note" type="text" maxlength="120" placeholder="e.g. Havoc Unleashed, session 3" style="min-width:240px;"></label>
+        <button class="secondary small" id="tt-add">Add tabletop Karma</button>
+      </div>
+      ${(pd.tabletop||[]).length ? `<table class="adv-table"><tr><th>Session</th><th>Hero</th><th>Note</th><th>Karma</th><th>Added</th><th></th></tr>${pd.tabletop.map(e=>`
+        <tr><td>${escapeHtml(e.session_date || fmtDate(e.created_at))}</td><td>${escapeHtml(heroLabel(e.hero_id))}</td>
+        <td>${e.reversed ? '<s>' : ''}${escapeHtml(e.note)}${e.reversed ? '</s> (reversed)' : ''}</td><td>${e.reversed ? '<s>' : ''}${e.amount}${e.reversed ? '</s>' : ''}</td>
+        <td>${escapeHtml(fmtDate(e.created_at))}</td>
+        <td>${e.reversed ? '' : `<button class="secondary small tt-rev" data-id="${e.id}">Reverse</button>`}</td></tr>`).join('')}</table>` : '<div class="tag" style="margin:6px 0 12px;">No tabletop Karma added yet.</div>'}
       <h3 style="margin:14px 0 0;">Upgrade log</h3>
       ${(pd.upgrades||[]).length ? `<table class="adv-table"><tr><th>When</th><th>Player</th><th>Hero</th><th>Upgrade</th><th>Cost</th><th></th></tr>${pd.upgrades.map(u=>`
         <tr><td>${escapeHtml(fmtDate(u.created_at))}</td><td>${escapeHtml(u.email||'')}</td><td>${escapeHtml(heroLabel(u.hero_id))}</td>
@@ -3392,6 +3440,44 @@ function renderPlayers(){
       }catch(e){ pd.msg = e.message; await loadPlayers(); }
     };
   });
+  document.querySelectorAll('.adv-lock').forEach(btn=>{
+    btn.onclick = ()=>{ pd.lockConfirm = btn.getAttribute('data-hero'); render(); };
+  });
+  document.querySelectorAll('.adv-lock-no').forEach(btn=>{ btn.onclick = ()=>{ pd.lockConfirm = null; render(); }; });
+  document.querySelectorAll('.adv-lock-yes').forEach(btn=>{
+    btn.onclick = async ()=>{
+      const hid = btn.getAttribute('data-hero');
+      try{
+        await apiCall('POST','/api/admin/advancement/lock',{hero_id:hid});
+        pd.msg = 'Starting total for ' + heroLabel(hid) + ' is locked.';
+      }catch(e){ pd.msg = e.message; }
+      pd.lockConfirm = null;
+      await loadPlayers();
+    };
+  });
+  const ttAdd = document.getElementById('tt-add');
+  if(ttAdd) ttAdd.onclick = async ()=>{
+    const hid = document.getElementById('tt-hero').value;
+    const amount = parseInt(document.getElementById('tt-amount').value,10);
+    const date = document.getElementById('tt-date').value;
+    const note = document.getElementById('tt-note').value.trim();
+    if(!Number.isInteger(amount) || amount < 1){ pd.msg = 'Enter a whole number of Karma from 1 up.'; return render(); }
+    if(!note){ pd.msg = 'Add a short note naming the session or mission.'; return render(); }
+    try{
+      await apiCall('POST','/api/admin/tabletop',{hero_id:hid, amount, note, session_date:date || null});
+      pd.msg = 'Added ' + amount + ' tabletop Karma to ' + heroLabel(hid) + '.';
+    }catch(e){ pd.msg = e.message; }
+    await loadPlayers();
+  };
+  document.querySelectorAll('.tt-rev').forEach(btn=>{
+    btn.onclick = async ()=>{
+      try{
+        await apiCall('POST','/api/admin/tabletop/reverse',{ id: parseInt(btn.getAttribute('data-id'),10) });
+        pd.msg = 'Tabletop entry reversed.';
+      }catch(e){ pd.msg = e.message; }
+      await loadPlayers();
+    };
+  });
   document.querySelectorAll('.upg-rev').forEach(btn=>{
     btn.onclick = async ()=>{
       try{
@@ -3429,6 +3515,7 @@ function openHeroDetail(hero){
     STATE.advancement = r.advancement || {};
     if(STATE.screen==='HERO_DETAIL' && STATE.detailHero && STATE.detailHero.id===hero.id) render();
     if(STATE.advancement[hero.id] !== undefined){
+      loadAdvBreakdown(hero.id);
       try{ await loadAdvLists(); }catch(e){ ADV_LISTS = { powers: [], talents: [] }; }
       if(STATE.screen==='HERO_DETAIL' && STATE.detailHero && STATE.detailHero.id===hero.id) render();
     }
