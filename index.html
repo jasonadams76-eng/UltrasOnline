@@ -1633,7 +1633,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-12.12';
+const APP_VERSION = '2026-11-12.13';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -1951,18 +1951,23 @@ const HERO_CANON_NOTES = {
 /* Hero damage rules. TraumaHawk: everything he does to an enemy hurts for the
    higher of Talons or Strength; his utility powers can never be the attack. */
 const HERO_DAMAGE_RULES = {
-  premade_traumahawk: { damageFrom: ['Talons','Strength'], nonAttack: ['Elemental Communication','Healing','Flight'] },
+  premade_traumahawk: { damageFrom: ['Talons','Strength'], nonAttack: ['Elemental Communication','Healing','Flight'], powerRoll: { 'talons': { ability: 'Fighting Ability' } } },
   premade_silverstar: { nonAttack: ['Lightning Speed','Regeneration','Light Manipulation'] },
   premade_steeltalon: { nonAttack: ['Flight'], powerDamage: { 'animal control (birds)': 10 } },
-  premade_thunderbolt: { nonAttack: ['Resistance to Electricity','Body Armor'] },
+  premade_thunderbolt: { nonAttack: ['Resistance to Electricity','Body Armor'], powerRoll: { 'energy generation - energy arrows': { ability: 'Agility', cs: 2 } } },
   premade_tungstentitan: { nonAttack: ['Natural Body Armor - Tungsten Skin','Body Transformation'] },
-  premade_bones: { nonAttack: ['Regeneration','Tracking Ability'] }
+  premade_bones: { nonAttack: ['Regeneration','Tracking Ability'], thrownCS: 1 }
 };
 function heroNonAttackPowers(hero){
   const r = HERO_DAMAGE_RULES[hero.id];
   return r ? r.nonAttack : [];
 }
 const HERO_ACTION_HINTS = {
+  premade_thunderbolt: 'THUNDER BOLT ACTION MAPPING: firing his energy bow or an arrow -> powerUsed "Energy Generation - Energy Arrows", actionType "energy", ability "Agility", targetsEnemy true (the game adds his +2 CS and the electric damage). Punching or kicking is a normal body blow (Fighting Ability, "blunt"). Shocking someone who grapples him counts as an escape using Energy Arrows.',
+  premade_bones: 'BONES ACTION MAPPING: throwing any object or weapon (a pipe, chair, knife) -> "thrown" true, ability "Agility", powerUsed null, actionType "blunt" (or "edged" for a blade); the game adds her +1 CS for thrown objects and uses her Strength for damage.',
+  premade_traumahawk: 'TRAUMAHAWK ACTION MAPPING: slashing or gripping strikes -> powerUsed "Talons", actionType "edged", ability "Fighting Ability" (damage is the higher of Talons or Strength). Kicks and punches are normal body blows.',
+  premade_tungstentitan: 'TUNGSTEN TITAN ACTION MAPPING: punches and kicks are normal body blows (Fighting Ability to hit, his Strength for damage). Tackling or barreling into a foe -> "charge". Wrestling, pinning or holding a foe -> "grapple"; his Martial Arts C (Grappling) talent gives +1 columnShift on grappling and escaping.',
+  premade_silverstar: 'SILVER STAR ACTION MAPPING: his super speed replaces Agility, so thrown objects hit very well; his punches and kicks are normal body blows and hurt only for his Strength. Light Manipulation can dazzle but never hurts.',
   premade_steeltalon: 'STEEL TALON ACTION MAPPING: (a) hurling loose objects with wind, or slamming a foe into a wall, vehicle or other solid thing with Air Control -> powerUsed "Air Control", actionType "blunt", targetsEnemy true (it does damage at the power rank, and the slam can Slam the foe); if nothing solid or loose is plausibly nearby, do not allow a slam (use "feat"). (b) sending birds to attack -> powerUsed "Animal Control (Birds)", actionType "swarm", targetsEnemy true. (c) hurricane-force winds blowing back or holding off many foes, or keeping the area clear -> powerUsed "Air Control", actionType "gale", targetsEnemy false, enemyName null (crowd control, no damage). Harmless gusts and updrafts are "feat", never an attack.'
 };
 function heroActionHintsText(hero){ return HERO_ACTION_HINTS[hero.id] ? HERO_ACTION_HINTS[hero.id] + '\n' : ''; }
@@ -2014,6 +2019,48 @@ function heroDamageRank(hero, usedPowerNumber, abilityNumber, usedPowerName){
   if(!r || !r.damageFrom) return abilityNumber;
   const nums = r.damageFrom.map(n => getPowerRank(hero, n) != null ? getPowerRank(hero, n) : (hero.stats[n] != null ? heroStat(hero, n) : 0));
   return Math.max.apply(null, nums);
+}
+/* ---------- Attack rules ----------
+   Punches, kicks and other body blows roll Fighting Ability and hurt for Strength.
+   Thrown objects roll Agility and hurt for Strength. A charge rolls Endurance and
+   hurts for Strength. A grapple rolls Strength and does no damage but holds the
+   target; a held side can only try to escape (Strength, or a power's rank), and a
+   damaging power used to escape hurts the holder. Hold and escape shifts compare
+   Strength ranks, one column per rank step, at most 3. */
+const ESCAPE_BLOCK = /heal|track|communicat|regenerat|resistance|armor/i;
+function csBetween(myNum, theirNum){ return Math.max(-3, Math.min(3, colIdxForNumber(myNum) - colIdxForNumber(theirNum))); }
+function attackMappingText(hero){
+  const held = STATE.heroHeld ? `\nTHE HERO IS HELD by ${STATE.heroHeld.by}: whatever the player tries is an ESCAPE attempt (actionType "escape", targetsEnemy false). Strength is the default; if the player uses a power to break free (flying, an energy burst, a gust of wind, a shock), set powerUsed to that power. A power that cannot plausibly break a hold (healing, tracking, communication, armor) is just a Strength attempt.\n` : '';
+  return `ATTACK RULES (all heroes): punches, kicks, headbutts and any other body blow -> actionType "blunt" (or "edged" with claws or a blade), ability "Fighting Ability", powerUsed null, thrown false. Throwing an object or weapon at a foe (a pipe or crate is "blunt", a knife is "edged") -> set "thrown" true, ability "Agility", powerUsed null. A tackle or running body-slam -> actionType "charge", ability "Endurance". A grapple, wrestling hold or pin -> actionType "grapple", ability "Strength". Do NOT add the Energy Bow's +2 CS or Bones' thrown-object +1 CS to columnShift: the game applies those itself. Damage is worked out by the game from the hero's sheet; never change it.\n${held}`;
+}
+function resolveEscape(hero, chapter, classification){
+  const held = STATE.heroHeld;
+  if(!held){ classification.actionType = 'feat'; return resolveOne(hero, chapter, classification); }
+  const pw = classification.powerUsed;
+  let pr = pw ? getPowerRank(hero, pw) : null;
+  if(pr != null && ESCAPE_BLOCK.test(String(pw))) pr = null;
+  const myNum = pr != null ? pr : heroStat(hero, 'Strength');
+  const extra = Math.max(-2, Math.min(2, classification.columnShift || 0));
+  const cs = csBetween(myNum, held.strength) + extra;
+  const feat = resolveFeat(myNum, cs);
+  const freed = feat.color !== 'white';
+  if(freed) STATE.heroHeld = null;
+  const enemy = Object.values(STATE.enemies || {}).find(e => e.name === held.by) || null;
+  let enemyResult = null;
+  const isAttackPow = pr != null && !heroNonAttackPowers(hero).map(n => n.toLowerCase()).includes(String(pw).toLowerCase());
+  if(freed && isAttackPow && enemy){
+    const src = sourceOf(pw, hero.id);
+    const raw = damageForAttack(heroDamageRank(hero, pr, myNum, pw), feat.color);
+    const eao = armorHit('foe', hero, enemy, raw, src ? 'energy' : 'blunt', feat.color, pw, src);
+    if(eao.damage > 0) enemy.currentHealth = Math.max(0, enemy.currentHealth - eao.damage);
+    enemyResult = { name: enemy.name, damage: eao.damage, after: null, armorText: eao.text, currentHealth: enemy.currentHealth, maxHealth: enemy.maxHealth, knockedOut: enemy.currentHealth <= 0, escaped: false, staggered: false, nonLethal: false };
+  }
+  return {
+    ability: pr != null ? pw : 'Strength', usedPower: pr != null, actionType: 'escape', columnShift: cs, intensity: null,
+    heroIsTarget: false, enemyName: held.by, enemyWeapon: null, enemyPowerUsed: null, damage: 0, after: null, armor: null,
+    enemyResult, unlistedClaim: false, ...feat,
+    label: freed ? `Breaks free of the hold (${feat.color} result)${enemyResult && enemyResult.damage > 0 ? ' and the power hurts the one holding them' : ''}` : 'Fails to break free: still held'
+  };
 }
 function heroLookText(hero){
   let out = '';
@@ -2314,7 +2361,7 @@ TASK: Write 1-3 short paragraphs of connective narration that bridge the gap bet
    situation warrants, and — for non-combat FEATs — the intensity of the
    task. This keeps dice resolution grounded in the actual Universal Table
    instead of the GM just narrating success/failure freely. */
-const ACTION_TYPES = ['feat','blunt','edged','shooting','energy','force','grapple','grab','charge','dodge','evade','swarm','gale'];
+const ACTION_TYPES = ['feat','blunt','edged','shooting','energy','force','grapple','grab','charge','dodge','evade','swarm','gale','escape'];
 
 async function classifyAction(hero, chapter, log, playerLine, opts){
   opts = opts || {};
@@ -2362,7 +2409,7 @@ Determine (for each action):
 14. "claimsUnlistedPower" (boolean) — true if the player's action relies on an ability this hero does NOT have: a power not on the sheet, or a listed power used for something its description does not allow (a force field, protective bubble, energy blast or beam, telekinesis, extra damage from a utility or communication power, etc.). Otherwise false.
 15. "taskSummary" — a very short plain label of the exact task being attempted (e.g. "lift the one-ton weight", "pick the vault lock"). Use the SAME label when the player simply tries the same thing again, and a DIFFERENT label when the player changes their approach (a lever, a different power, help from someone).
 ${heroPowerLimitsText(hero)}
-${namedEnemiesPromptText(STATE.adventureId, log)}${nonAttackRuleText(hero)}${heroActionHintsText(hero)}Return exactly: {"actions":[{"stepText":"...","requiresFeat":bool,"heroIsTarget":bool,"powerUsed":"..."|null,"ability":"...","actionType":"...","columnShift":int,"intensity":"..."|null,"enemyName":"..."|null,"enemyTier":"..."|null,"enemyStats":{...}|null,"enemyPowers":[...],"enemyWeapon":"..."|null,"enemyPowerUsed":"..."|null,"targetsEnemy":bool,"claimsUnlistedPower":bool,"taskSummary":"..."|null,"retreats":bool}, ...up to 3 items]}`;
+${namedEnemiesPromptText(STATE.adventureId, log)}${nonAttackRuleText(hero)}${attackMappingText(hero)}${heroActionHintsText(hero)}Return exactly: {"actions":[{"stepText":"...","requiresFeat":bool,"heroIsTarget":bool,"powerUsed":"..."|null,"ability":"...","actionType":"...","columnShift":int,"intensity":"..."|null,"enemyName":"..."|null,"enemyTier":"..."|null,"enemyStats":{...}|null,"enemyPowers":[...],"enemyWeapon":"..."|null,"enemyPowerUsed":"..."|null,"targetsEnemy":bool,"thrown":bool,"claimsUnlistedPower":bool,"taskSummary":"..."|null,"retreats":bool}, ...up to 3 items]}`;
 
   const response = await fetchGeminiWithFallback({
     contents: [{ role:"user", parts:[{text: prompt}] }],
@@ -2391,6 +2438,7 @@ function normalizeClassification(parsed, hero, i){
   parsed.requiresFeat = !!parsed.requiresFeat;
   parsed.heroIsTarget = !!parsed.heroIsTarget;
   parsed.retreats = !!parsed.retreats;
+  parsed.thrown = !!parsed.thrown;
   parsed.targetsEnemy = !!parsed.targetsEnemy;
   if(!parsed.enemyName || typeof parsed.enemyName !== 'string' || !parsed.enemyName.trim()) parsed.enemyName = null;
   if(!['civilian','trained','super'].includes(parsed.enemyTier)) parsed.enemyTier = parsed.enemyName ? 'civilian' : null;
@@ -2457,6 +2505,11 @@ function resolveOne(hero, chapter, classification){
   if(classification.claimsUnlistedPower) classification.requiresFeat = true;
   if(!classification.requiresFeat) return null;
 
+  if(STATE.heroHeld && !classification.heroIsTarget && ['blunt','edged','charge','grapple','grab','shooting','energy','force','escape','swarm','gale'].includes(classification.actionType)){
+    classification.actionType = 'escape'; classification.targetsEnemy = false;
+  }
+  if(classification.actionType === 'escape') return resolveEscape(hero, chapter, classification);
+
   const nonAttackList = heroNonAttackPowers(hero).map(n=>n.toLowerCase());
   if(classification.actionType !== 'feat' && classification.powerUsed && nonAttackList.includes(String(classification.powerUsed).toLowerCase())){
     classification.powerUsed = null;
@@ -2467,10 +2520,27 @@ function resolveOne(hero, chapter, classification){
     classification.columnShift = 0;
     classification.ability = classification.heroIsTarget ? 'Agility' : (classification.ability === 'Strength' ? 'Strength' : 'Fighting Ability');
   }
+  if(classification.actionType === 'grapple'){ classification.powerUsed = null; classification.ability = 'Strength'; }
   const usedPower = classification.powerUsed ? getPowerRank(hero, classification.powerUsed) : null;
-  const abilityNumber = usedPower != null ? usedPower : heroStat(hero, classification.ability);
-  const displayName = usedPower != null ? classification.powerUsed : classification.ability;
-  const feat = resolveFeat(abilityNumber, classification.columnShift);
+  let abilityNumber = usedPower != null ? usedPower : heroStat(hero, classification.ability);
+  let displayName = usedPower != null ? classification.powerUsed : classification.ability;
+  // Roll stat and damage stat are separate: see the Attack rules above.
+  const rules = HERO_DAMAGE_RULES[hero.id] || {};
+  let rollNumber = abilityNumber, dmgBase = abilityNumber, extraCS = 0;
+  const physType = classification.actionType === 'blunt' || classification.actionType === 'edged';
+  const pRoll = usedPower != null && rules.powerRoll ? rules.powerRoll[String(classification.powerUsed).toLowerCase()] : null;
+  if(!classification.heroIsTarget){
+    if(pRoll){
+      rollNumber = heroStat(hero, pRoll.ability); extraCS = pRoll.cs || 0; dmgBase = usedPower; displayName = classification.powerUsed + ' (' + pRoll.ability + ')';
+    } else if(usedPower == null && physType && classification.thrown){
+      rollNumber = heroStat(hero, 'Agility'); dmgBase = heroStat(hero, 'Strength'); extraCS = rules.thrownCS || 0; displayName = 'Agility (thrown)';
+    } else if(usedPower == null && physType){
+      rollNumber = heroStat(hero, 'Fighting Ability'); dmgBase = heroStat(hero, 'Strength'); displayName = 'Fighting Ability';
+    } else if(usedPower == null && classification.actionType === 'charge'){
+      rollNumber = heroStat(hero, 'Endurance'); dmgBase = heroStat(hero, 'Strength'); displayName = 'Endurance (charge)';
+    }
+  }
+  const feat = resolveFeat(rollNumber, Math.max(-6, Math.min(6, (classification.columnShift || 0) + extraCS)));
   // Impossible tasks: two or more ranks above the ability can never succeed,
   // and a task that already failed cannot be retried unchanged in this chapter.
   const abilityColIdx = colIdxForNumber(abilityNumber);
@@ -2518,6 +2588,9 @@ function resolveOne(hero, chapter, classification){
     });
   }
 
+  if(classification.actionType === 'grapple' && enemy && (feat.color === 'yellow' || feat.color === 'red') && !classification.heroIsTarget){
+    enemy.held = { strength: heroStat(hero, 'Strength') };
+  }
   // Damage to the HERO is driven by the attacking enemy's own weapon,
   // power, or stat rank — a stronger threat (or a heavier gun) should hit
   // harder regardless of who's rolling the FEAT this turn.
@@ -2551,7 +2624,7 @@ function resolveOne(hero, chapter, classification){
   // resolved rank/power, tracked against that enemy's Health pool.
   let enemyResult = null;
   if(isCombatType && isHarmfulColor && classification.targetsEnemy && enemy){
-    const rawEnemyDamage = damageForAttack(heroDamageRank(hero, usedPower, abilityNumber, classification.powerUsed), feat.color);
+    const rawEnemyDamage = damageForAttack(heroDamageRank(hero, usedPower, dmgBase, classification.powerUsed), feat.color);
     const eao = classification.actionType === 'swarm'
       ? { damage: rawEnemyDamage, absorbed: 0, cracked: false, after: rawEnemyDamage > 0 ? aftereffectFor('swarm', feat.color) : null, text: '' }
       : armorHit('foe', hero, enemy, rawEnemyDamage, classification.actionType, feat.color, classification.powerUsed, sourceOf(classification.powerUsed, hero.id));
@@ -4463,6 +4536,25 @@ function resolveFoeTurn(enemy, shift){
 }
 /* An ordinary foe surrenders once it is clearly overmatched. Named villains
    never do unless their sheet says "surrenders". */
+function resolveFoeEscape(e){
+  const held = e.held;
+  const strNum = rankNumberForName(e.stats.Strength);
+  const pows = (e.powers || []).filter(p => isAttackPower(e, p)).sort((a, b) => rankNumberForName(b.rank) - rankNumberForName(a.rank));
+  const pw = pows.length && rankNumberForName(pows[0].rank) > strNum ? pows[0] : null;
+  const myNum = pw ? rankNumberForName(pw.rank) : strNum;
+  const feat = resolveFeat(myNum, csBetween(myNum, held.strength));
+  const freed = feat.color !== 'white';
+  if(freed) e.held = null;
+  let damage = 0, after = null, armorText = '';
+  if(freed && pw){
+    const src = pw.source || sourceOf(pw.name);
+    const raw = damageForAttack(rankNumberForName(pw.rank), feat.color);
+    const ao = armorHit('hero', STATE.activeHero, null, raw, src ? 'energy' : 'blunt', feat.color, pw.name, src || null);
+    damage = ao.damage; after = ao.after; armorText = ao.text;
+    if(damage > 0){ if(after === 'kill') STATE.currentHealth = 0; else STATE.currentHealth = Math.max(0, STATE.currentHealth - damage); if(after === 'stun') STATE.heroStunned = true; }
+  }
+  return { kind:'escape', name: e.name, freed, power: pw ? pw.name : null, damage, after, armorText };
+}
 function foeSurrenders(enemy, activeCount){
   const sheet = namedEnemyFor(enemy.name);
   if(sheet && sheet.surrenders !== true) return false;
@@ -4568,7 +4660,7 @@ async function startCombat(hero, chapter, log){
 }
 function endCombat(reason){
   if(!STATE.combat) return;
-  STATE.combat = null;
+  STATE.combat = null; STATE.heroHeld = null;
   if(reason) pushCombatNote(reason);
 }
 /* One full round: foes ahead of the hero in initiative, the hero's single
@@ -4585,6 +4677,14 @@ async function resolveCombatRound(hero, chapter, text, opts){
     if(!e || foeStatus(e) !== 'active' || STATE.currentHealth <= 0) return;
     if(e.staggerSkip){ events.push({ kind:'staggered', name: e.name }); e.staggerSkip = false; e.currentHealth = Math.ceil(e.maxHealth / 2); return; }
     if(e.stunned){ events.push({ kind:'stunned', name: e.name }); e.stunned = false; return; }
+    if(e.held){ events.push(resolveFoeEscape(e)); return; }
+    if(STATE.heroHeld && STATE.heroHeld.by === e.name){ events.push({ kind:'holding', name: e.name }); return; }
+    if(e.grapples && !STATE.heroHeld && rollD10() <= 5){
+      const gr = resolveFeat(rankNumberForName(e.stats.Strength), 0);
+      if(gr.color === 'yellow' || gr.color === 'red'){ STATE.heroHeld = { by: e.name, strength: rankNumberForName(e.stats.Strength) }; events.push({ kind:'grapple', name: e.name, held: true }); }
+      else events.push({ kind:'grapple', name: e.name, held: false });
+      return;
+    }
     if(foeSurrenders(e, activeFoes().length)){ e.status = 'surrendered'; events.push({ kind:'surrender', name: e.name }); return; }
     const foeActs = speedActions(e);
     for(let fa = 0; fa < foeActs && STATE.currentHealth > 0; fa++){
@@ -4597,6 +4697,7 @@ async function resolveCombatRound(hero, chapter, text, opts){
       events.push(r);
     }
   };
+  if(STATE.heroHeld){ const ge = Object.values(STATE.enemies).find(x => x.name === STATE.heroHeld.by); if(!ge || foeStatus(ge) !== 'active' || ge.stunned) STATE.heroHeld = null; }
   const pre = c.order.filter(o => o.init > c.heroInit);
   const post = c.order.filter(o => !(o.init > c.heroInit));
   pre.forEach(o => runFoe(o, 0));
@@ -4675,6 +4776,9 @@ function combatBlockText(cr){
   const lines = cr.events.map(ev => {
     switch(ev.kind){
       case 'attack': return `${ev.name} attacks with ${ev.attack}: ${ev.label} (${ev.color.toUpperCase()}). ${ev.damage > 0 ? 'It HITS the hero.' : ev.armorAbsorbed > 0 ? 'It strikes the hero but does no damage.' : 'It MISSES.'}${ev.armorText ? ' ' + ev.armorText : ''}${ev.devastating ? ' This is a DEVASTATING blow: the hero is gravely wounded and goes down.' : ev.after === 'stun' ? ' The hero is left reeling and dazed.' : ev.after === 'slam' ? ' The hero is knocked back or down.' : ''}`;
+      case 'escape': return ev.freed ? `${ev.name} is HELD in the hero's grip, spends their action struggling, and BREAKS FREE${ev.power ? ' using ' + ev.power : ''}.${ev.damage > 0 ? ' That hurts the hero.' : ''}${ev.armorText ? ' ' + ev.armorText : ''}` : `${ev.name} is HELD in the hero's grip, spends their whole action struggling, and stays held. They cannot attack.`;
+      case 'holding': return `${ev.name} keeps the hero HELD in a grapple and does nothing else this round.`;
+      case 'grapple': return ev.held ? `${ev.name} grabs the hero and HOLDS them: the hero can do nothing next round except try to break free. No damage is done.` : `${ev.name} tries to grab the hero but the hero twists away.`;
       case 'stunned': return `${ev.name} is stunned and loses their turn.`;
       case 'staggered': return `${ev.name} is staggered and loses their turn, then pulls himself together.`;
       case 'surrender': return `${ev.name} sees they are hopelessly beaten and SURRENDERS (drops their weapon or raises their hands). Narrate a clear surrender beat; the fight with them is over. Do NOT end the chapter just because of this.`;
