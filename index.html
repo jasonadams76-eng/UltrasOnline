@@ -230,8 +230,8 @@
   #update-bar button{ padding:6px 14px; font-size:0.85rem; }
   .rescore-box{ border:2px dashed var(--ink); padding:12px; margin-top:6px; }
   .coming-soon-badge{ background:var(--hero-red); color:#fff; padding:1px 7px; border:2px solid var(--ink); letter-spacing:.06em; }
-  .hist-banner{ position:relative; min-height:120px; background:var(--ink); border:3px solid var(--ink); box-shadow:5px 5px 0 rgba(10,31,68,0.85); overflow:hidden; display:flex; align-items:flex-end; }
-  .hist-banner img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:1; }
+  .hist-banner{ position:relative; min-height:clamp(220px, 32vw, 320px); background:var(--ink); border:3px solid var(--ink); box-shadow:5px 5px 0 rgba(10,31,68,0.85); overflow:hidden; display:flex; align-items:flex-end; }
+  .hist-banner img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 30%; z-index:1; }
   .hist-banner .hist-banner-text{ position:relative; z-index:2; padding:14px 18px; color:#fff; background:linear-gradient(0deg, rgba(10,31,68,0.92), rgba(10,31,68,0)); width:100%; }
   .hist-banner h3{ font-family:'Anton',sans-serif; text-transform:uppercase; letter-spacing:1px; font-size:1.7rem; margin:0; }
   .hist-banner p{ margin:2px 0 0; font-size:0.95rem; }
@@ -1589,7 +1589,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-12.9';
+const APP_VERSION = '2026-11-12.10';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
