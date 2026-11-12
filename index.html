@@ -371,6 +371,31 @@
   .title-banner{ margin:-1px -1px 0; line-height:0; border-bottom:3px solid var(--ink); }
   .title-banner img{ width:100%; height:auto; display:block; aspect-ratio:3/2; background:var(--ink); }
   .title-fallback{ display:none; padding-top:50px; }
+
+  /* ---- Full-screen title scene ---- */
+  .title-hero{ position:fixed; inset:0; z-index:50; background:#0a1f44; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+  .title-hero .th-bg{ position:absolute; inset:-30px; background:url('images/title-hero-sm.jpg') center/cover no-repeat; filter:blur(18px) brightness(.5); }
+  .title-hero .th-stage{ position:relative; width:min(100vw, calc(100vh * 16 / 9)); aspect-ratio:16/9; container-type:size; }
+  .title-hero .th-img, .title-hero .th-img img{ display:block; width:100%; height:100%; }
+  .title-hero .th-tl{ position:absolute; left:3cqw; top:2.4cqh; color:#fff; pointer-events:none; }
+  .title-hero .th-ttl{ font-family:'Anton',sans-serif; text-transform:uppercase; letter-spacing:.06em; line-height:1; font-size:4.6cqw; text-shadow:0 3px 0 #0a1f44, 0 0 22px rgba(0,0,0,.75); }
+  .title-hero .th-sub{ font-family:'JetBrains Mono',monospace; font-weight:700; letter-spacing:.3em; text-transform:uppercase; color:#e3eeff; font-size:max(9px,.85cqw); margin-top:.5cqh; text-shadow:0 2px 6px #000; }
+  .title-hero .th-btn{ position:absolute; left:0; right:0; bottom:3cqh; text-align:center; }
+  .title-hero .th-btn button{ font-size:max(14px,1.35cqw); padding:.55em 2.6em; }
+  .title-old{ display:none; }
+  .title-hero.failed{ display:none; } .title-hero.failed + .title-old{ display:block; }
+  /* Phone held upright: full picture at screen width, title and button below it, all centred */
+  @media (orientation:portrait) and (max-width:900px){
+    .title-hero .th-bg{ display:none; }
+    .title-hero{ background:linear-gradient(#0d2a5c,#071634); flex-direction:column; }
+    .title-hero .th-stage{ width:100%; aspect-ratio:auto; container-type:normal; }
+    .title-hero .th-tl, .title-hero .th-btn{ position:static; text-align:center; }
+    .title-hero .th-tl{ margin-top:5vh; }
+    .title-hero .th-ttl{ font-size:min(13vw,72px); }
+    .title-hero .th-sub{ font-size:max(10px,2.7vw); margin-top:1vh; }
+    .title-hero .th-btn{ margin-top:4vh; }
+    .title-hero .th-btn button{ font-size:max(16px,5vw); }
+  }
   .title-screen.no-banner .title-banner{ display:none; }
   .title-screen.no-banner .title-fallback{ display:block; }
   .title-screen .sub{ margin:18px 0 20px; }
@@ -1549,7 +1574,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-12.3';
+const APP_VERSION = '2026-11-12.4';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -2791,7 +2816,17 @@ async function afterLogin(){
 }
 
 function renderTitle(){
+  const startLabel = AUTH.token ? 'Continue' : 'Begin';
   app.innerHTML = `
+    <div class="title-hero" id="title-hero">
+      <div class="th-bg"></div>
+      <div class="th-stage">
+        <picture class="th-img"><source media="(max-width:900px)" srcset="images/title-hero-sm.jpg"><img src="images/title-hero.jpg" alt="The Ultras" decoding="async"></picture>
+        <div class="th-tl"><div class="th-ttl">The Ultras</div><div class="th-sub">Solo Superhero Chronicles</div></div>
+        <div class="th-btn"><button id="btn-start">${startLabel}</button></div>
+      </div>
+    </div>
+    <div class="title-old">
     <div class="panel title-screen">
       <div class="title-banner"><img src="images/title-banner.jpg" alt="The Ultras" decoding="async" onerror="this.closest('.title-screen').classList.add('no-banner')"></div>
       <div class="title-fallback">
@@ -2800,12 +2835,14 @@ function renderTitle(){
       </div>
       <div class="sub">Solo Superhero Chronicles</div>
       <div class="menu-grid">
-        <button id="btn-start">${AUTH.token ? 'Continue' : 'Begin'}</button>
+        <button id="btn-start-old">${startLabel}</button>
       </div>
     </div>
+    </div>
   `;
-
-  document.getElementById('btn-start').onclick = ()=>{
+  const heroImg = document.querySelector('#title-hero .th-img img');
+  if(heroImg) heroImg.addEventListener('error', ()=>{ const h = document.getElementById('title-hero'); if(h) h.classList.add('failed'); });
+  const startGame = ()=>{
     if(AUTH.token){
       STATE.screen = 'HERO_SELECT';
     } else {
@@ -2815,6 +2852,8 @@ function renderTitle(){
     }
     render();
   };
+  document.getElementById('btn-start').onclick = startGame;
+  document.getElementById('btn-start-old').onclick = startGame;
 }
 
 function heroBuildText(h){
