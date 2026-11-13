@@ -860,7 +860,7 @@ function foeArmor(enemy){
 }
 /* One hit through armor. armor may be null. Returns damage after armor,
    the after-effect that still applies, and whether the armor cracks. */
-function armorOutcome(armor, rawDamage, type, color, mental, resist){
+function armorOutcome(armor, rawDamage, type, color, mental, resist, keepFx){
   if(!(rawDamage > 0)) return { damage: 0, absorbed: 0, cracked: false, after: null };
   let after = aftereffectFor(type, color);
   const aRank = (armor && armor.active && armor.rank > 0 && !mental) ? armor.rank : 0;
@@ -868,7 +868,7 @@ function armorOutcome(armor, rawDamage, type, color, mental, resist){
   const red = Math.max(aRank, rRank);
   if(!red) return { damage: rawDamage, absorbed: 0, cracked: false, after };
   const damage = Math.max(0, rawDamage - red);
-  if(damage === 0 && after !== 'slam') after = null;
+  if(damage === 0 && after !== 'slam' && !(keepFx && after === 'stun')) after = null;
   let cracked = false;
   if(aRank >= rRank){
     const gap = colIdxForNumber(rawDamage) - colIdxForNumber(aRank);
@@ -892,7 +892,7 @@ function armorHit(side, hero, enemy, rawDamage, type, color, powerName, source, 
   const area = side === 'hero' ? (opts.area || null) : null;
   const armor = side === 'hero' ? heroArmorNow(hero, area) : foeArmor(enemy);
   const res = resistFor(side === 'hero' ? heroResists(hero) : foeResists(enemy), source);
-  const ao = armorOutcome(armor, rawDamage, type, color, isMentalName(powerName) || !!opts.sonic, res.rank);
+  const ao = armorOutcome(armor, rawDamage, type, color, isMentalName(powerName) || !!opts.sonic, res.rank, !!opts.martialD);
   let rankAfter = armor ? armor.rank : 0;
   if(ao.cracked && armor){
     const cap = colIdxForNumber(armor.base);
@@ -1196,7 +1196,7 @@ function getOrCreateEnemy(name, details){
       stats = NPC_TIER_STATS[tierKey];
     }
     const maxHealth = enemyMaxHealth(stats);
-    STATE.enemies[key] = { name, stats, powers, maxHealth, currentHealth: maxHealth };
+    STATE.enemies[key] = { name, stats, powers, maxHealth, currentHealth: maxHealth, talents: named && named.talents ? named.talents.slice() : [] };
   }
   return STATE.enemies[key];
 }
@@ -1262,9 +1262,76 @@ function getPowerRank(hero, name){
    heroes with full mechanical descriptions from the rulebook's Talent
    Appendix). */
 function talentName(t){ return typeof t === 'string' ? t : t.name; }
+/* ---------- Talent rules ----------
+   Written effects (from the Talent Appendix and the house rules). Talents with
+   'mods' have their column shifts applied by the game itself, for heroes and
+   villains alike; the narrator is told not to add them again. */
+const TALENT_RULES = {
+  'martial arts a': { text: '+1 CS to the chance to Slam or Stun an opponent in unarmed combat.' },
+  'martial arts b': { text: '+1 CS to Fighting Ability in unarmed combat.', mods: [['unarmed',1]] },
+  'martial arts c': { text: '+1 CS to grappling, escaping and dodging actions.', mods: [['grapple',1],['escape',1],['dodge',1]] },
+  'martial arts d': { text: 'Can stun and slam opponents even if no damage was inflicted (for example through Body Armor).' },
+  'martial arts e': { text: '+1 to initiative rolls.' },
+  'martial arts f': { text: 'Defensive discipline: +1 CS to effective Strength for blocking, and +1 CS to resist enemy Slams and Stuns in hand-to-hand combat.' },
+  'wrestling': { text: '+2 CS on grappling attacks.', mods: [['grapple',2]] },
+  'escape artist': { text: '+1 CS on escape actions, and +1 CS to Agility for wriggling out of locks, chains, ropes and other restraints.', mods: [['escape',1]] },
+  'acrobatics': { text: '+1 CS to dodging, evading and escaping actions.', mods: [['dodge',1],['evade',1],['escape',1]] },
+  'tumbling': { text: 'Can make an Agility FEAT after any fall to land on his feet without damage, up to a fall of his Endurance rank number in stories.' },
+  'marksman': { text: '+1 CS with any ranged attack weapon that requires line of sight; no range penalties.', mods: [['ranged',1]] },
+  'gun': { text: '+1 CS with guns (handguns, rifles, blasters and similar).', mods: [['gun',1]] },
+  'thrown weapons': { text: '+1 CS to the Agility roll to hit when throwing a weapon.', mods: [['thrownWeapon',1]] },
+  'bow': { text: '+1 CS to the Agility roll to hit when using a bow.', mods: [['bow',1]] },
+  'blunt weapons': { text: '+1 CS to Fighting Ability when using a blunt weapon.', mods: [['bluntWeapon',1]] },
+  'sharp weapons': { text: '+1 CS to Fighting Ability when using an edged weapon.', mods: [['edgedWeapon',1]] },
+  'weapons specialist': { text: '+2 CS (instead of +1) with one particular weapon, and +1 to initiative when using it alone.' },
+  'aerial combat': { text: '+1 CS in aerial combat.' },
+  'underwater combat': { text: '+1 CS in underwater combat.' },
+  'resist domination': { text: '+1 CS to all Psyche FEATs against mental attacks.' },
+  'military': { text: '+1 CS to all FEATs using military hardware, including army weapons.' },
+  'streetsmart': { text: '+1 CS to all FEATs involving city life, including recognizing and dealing with gangs, and general survival on the street.' },
+  'crime': { text: '+1 CS when dealing with criminals, including masquerading as one.' },
+  'demolition': { text: '+1 CS to any FEAT involving explosives.' },
+  'pilot': { text: '+1 CS to Agility when performing a feat of flying an aircraft.' },
+  'driving': { text: '+1 CS to Agility for any feat while operating a vehicle on the ground.' },
+  'tracking': { text: '+1 CS to Intuition when trying to track someone (or to the Tracking power, if the character has it).' },
+  'crime boss': { text: '+1 CS to any FEAT involving knowledge of the criminal underworld.' },
+  'heir to fortune': { text: '+2 CS to Resources (the game does not track Resources).' },
+  'mystic origin': { text: '+1 CS to knowledge of the occult.' },
+  'demonologist': { text: '+1 CS to knowledge about demons.' },
+  'languages': { text: '+1 CS when determining the origin of written or spoken words.' },
+  'first aid': { text: 'Can halt the Endurance loss of another character, including those at 0 Health, who regain one rank of Endurance immediately (if any were lost).' },
+  'medicine': { text: 'Counts as two talents: acts as First Aid, plus +1 CS when dealing with medical problems (diagnosis, treatment, research).' },
+  'law enforcement': { text: 'Counts as two talents: the hero has both Gun and Law talents.' },
+  'student': { text: 'Trying to learn as much as possible about everything: no immediate +1 CS, but can buy additional talents at half normal price.' },
+  'multi-lingual': { text: 'Can speak several languages: make a Reason FEAT (White = 1 additional language, Green = 2, Yellow = 3, Red = 4); no Karma can be spent on this roll.' },
+  'leadership': { text: 'A recognized Leader (50 point Karma-pool benefit when forming a pool; not tracked in this game).' }
+};
+const TALENT_ALIASES = { 'martial arts': 'martial arts b', 'marksmanship': 'gun', 'guns': 'gun', 'bows': 'bow', 'thrown objects': 'thrown objects' };
+function talentKey(t){
+  let n = String(typeof t === 'string' ? t : (t && t.name) || '').toLowerCase().replace(/\s*\(.*?\)\s*/g, ' ').replace(/\s+/g, ' ').trim();
+  if(/^weapons specialist/.test(n)) return 'weapons specialist';
+  return TALENT_ALIASES[n] || n;
+}
+function talentHas(talents, key){ return (talents || []).some(t => talentKey(t) === key); }
+function talentAutoShifts(t){ const r = TALENT_RULES[talentKey(t)]; return !!(r && r.mods); }
+/* Sum of column shifts from a character's talents for the tags that describe this action; one per talent, capped at +3. */
+function talentShift(talents, tags){
+  let cs = 0; const names = [], seen = {};
+  (talents || []).forEach(t => {
+    const k = talentKey(t); if(seen[k]) return; seen[k] = true;
+    const r = TALENT_RULES[k]; if(!r || !r.mods) return;
+    let add = 0; r.mods.forEach(([tag, v]) => { if(tags.includes(tag)) add = Math.max(add, v); });
+    if(add){ cs += add; names.push(k); }
+  });
+  return { cs: Math.min(3, cs), names };
+}
+function talentInitBonus(talents){ return talentHas(talents, 'martial arts e') ? 1 : 0; }
 function talentLabel(t){
-  if(typeof t === 'string') return t;
-  return t.effect ? `${t.name} — ${t.effect}` : t.name;
+  const r = TALENT_RULES[talentKey(t)];
+  const name = typeof t === 'string' ? t : t.name;
+  const eff = (typeof t !== 'string' && t.effect) ? t.effect : (r ? r.text : '');
+  const note = r && r.mods && !(typeof t !== 'string' && /^weapons specialist/i.test(t.name)) ? ' [the game applies this talent\'s shift itself: do NOT add it to columnShift]' : '';
+  return eff ? `${name} — ${eff}${note}` : name;
 }
 
 /* =========================================================
@@ -1663,7 +1730,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-12.15';
+const APP_VERSION = '2026-11-13.1';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -2037,7 +2104,7 @@ const HERO_ACTION_HINTS = {
   premade_thunderbolt: 'THUNDER BOLT ACTION MAPPING: firing his energy bow or an arrow -> powerUsed "Energy Generation - Energy Arrows", actionType "energy", ability "Agility", targetsEnemy true (the game adds his +2 CS and the electric damage). Punching or kicking is a normal body blow (Fighting Ability, "blunt"). Shocking someone who grapples him counts as an escape using Energy Arrows.',
   premade_bones: 'BONES ACTION MAPPING: throwing any object or weapon (a pipe, chair, knife) -> "thrown" true, ability "Agility", powerUsed null, actionType "blunt" (or "edged" for a blade); the game adds her +1 CS for thrown objects and uses her Strength for damage.',
   premade_traumahawk: 'TRAUMAHAWK ACTION MAPPING: slashing or gripping strikes -> powerUsed "Talons", actionType "edged", ability "Fighting Ability" (damage is the higher of Talons or Strength). Kicks and punches are normal body blows.',
-  premade_tungstentitan: 'TUNGSTEN TITAN ACTION MAPPING: punches and kicks are normal body blows (Fighting Ability to hit, his Strength for damage). Tackling or barreling into a foe -> "charge". Wrestling, pinning or holding a foe -> "grapple"; his Martial Arts C (Grappling) talent gives +1 columnShift on grappling and escaping.',
+  premade_tungstentitan: 'TUNGSTEN TITAN ACTION MAPPING: punches and kicks are normal body blows (Fighting Ability to hit, his Strength for damage). Tackling or barreling into a foe -> "charge". Wrestling, pinning or holding a foe -> "grapple"; the game applies his Martial Arts C (Grappling) shift itself.',
   premade_silverstar: 'SILVER STAR ACTION MAPPING: his super speed replaces Agility, so thrown objects hit very well; his punches and kicks are normal body blows and hurt only for his Strength. Light Manipulation can dazzle but never hurts.',
   premade_steeltalon: 'STEEL TALON ACTION MAPPING: (a) hurling loose objects with wind, or slamming a foe into a wall, vehicle or other solid thing with Air Control -> powerUsed "Air Control", actionType "blunt", targetsEnemy true (it does damage at the power rank, and the slam can Slam the foe); if nothing solid or loose is plausibly nearby, do not allow a slam (use "feat"). (b) sending birds to attack -> powerUsed "Animal Control (Birds)", actionType "swarm", targetsEnemy true. (c) hurricane-force winds blowing back or holding off many foes, or keeping the area clear -> powerUsed "Air Control", actionType "gale", targetsEnemy false, enemyName null (crowd control, no damage). Harmless gusts and updrafts are "feat", never an attack.'
 };
@@ -2102,7 +2169,7 @@ const ESCAPE_BLOCK = /heal|track|communicat|regenerat|resistance|armor/i;
 function csBetween(myNum, theirNum){ return Math.max(-3, Math.min(3, colIdxForNumber(myNum) - colIdxForNumber(theirNum))); }
 function attackMappingText(hero){
   const held = STATE.heroHeld ? `\nTHE HERO IS HELD by ${STATE.heroHeld.by}: whatever the player tries is an ESCAPE attempt (actionType "escape", targetsEnemy false). Strength is the default; if the player uses a power to break free (flying, an energy burst, a gust of wind, a shock), set powerUsed to that power. A power that cannot plausibly break a hold (healing, tracking, communication, armor) is just a Strength attempt.\n` : '';
-  return `ATTACK RULES (all heroes): punches, kicks, headbutts and any other body blow -> actionType "blunt" (or "edged" with claws or a blade), ability "Fighting Ability", powerUsed null, thrown false. Throwing an object or weapon at a foe (a pipe or crate is "blunt", a knife is "edged") -> set "thrown" true, ability "Agility", powerUsed null. A tackle or running body-slam -> actionType "charge", ability "Endurance". A grapple, wrestling hold or pin -> actionType "grapple", ability "Strength". Do NOT add the Energy Bow's +2 CS or Bones' thrown-object +1 CS to columnShift: the game applies those itself. Damage is worked out by the game from the hero's sheet; never change it.\n${held}`;
+  return `ATTACK RULES (all heroes): punches, kicks, headbutts and any other body blow -> actionType "blunt" (or "edged" with claws or a blade), ability "Fighting Ability", powerUsed null, thrown false. Throwing an object or weapon at a foe (a pipe or crate is "blunt", a knife is "edged") -> set "thrown" true, ability "Agility", powerUsed null. A tackle or running body-slam -> actionType "charge", ability "Endurance". A grapple, wrestling hold or pin -> actionType "grapple", ability "Strength". Do NOT add the Energy Bow's +2 CS or Bones' thrown-object +1 CS to columnShift: the game applies those itself. Set "weaponUsed" to the weapon the hero wields or throws: "blunt" (pipe, bat, club), "edged" (knife, sword, axe), "bow" or "gun"; null for bare hands, powers and plain objects. Damage is worked out by the game from the hero's sheet; never change it.\n${held}`;
 }
 function resolveEscape(hero, chapter, classification){
   const held = STATE.heroHeld;
@@ -2112,7 +2179,7 @@ function resolveEscape(hero, chapter, classification){
   if(pr != null && ESCAPE_BLOCK.test(String(pw))) pr = null;
   const myNum = pr != null ? pr : heroStat(hero, 'Strength');
   const extra = Math.max(-2, Math.min(2, classification.columnShift || 0));
-  const cs = csBetween(myNum, held.strength) + extra;
+  const cs = csBetween(myNum, held.strength) + extra + talentShift(hero.talents, ['escape']).cs;
   const feat = resolveFeat(myNum, cs);
   const freed = feat.color !== 'white';
   if(freed) STATE.heroHeld = null;
@@ -2480,7 +2547,7 @@ Determine (for each action):
 14. "claimsUnlistedPower" (boolean) — true if the player's action relies on an ability this hero does NOT have: a power not on the sheet, or a listed power used for something its description does not allow (a force field, protective bubble, energy blast or beam, telekinesis, extra damage from a utility or communication power, etc.). Otherwise false.
 15. "taskSummary" — a very short plain label of the exact task being attempted (e.g. "lift the one-ton weight", "pick the vault lock"). Use the SAME label when the player simply tries the same thing again, and a DIFFERENT label when the player changes their approach (a lever, a different power, help from someone).
 ${heroPowerLimitsText(hero)}
-${namedEnemiesPromptText(STATE.adventureId, log)}${nonAttackRuleText(hero)}${attackMappingText(hero)}${heroActionHintsText(hero)}Return exactly: {"actions":[{"stepText":"...","requiresFeat":bool,"heroIsTarget":bool,"powerUsed":"..."|null,"ability":"...","actionType":"...","columnShift":int,"intensity":"..."|null,"enemyName":"..."|null,"enemyTier":"..."|null,"enemyStats":{...}|null,"enemyPowers":[...],"enemyWeapon":"..."|null,"enemyPowerUsed":"..."|null,"targetsEnemy":bool,"thrown":bool,"claimsUnlistedPower":bool,"taskSummary":"..."|null,"retreats":bool}, ...up to 3 items]}`;
+${namedEnemiesPromptText(STATE.adventureId, log)}${nonAttackRuleText(hero)}${attackMappingText(hero)}${heroActionHintsText(hero)}Return exactly: {"actions":[{"stepText":"...","requiresFeat":bool,"heroIsTarget":bool,"powerUsed":"..."|null,"ability":"...","actionType":"...","columnShift":int,"intensity":"..."|null,"enemyName":"..."|null,"enemyTier":"..."|null,"enemyStats":{...}|null,"enemyPowers":[...],"enemyWeapon":"..."|null,"enemyPowerUsed":"..."|null,"targetsEnemy":bool,"thrown":bool,"weaponUsed":"blunt"|"edged"|"bow"|"gun"|null,"claimsUnlistedPower":bool,"taskSummary":"..."|null,"retreats":bool}, ...up to 3 items]}`;
 
   const response = await fetchGeminiWithFallback({
     contents: [{ role:"user", parts:[{text: prompt}] }],
@@ -2510,6 +2577,7 @@ function normalizeClassification(parsed, hero, i){
   parsed.heroIsTarget = !!parsed.heroIsTarget;
   parsed.retreats = !!parsed.retreats;
   parsed.thrown = !!parsed.thrown;
+  if(!['blunt','edged','bow','gun'].includes(parsed.weaponUsed)) parsed.weaponUsed = null;
   parsed.targetsEnemy = !!parsed.targetsEnemy;
   if(!parsed.enemyName || typeof parsed.enemyName !== 'string' || !parsed.enemyName.trim()) parsed.enemyName = null;
   if(!['civilian','trained','super'].includes(parsed.enemyTier)) parsed.enemyTier = parsed.enemyName ? 'civilian' : null;
@@ -2611,7 +2679,23 @@ function resolveOne(hero, chapter, classification){
       rollNumber = heroStat(hero, 'Endurance'); dmgBase = heroStat(hero, 'Strength'); displayName = 'Endurance (charge)';
     }
   }
+  // Talent shifts (applied by the game, not the narrator) and Martial Arts effects.
+  const tTags = [];
+  { const at = classification.actionType, w = classification.weaponUsed || null;
+    if(at === 'grapple') tTags.push('grapple'); if(at === 'dodge') tTags.push('dodge'); if(at === 'evade') tTags.push('evade');
+    if(!classification.heroIsTarget && !pRoll){
+      if(w === 'bow') tTags.push('bow', 'ranged'); if(w === 'gun') tTags.push('gun', 'ranged');
+      if(classification.thrown && w) tTags.push('thrownWeapon', 'ranged');
+      if(!classification.thrown && w === 'blunt' && at === 'blunt') tTags.push('bluntWeapon');
+      if(!classification.thrown && w === 'edged' && at === 'edged') tTags.push('edgedWeapon');
+      if(!classification.thrown && !w && at === 'blunt' && usedPower == null) tTags.push('unarmed');
+    } }
+  const tShift = talentShift(hero.talents, tTags);
+  extraCS += tShift.cs;
   const feat = resolveFeat(rollNumber, Math.max(-6, Math.min(6, (classification.columnShift || 0) + extraCS)));
+  const heroMA_A = talentHas(hero.talents, 'martial arts a') && !classification.heroIsTarget && usedPower == null && feat.color !== 'white' && (classification.actionType === 'blunt' || classification.actionType === 'charge');
+  const effColor = heroMA_A ? resolveFeat(rollNumber, Math.max(-6, Math.min(6, (classification.columnShift || 0) + extraCS + 1)), feat.roll).color : feat.color;
+  const heroMA_D = talentHas(hero.talents, 'martial arts d') && usedPower == null && (classification.actionType === 'blunt' || classification.actionType === 'charge');
   // Impossible tasks: two or more ranks above the ability can never succeed,
   // and a task that already failed cannot be retried unchanged in this chapter.
   const abilityColIdx = colIdxForNumber(abilityNumber);
@@ -2698,7 +2782,7 @@ function resolveOne(hero, chapter, classification){
     const rawEnemyDamage = damageForAttack(heroDamageRank(hero, usedPower, dmgBase, classification.powerUsed), feat.color);
     const eao = classification.actionType === 'swarm'
       ? { damage: rawEnemyDamage, absorbed: 0, cracked: false, after: rawEnemyDamage > 0 ? aftereffectFor('swarm', feat.color) : null, text: '' }
-      : armorHit('foe', hero, enemy, rawEnemyDamage, classification.actionType, feat.color, classification.powerUsed, sourceOf(classification.powerUsed, hero.id));
+      : armorHit('foe', hero, enemy, rawEnemyDamage, classification.actionType, effColor, classification.powerUsed, sourceOf(classification.powerUsed, hero.id), { martialD: heroMA_D });
     const enemyDamage = eao.damage;
     if(enemyDamage > 0) enemy.currentHealth = Math.max(0, enemy.currentHealth - enemyDamage);
     const sheet = namedEnemyFor(enemy.name) || {};
@@ -4582,6 +4666,9 @@ function foeAttackProfile(enemy){
   const allPow = (enemy.powers || []).filter(p => isAttackPower(enemy, p));
   const special = allPow.filter(p => p.vsHeavyArmor);
   const powers = allPow.filter(p => !p.vsHeavyArmor);
+  if(heroHeavyArmored() && talentHas(enemy.talents, 'martial arts d') && (!special.length || rollD10() <= 5)){
+    return { tags: ['unarmed'], name: 'a martial-arts strike', type: 'blunt', martial: true, rollRank: rankNumberForName(enemy.stats['Fighting Ability']), damageRank: rankNumberForName(enemy.stats['Strength']) };
+  }
   if(special.length && heroHeavyArmored()){
     const sonic = special.find(p => p.effect === 'sonic'), pierce = special.find(p => p.effect === 'pierce');
     const p = sonic && pierce ? (rollD10() <= 3 ? sonic : pierce) : (sonic || pierce || special[0]);
@@ -4591,7 +4678,8 @@ function foeAttackProfile(enemy){
   if(enemy.weapon && WEAPON_DAMAGE_RANK[enemy.weapon]){
     const type = WEAPON_ACTION[enemy.weapon] || 'blunt';
     const rollStat = type === 'shooting' ? 'Agility' : 'Fighting Ability';
-    return { name: enemy.weapon, type, rollRank: Math.max(rankNumberForName(enemy.stats[rollStat]), rollStat === 'Agility' ? speedRankNumber(enemy) : 0), damageRank: rankNumberForName(WEAPON_DAMAGE_RANK[enemy.weapon]) };
+    const wtags = type === 'shooting' ? ['gun', 'ranged'] : type === 'edged' ? ['edgedWeapon'] : type === 'blunt' ? (enemy.weapon === 'unarmed strike' ? ['unarmed'] : ['bluntWeapon']) : [];
+    return { tags: wtags, name: enemy.weapon, type, rollRank: Math.max(rankNumberForName(enemy.stats[rollStat]), rollStat === 'Agility' ? speedRankNumber(enemy) : 0), damageRank: rankNumberForName(WEAPON_DAMAGE_RANK[enemy.weapon]) };
   }
   if(powers.length){
     const p = powers.slice().sort((a, b) => rankNumberForName(b.rank) - rankNumberForName(a.rank))[0];
@@ -4603,11 +4691,12 @@ function foeAttackProfile(enemy){
     const r = rankNumberForName(p.rank);
     return { name: p.name, type, source: src, rollRank: r, damageRank: r };
   }
-  return { name: 'a heavy blow', type: 'blunt', rollRank: rankNumberForName(enemy.stats['Fighting Ability']), damageRank: rankNumberForName(enemy.stats['Strength']) };
+  return { tags: ['unarmed'], name: 'a heavy blow', type: 'blunt', rollRank: rankNumberForName(enemy.stats['Fighting Ability']), damageRank: rankNumberForName(enemy.stats['Strength']) };
 }
 function resolveFoeTurn(enemy, shift){
   const prof = foeAttackProfile(enemy);
-  const feat = resolveFeat(prof.rollRank, shift || 0);
+  const fts = talentShift(enemy.talents, prof.tags || []);
+  const feat = resolveFeat(prof.rollRank, (shift || 0) + fts.cs);
   if(prof.sonic){
     const lvl = feat.color === 'white' ? 0 : feat.color === 'green' ? 1 : feat.color === 'yellow' ? 2 : 3;
     if(lvl) STATE.heroDisrupt = Math.max(STATE.heroDisrupt || 0, lvl);
@@ -4615,7 +4704,10 @@ function resolveFoeTurn(enemy, shift){
   }
   const raw = damageForAttack(prof.damageRank, feat.color);
   const area = heroArmor(STATE.activeHero) ? pickArmorArea() : null;
-  const ao = armorHit('hero', STATE.activeHero, null, raw, prof.type, feat.color, prof.name, prof.source || null, { area, pierce: !!prof.pierce });
+  const foeUnarmed = (prof.tags || []).includes('unarmed') && prof.type === 'blunt';
+  const maA = talentHas(enemy.talents, 'martial arts a') && foeUnarmed && feat.color !== 'white';
+  const effColor = maA ? resolveFeat(prof.rollRank, (shift || 0) + fts.cs + 1, feat.roll).color : feat.color;
+  const ao = armorHit('hero', STATE.activeHero, null, raw, prof.type, effColor, prof.name, prof.source || null, { area, pierce: !!prof.pierce, martialD: foeUnarmed && talentHas(enemy.talents, 'martial arts d') });
   return { kind:'attack', name: enemy.name, attack: prof.name, type: prof.type, roll: feat.roll, color: feat.color, area: (feat.color !== 'white' && prof.pierce) ? area : null, pierced: !!ao.pierced,
            label: actionLabel(prof.type, feat.color), damage: ao.damage, after: ao.after, armorText: ao.text, armorAbsorbed: ao.absorbed };
 }
@@ -4627,7 +4719,7 @@ function resolveFoeEscape(e){
   const pows = (e.powers || []).filter(p => isAttackPower(e, p)).sort((a, b) => rankNumberForName(b.rank) - rankNumberForName(a.rank));
   const pw = pows.length && rankNumberForName(pows[0].rank) > strNum ? pows[0] : null;
   const myNum = pw ? rankNumberForName(pw.rank) : strNum;
-  const feat = resolveFeat(myNum, csBetween(myNum, held.strength));
+  const feat = resolveFeat(myNum, csBetween(myNum, held.strength) + talentShift(e.talents, ['escape']).cs);
   const freed = feat.color !== 'white';
   if(freed) e.held = null;
   let damage = 0, after = null, armorText = '';
@@ -4745,8 +4837,8 @@ async function startCombat(hero, chapter, log){
     });
   }
   const active = list.slice(0, COMBAT_MAX_FOES), queue = list.slice(COMBAT_MAX_FOES);
-  const heroInit = rollD10() + ((hero.stats && hero.stats.Intuition) || 0);
-  const order = active.map(e => { e.status = 'active'; e.stunned = false; return { key: enemyKey(e), init: rollD10() + rankNumberForName(e.stats.Intuition) }; });
+  const heroInit = rollD10() + ((hero.stats && hero.stats.Intuition) || 0) + talentInitBonus(hero.talents);
+  const order = active.map(e => { e.status = 'active'; e.stunned = false; return { key: enemyKey(e), init: rollD10() + rankNumberForName(e.stats.Intuition) + talentInitBonus(e.talents) }; });
   order.sort((a, b) => b.init - a.init);
   queue.forEach(e => { e.status = 'queued'; });
   STATE.combat = { round: 1, heroInit, order, queue: queue.map(enemyKey) };
@@ -4787,8 +4879,8 @@ async function resolveCombatRound(hero, chapter, text, opts){
       if(r.damage > 0){
         if(r.after === 'kill'){ STATE.currentHealth = 0; r.devastating = true; }
         else STATE.currentHealth = Math.max(0, STATE.currentHealth - r.damage);
-        if(r.after === 'stun') STATE.heroStunned = true;
       }
+      if(r.after === 'stun') STATE.heroStunned = true;
       events.push(r);
     }
   };
@@ -4861,7 +4953,7 @@ async function resolveCombatRound(hero, chapter, text, opts){
     const k = c.queue.shift(); const e = STATE.enemies[k];
     if(!e || e.currentHealth <= 0) continue;
     e.status = 'active'; e.stunned = false;
-    c.order.push({ key: k, init: rollD10() + rankNumberForName(e.stats.Intuition) });
+    c.order.push({ key: k, init: rollD10() + rankNumberForName(e.stats.Intuition) + talentInitBonus(e.talents) });
     joined.push(e.name);
     events.push({ kind:'join', name: e.name });
   }
