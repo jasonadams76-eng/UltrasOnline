@@ -1325,6 +1325,7 @@ function talentShift(talents, tags){
   });
   return { cs: Math.min(3, cs), names };
 }
+function talentEffectText(name){ const r = TALENT_RULES[talentKey(name)]; return r ? r.text : '+1 CS to FEATs where this talent would be useful (the Judge has the final say).'; }
 function talentInitBonus(talents){ return talentHas(talents, 'martial arts e') ? 1 : 0; }
 function talentLabel(t){
   const r = TALENT_RULES[talentKey(t)];
@@ -1730,7 +1731,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-13.1';
+const APP_VERSION = '2026-11-13.2';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -3360,7 +3361,9 @@ function advanceSection(h){
       .map(p => `<option value="${escapeHtml(p.name)}" data-cost="${p.double ? 8000 : 4000}">${escapeHtml(p.name)}${p.double ? ' ★' : ''} — ${p.double ? 8000 : 4000}</option>`).join('');
     const tOpts = ADV_LISTS.talents.filter(t => !ownedT.includes(normName(t.name)))
       .map(t => `<option value="${escapeHtml(t.name)}" data-cost="${t.double ? 4000 : 2000}">${escapeHtml(t.name)}${t.double ? ' ★' : ''} — ${t.double ? 4000 : 2000}</option>`).join('');
+    const firstT = ADV_LISTS.talents.find(t => !ownedT.includes(normName(t.name)));
     addHtml = `<div class="adv-add"><label>Add a talent <select id="adv-talent-sel">${tOpts}</select></label> <button class="secondary small" id="adv-talent-buy">Buy</button></div>
+      <div class="tag" id="adv-talent-eff" style="margin:-4px 0 8px;">${firstT ? escapeHtml(talentEffectText(firstT.name)) : ''}</div>
       <div class="adv-add"><label>Add a power (starts at Typical 6) <select id="adv-power-sel">${pOpts}</select></label> <button class="secondary small" id="adv-power-buy">Buy</button></div>
       <div class="tag">★ costs double.</div>`;
   }
@@ -3388,6 +3391,8 @@ function wireAdvanceSection(h){
     STATE.advConfirm = { hero:h.id, kind, target:sel.value, cost:+opt.getAttribute('data-cost'), label:`gain the ${word} ${sel.value}` };
     STATE.advMsg = null; render();
   };
+  const tsel = document.getElementById('adv-talent-sel'), teff = document.getElementById('adv-talent-eff');
+  if(tsel && teff) tsel.onchange = ()=>{ teff.textContent = tsel.value ? talentEffectText(tsel.value) : ''; };
   const tb = document.getElementById('adv-talent-buy'); if(tb) tb.onclick = ()=>pick('adv-talent-sel','talent','talent');
   const pb = document.getElementById('adv-power-buy'); if(pb) pb.onclick = ()=>pick('adv-power-sel','power','power');
   const no = document.getElementById('adv-confirm-no'); if(no) no.onclick = ()=>{ STATE.advConfirm = null; render(); };
