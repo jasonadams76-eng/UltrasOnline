@@ -146,6 +146,8 @@
 
   .error-box{ border:2px solid var(--hero-red); background:#fff0ee; color:var(--hero-red); padding:10px 14px; font-family:'JetBrains Mono',monospace; font-size:0.8rem; margin-top:10px; }
 
+  .foe-roll{ background:#fbeeee; border-left:3px solid #a33; color:#5a1d1d; }
+  .karma-have{ display:block; margin-top:4px; font-size:0.85rem; color:#555; }
   .feat-roll{
     font-family:'JetBrains Mono',monospace; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.5px;
     border:1.5px solid var(--ink); padding:5px 9px; margin-bottom:8px; display:inline-block;
@@ -1495,6 +1497,7 @@ function validateAdventure(doc, fileName){
     chapters: doc.chapters.map(ch => ({
       id: ch.id, title: ch.title, eyebrow: ch.eyebrow,
       opening: joinLines(ch.opening), gmInstructions: joinLines(ch.gmInstructions),
+      notYet: ch.notYet ? joinLines(ch.notYet) : '',
       imagePrompt: ch.imagePrompt ? String(ch.imagePrompt) : '',
       hoursBefore: (ch.hoursBefore != null && isFinite(Number(ch.hoursBefore)) && Number(ch.hoursBefore) >= 0) ? Number(ch.hoursBefore) : null
     }))
@@ -1546,7 +1549,10 @@ RULES YOU MUST FOLLOW:
 - Judge the player's stated plan fairly against their hero sheet (stats, powers, bio). Clever, well-suited plans should go well; reckless or ill-suited plans can go wrong, but keep the story moving — failure should complicate, not dead-end.
 - A hero can only do what their listed Powers, Talents, Stats and gear allow, exactly as described on the sheet. If the player tries something the sheet does not give them (a force field, an energy beam, telekinesis, a new power, or a listed power used for something it does not do), it DOES NOT WORK: narrate the attempt failing or the hero doing the nearest ordinary physical thing instead (dodging, blocking, striking). Never invent a power, never stretch a power past its description, and never reward the attempt with a success. Do not lecture the player; just let the fiction show it did not work.
 - When real time passes with no foe attacking or threatening the hero (a rest, a conversation, a trip, a search, an interlude after a fight), end your reply with a line such as "[TIME: 5 minutes]" (units: seconds, minutes, hours or days) giving how much time passed, so the hero can recover. Never use it while a fight or danger is ongoing, and never mention that the line exists.
-- When the hero is suddenly attacked or an ambush or fight breaks out, end your reply with the line "[COMBAT]" so turn-based combat can begin. Do not use it for a threat that has not yet attacked. Never mention that the line exists.
+- When the hero is suddenly attacked or an ambush or fight breaks out, end your reply with a combat line so turn-based combat can begin: "[COMBAT]" when both sides know about each other; "[COMBAT:HERO]" when the hero has the drop on foes who have NOT noticed him (he is hidden, behind them, or striking first); "[COMBAT:FOES]" when the foes ambush the hero. Your reply must make it unmistakable to the player that a fight has begun: say who has noticed the hero and what the foes are about to do, but never write whether the first attack hits (the game rolls it). Do not use these lines for a threat that has not yet attacked or been spotted. Never mention that the lines exist.
+- If, during a fight, the foes plainly comply with the hero's words (they drop their weapons, back down or agree to stop), end that reply with the line "[STAND_DOWN]" and show clearly why they comply. Never mention that the line exists.
+- CHAPTER BOUNDARIES: the lines "DO NOT RESOLVE IN THIS CHAPTER" and "LATER CHAPTERS" below name story beats that belong to other chapters. The player may work toward them, but never play them out, answer them or reveal them early. If the player's plan would jump ahead, let the hero make real progress and stop at the chapter's own boundary.
+- GROUP EVACUATIONS: a crowd of six or more civilians is ONE objective, not one target per person. When the player says they will make as many trips as it takes (or otherwise brings everyone out in one command), the game rolls ONE FEAT for the whole job: green or better means everyone reaches safety (summarize the trips in a few vivid sentences); white means most are safe but a complication leaves some people behind or hurt, which needs another action. Trips take real time. Never add weather holds, countdowns or other stalls just to stretch an evacuation out, and never change the headcount the chapter states.
 - When the hero arrives at a place with proper tools and equipment where armor or gear can be repaired (their own lab, ORACLE's workshop, a well-equipped garage), end your reply with the line "[WORKSHOP]". Never mention that the line exists.
 - Nobody dies from a combat result. A gravely wounded foe or hero is badly hurt, unconscious and survivable, never dead. When a foe is gravely wounded, let the hero notice and have the chance to check on them.
 - Never invent physical features the hero does not have. Describe the hero only as the Appearance and Canon note on the hero sheet say: no wings, capes, armor, masks or weapons that are not listed. Powers work as the sheet describes them.
@@ -1680,7 +1686,8 @@ async function saveGame(heroId, gameState){
 function slimTranscript(log){
   if(!Array.isArray(log) || !log.length) return undefined;
   return log.map(e=>({chapterId:e.chapterId, chapterTitle:e.chapterTitle, chapterEyebrow:e.chapterEyebrow, who:e.who, text:e.text,
-    mechanics: e.mechanics ? {ability:e.mechanics.ability, effectiveRank:e.mechanics.effectiveRank, roll:e.mechanics.roll, label:e.mechanics.label} : null}));
+    mechanics: e.mechanics ? {ability:e.mechanics.ability, effectiveRank:e.mechanics.effectiveRank, roll:e.mechanics.roll, label:e.mechanics.label} : null,
+    rolls: Array.isArray(e.rolls) && e.rolls.length ? e.rolls.map(t => String(t).slice(0, 220)) : undefined, defeat: e.defeat ? true : undefined}));
 }
 async function pushKarma(heroId, adventureId, review, fullLog){
   if(!review || !Array.isArray(review.awards)) return false;
@@ -1731,7 +1738,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-14.1';
+const APP_VERSION = '2026-11-14.2';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -1955,7 +1962,8 @@ const KARMA_GUIDE = `HOW TO RECOGNIZE EACH AWARD IN THE STORY (read the whole tr
 - Showing Off: the hero uses powers flashily or heroically in front of a crowd or witnesses.
 - Humor: ANY joke, quip, pun, wisecrack or funny line the PLAYER'S HERO says or does. Humor is subjective, so award it when the line was clearly meant to be funny. Report each distinct moment.
 - Personal Commitment / Act of Charity: the hero fulfills a stated personal goal / gives time, money or help freely to people in need.
-- Negative awards: only when the HERO clearly commits or allows the wrongdoing, or loses in front of witnesses/in private. Do not penalize the hero for things the villains did that the hero could not stop.
+- Defeats: the game itself records a Public Defeat each time ORACLE has to rescue the hero. Do NOT report Public Defeat or Private Defeat events.
+- Negative awards: only when the HERO clearly commits or allows the wrongdoing. Do not penalize the hero for things the villains did that the hero could not stop.
 When the hero's actions plausibly fit a category, include it and quote the moment. Do not invent events that are not in the transcript.`;
 
 function karmaEntriesToText(entries, alias){
@@ -2018,7 +2026,7 @@ function applyKarmaEvents(events){
 /* Sends a completed adventure's transcript to the GM model and returns
    {awards:[{category,points,note}], total}. Used at the epilogue and by the
    admin "Re-run Karma review" tool. Throws on a connection/format failure. */
-async function reviewKarmaText(heroDesc, transcript){
+async function reviewKarmaText(heroDesc, transcript, defeats){
   // A full 10-chapter chronicle is ~73k characters; this cap is only a backstop against a pathological save.
   transcript = transcript.slice(0, 100000);
   const names = Object.values(KARMA_TABLE).map(c=>c.name).filter(n=>n !== KARMA_MASS_RESCUE).concat([KARMA_FOE_CATEGORY]).join('; ');
@@ -2051,10 +2059,10 @@ Respond with ONLY a raw JSON object, no markdown, no commentary:
   let parsed;
   try{ parsed = JSON.parse(text); }
   catch(e){ throw new Error('Karma review returned malformed JSON'); }
-  return applyKarmaEvents(parsed.events || parsed.awards);
+  return applyDefeatAwards(applyKarmaEvents(parsed.events || parsed.awards), defeats);
 }
 async function callKarmaReview(hero){
-  return reviewKarmaText(`${hero.alias} (${hero.name})`, buildKarmaTranscript(hero));
+  return reviewKarmaText(`${hero.alias} (${hero.name})`, buildKarmaTranscript(hero), STATE.fullLog.filter(e => e.defeat).length);
 }
 
 /* Fire-and-forget, mirrors ensureOpeningImage()'s pattern: kicks off the
@@ -2227,6 +2235,18 @@ function stepsBlockText(mechanics){
     return `Step ${i+1} (${st.text}): ${m.usedPower ? 'Power' : 'Ability'} ${m.ability} (${m.effectiveRank}${m.columnShift ? ', shifted from '+m.baseRank+' by '+(m.columnShift>0?'+':'')+m.columnShift+' CS' : ''}), action type ${m.actionType}. Roll ${m.roll}, result color ${m.color.toUpperCase()}. Outcome: ${m.label}${mechNotes(m)}`;
   }).join('\n');
 }
+function chapterBoundaryText(chapter){
+  let out = '';
+  let later = [];
+  try{
+    const chs = currentAdventureChapters();
+    const idx = chs.findIndex(c => c.id === chapter.id);
+    later = idx >= 0 ? chs.slice(idx + 1) : [];
+  }catch(e){ later = []; }
+  if(chapter.notYet) out += `\nDO NOT RESOLVE IN THIS CHAPTER (these belong to later chapters; the player may work toward them but they must not happen yet): ${chapter.notYet}`;
+  if(later.length) out += `\nLATER CHAPTERS (hidden, for your awareness only; never play them out or reveal them early): ${later.map(c => c.title).join('; ')}.`;
+  return out;
+}
 async function callGM(hero, chapter, log, newPlayerLine, mechanics, healthContext, extraBlock) {
 
   const heroSheet = `Name: ${hero.name}
@@ -2278,7 +2298,7 @@ ${heroSheet}
 
 CURRENT CHAPTER (hidden from player — never quote this verbatim):
 Title: ${chapter.title}
-${chapter.gmInstructions}${namedEnemiesNarratorText(STATE.adventureId, log)}${mechanicsBlock}${extraBlock || ''}${healthContext ? `
+${chapter.gmInstructions}${chapterBoundaryText(chapter)}${namedEnemiesNarratorText(STATE.adventureId, log)}${mechanicsBlock}${extraBlock || ''}${healthContext ? `
 
 HERO'S CURRENT CONDITION (never state numbers or the word "Health" — reflect this only as physical wear/breathlessness/injury in the prose when relevant): ${healthContext}` : ''}`;
 
@@ -2384,7 +2404,7 @@ CURRENT CHAPTER (hidden from player — never quote this verbatim):
 Title: ${chapter.title}
 ${chapter.gmInstructions}
 
-THE HERO HAS JUST BEEN OVERWHELMED — battered past the point of continuing to fight or act under their own power. Write a vivid 2-4 paragraph beat where Victor Cross and a strike team of ORACLE agents arrive just in time, extract the hero from danger, and finish resolving whatever remains of this chapter's crisis on the hero's behalf (stopping the threat, securing civilians, whatever the scene calls for) — treat this as a dramatic "cavalry arrives" rescue, not a failure or a scolding. Let the hero have been the one who got things far enough (softened up the threat, found the key clue, held the line) that ORACLE's arrival is a capstone to their effort rather than an erasure of it. Close with the hero safe, conscious enough to know they're safe, and the immediate crisis over. End your reply with the exact line "[CHAPTER_COMPLETE]" on its own line, after this closing beat. Do not mention that token exists.`;
+THE HERO HAS JUST BEEN BEATEN: the fight you just narrated ended with him knocked out and unable to go on. Write a vivid 3-4 paragraph beat, in this order. (1) State plainly that he lost this fight: what struck him down, that he blacked out or collapsed, and that the threat was winning. Do not soften this into a victory. (2) Victor Cross and an ORACLE strike team arrive and pull him out: they carry him clear, stabilize him, and deal with the threat (stopping the foes, securing civilians, whatever the scene needs). Make clear that it was ORACLE who saved the day, not the hero. (3) The hero comes round, hurt, with medics at his side, aware that he was beaten and that it cost him (a wound, a bruised reputation, someone else having to finish the job). Do not scold him, but do NOT call it a triumph and do NOT say the crisis is over as if he won. End your reply with the exact line "[CHAPTER_COMPLETE]" on its own line. Do not mention that token exists.`;
 
   const contents = [];
   const MAX_HISTORY = 20;
@@ -2397,7 +2417,7 @@ THE HERO HAS JUST BEEN OVERWHELMED — battered past the point of continuing to 
   const response = await fetchGeminiWithFallback({
     systemInstruction: { parts: [{ text: systemInstruction }] },
     contents,
-    generationConfig: { temperature: 0.9, topP: 0.95, topK: 40, maxOutputTokens: 500 }
+    generationConfig: { temperature: 0.9, topP: 0.95, topK: 40, maxOutputTokens: 800 }
   });
 
   if(!response.ok) throw new Error(`ORACLE rescue connection failed (${response.status} from ${response.usedModel})`);
@@ -3629,6 +3649,7 @@ function transcriptToText(d){
   let last;
   d.entries.forEach(e=>{
     if(e.chapterId !== last){ last = e.chapterId; out += `\n=== ${e.chapterTitle||''} ===\n`; }
+    if(e.who==='gm' && Array.isArray(e.rolls)) e.rolls.forEach(t => { out += `  [${t}]\n`; });
     out += `${e.who==='gm' ? 'GM' : heroLabel(d.hero_id)}: ${e.text}\n`;
   });
   if(d.awards && d.awards.length){
@@ -3668,7 +3689,8 @@ function renderTranscript(){
       if(e.chapterId !== last){ last = e.chapterId; head = `<div class="chapter-eyebrow display" style="margin-top:18px;">${escapeHtml(e.chapterEyebrow||'')}</div><h3 style="margin:2px 0 8px;">${escapeHtml(e.chapterTitle||'')}</h3>`; }
       const m = e.mechanics;
       const feat = (e.who==='gm' && m) ? `<div class="tag">FEAT: ${escapeHtml(m.ability)} (${escapeHtml(m.effectiveRank)}) · Roll ${m.roll} · ${escapeHtml(m.label)}</div>` : '';
-      return `${head}<div class="entry ${e.who}"><div class="who">${e.who==='gm' ? 'Game Master' : escapeHtml(heroLabel(d.hero_id))}</div>${feat}<div class="text">${escapeHtml(e.text)}</div></div>`;
+      const rl = (e.who==='gm' && Array.isArray(e.rolls)) ? e.rolls.map(t => `<div class="tag">${escapeHtml(t)}</div>`).join('') : '';
+      return `${head}<div class="entry ${e.who}"><div class="who">${e.who==='gm' ? 'Game Master' : escapeHtml(heroLabel(d.hero_id))}</div>${feat}${rl}<div class="text">${escapeHtml(e.text)}</div></div>`;
     }).join('');
     const awards = (d.awards||[]).length ? `<div class="hist-sub">Karma earned${d.total!=null ? ' — '+d.total : ''}</div><ul class="karma-awards">${d.awards.map(a=>`<li>${escapeHtml(signed(a.points))} ${escapeHtml(a.category)}${a.note ? ' — '+escapeHtml(a.note) : ''}</li>`).join('')}</ul>` : '';
     body = `
@@ -3717,7 +3739,7 @@ function renderTranscript(){
     try{
       const ph = PREMADE_HEROES.find(h=>h.id===d.hero_id);
       const alias = heroLabel(d.hero_id);
-      const result = await reviewKarmaText(ph ? `${ph.alias} (${ph.name})` : alias, karmaEntriesToText(d.entries, alias));
+      const result = await reviewKarmaText(ph ? `${ph.alias} (${ph.name})` : alias, karmaEntriesToText(d.entries, alias), (d.entries || []).filter(e => e.defeat).length);
       tr.review = { result };
     }catch(e){ tr.review = { error: e.message || 'The review could not be completed.' }; }
     if(STATE.screen==='TRANSCRIPT') render();
@@ -4386,9 +4408,25 @@ function currentChapterMeta(){
   const chapter = currentChapter();
   return {title: chapter.title, eyebrow: chapter.eyebrow};
 }
-function pushFullLog(who, text, mechanics){
+function pushFullLog(who, text, mechanics, extra){
   const meta = currentChapterMeta();
-  STATE.fullLog.push({chapterId: STATE.chapterId, chapterTitle: meta.title, chapterEyebrow: meta.eyebrow, who, text, mechanics: mechanics || null});
+  const entry = {chapterId: STATE.chapterId, chapterTitle: meta.title, chapterEyebrow: meta.eyebrow, who, text, mechanics: mechanics || null};
+  if(extra) Object.assign(entry, extra);
+  STATE.fullLog.push(entry);
+}
+/* A hero beaten badly enough that ORACLE has to pull him out takes a Public Defeat Karma penalty. */
+const DEFEAT_KARMA = (KARMA_TABLE['public defeat'] || { points: -40 }).points;
+function defeatAftermathText(hero, endsChapter){
+  const half = Math.ceil(maxHealth(hero) / 2);
+  return `ORACLE patches you up: you come to with ${half} Health${endsChapter ? ', and the chapter ends here' : ' and the fight is still ahead of you'}. Public Defeat: needing a rescue takes ${Math.abs(DEFEAT_KARMA)} Karma off this mission's award.`;
+}
+function applyDefeatAwards(result, defeats){
+  const n = Math.max(0, Math.floor(defeats) || 0);
+  if(!result || !n) return result;
+  const kept = (result.awards || []).filter(a => !/^(public|private) defeat$/i.test(String(a.category || '').trim()));
+  for(let i = 0; i < n; i++) kept.push({ category: 'Public Defeat', points: DEFEAT_KARMA, note: n > 1 ? `ORACLE had to rescue the hero (rescue ${i + 1} of ${n}).` : 'ORACLE had to rescue the hero.' });
+  const capped = kept.slice(0, KARMA_MAX_AWARDS);
+  return { awards: capped, total: capped.reduce((t, a) => t + a.points, 0) };
 }
 function printTranscriptWindow(opts){
   const hero = {alias: opts.heroAlias};
@@ -4419,7 +4457,8 @@ function printTranscriptWindow(opts){
     }
     const m = entry.mechanics;
     const featHtml = (entry.who==='gm' && m) ? `<div class="feat">FEAT: ${escapeHtml(m.ability)} (${escapeHtml(m.effectiveRank)}) · Roll ${m.roll} · ${escapeHtml(m.label)}</div>` : '';
-    html += `<div class="entry ${entry.who}"><div class="who">${entry.who==='gm' ? 'Game Master' : escapeHtml(hero.alias)}</div>${featHtml}<div class="text">${escapeHtml(entry.text)}</div></div>`;
+    const rollsPrint = (entry.who==='gm' && Array.isArray(entry.rolls)) ? entry.rolls.map(t => `<div class="feat">${escapeHtml(t)}</div>`).join('') : '';
+    html += `<div class="entry ${entry.who}"><div class="who">${entry.who==='gm' ? 'Game Master' : escapeHtml(hero.alias)}</div>${featHtml}${rollsPrint}<div class="text">${escapeHtml(entry.text)}</div></div>`;
   });
 
   html += `</body></html>`;
@@ -4472,10 +4511,11 @@ function renderPlay(){
         <span class="feat-tag">FEAT</span> ${escapeHtml(m.ability)} (${escapeHtml(m.effectiveRank)}) · Roll ${m.roll} ·
         <span class="feat-color-tag">${m.color.toUpperCase()}</span> · ${escapeHtml(m.label)}${enemyBadge}${(m.armor && m.armor.absorbed) ? ' · Armor absorbed ' + m.armor.absorbed : ''}
       </div>` : '';
+    const rollsHtml = (e.who==='gm' && Array.isArray(e.rolls)) ? e.rolls.map(t => `<div class="feat-roll foe-roll">${escapeHtml(t)}</div>`).join('') : '';
     return `
     <div class="entry ${e.who}">
       <div class="who">${e.who==='gm' ? 'Game Master' : hero.alias}</div>
-      ${mechanicsHtml}
+      ${mechanicsHtml}${rollsHtml}
       <div class="text">${escapeHtml(e.text)}</div>
       ${e.villain ? `<div class="scene-image-wrap villain-card"><img class="scene-image" src="${escapeHtml(e.villain.url)}" alt="${escapeHtml(e.villain.name)}" onerror="this.parentNode.remove()"><div class="villain-cap">${escapeHtml(e.villain.name)}</div></div>` : ''}
     </div>
@@ -4539,7 +4579,7 @@ function renderPlay(){
           <button id="btn-continue">${STATE.pendingAdvance === 'FINISHED' ? 'View epilogue' : 'Continue to next chapter'}</button>
         </div>
       ` : `
-        ${combatPanelHtml()}${checkPromptsHtml()}
+        ${karmaPromptHtml()}${combatPanelHtml()}${checkPromptsHtml()}
         ${heroCanTransform(hero) ? `<div style="margin-bottom:8px;"><button id="btn-transform" class="secondary" ${STATE.busy?'disabled':''}>Transform: ${STATE.transformed ? 'return to human form' : 'change to tungsten form'}${STATE.combat ? ' (uses your action)' : ''}</button></div>` : ''}
         <div class="input-row">
           <textarea id="player-input" placeholder="${STATE.combat ? (speedActions(hero) > 1 ? 'Your actions this round: up to ' + speedActions(hero) + ', one per line (Round ' + STATE.combat.round + ')' : 'Your action this turn (Round ' + STATE.combat.round + ')') : 'What does ' + escapeHtml(hero.alias) + ' do?'}" ${STATE.busy?'disabled':''}></textarea>
@@ -4597,6 +4637,11 @@ function renderPlay(){
 
   const continueBtn = document.getElementById('btn-continue');
   if(continueBtn) continueBtn.onclick = ()=> advanceChapter();
+
+  const answerKarma = (v)=>{ const kp = STATE.karmaPrompt; if(!kp) return; STATE.karmaPrompt = null; kp.resolve(v); render(); };
+  const karmaYes = document.getElementById('btn-karma-yes'), karmaNo = document.getElementById('btn-karma-no');
+  if(karmaYes) karmaYes.onclick = ()=> answerKarma(true);
+  if(karmaNo) karmaNo.onclick = ()=> answerKarma(false);
 }
 
 async function advanceChapter(){
@@ -4646,6 +4691,104 @@ async function advanceChapter(){
    every foe then acts on its own FEAT roll, and one narration covers the
    whole round. It ends when every foe is down, surrenders or flees, when the
    hero falls (ORACLE) or when the hero retreats on purpose. */
+
+/* ---------- Kill checks, Karma saves and visible foe-roll lines ---------- */
+const RETREAT_WORDS = /\b(retreat|flee|fall back|withdraw|run away|run for it|break off|disengage|pull back|back off|bug out|escape the fight|leave the fight|get out of (here|there))\b/i;
+function retreatIntent(text){ return RETREAT_WORDS.test(String(text || '')); }
+function groupRescueIntent(text){
+  const t = String(text || '');
+  if(/\b(as many (trips|flights|runs|journeys|times)|every trip|all the trips)\b/i.test(t)) return true;
+  return /\b(everyone|everybody|all (of )?the (civilians|passengers|people|survivors|hostages|residents|commuters))\b/i.test(t) && /\b(safety|safe|across|home|passage|evacuat\w*|ferry|carry|escort|bring|lead|fly)\b/i.test(t);
+}
+function lowestRollForColor(abilityNumber, want){
+  const order = { white:0, green:1, yellow:2, red:3 };
+  for(let r = 1; r <= 100; r++){ if(order[resolveFeat(abilityNumber, 0, r).color] >= order[want]) return r; }
+  return null;
+}
+/* A Kill result: the hero takes his damage, then makes an Endurance FEAT on the
+   Kill column. White is bad; green is also bad against edged and shooting attacks.
+   Karma can be added to the roll: the cost is how far the roll falls short of the
+   lowest roll that keeps him on his feet. */
+function killCheckRoll(hero, attackType){
+  const end = heroStat(hero, 'Endurance');
+  const f = resolveFeat(end, 0);
+  const strict = attackType === 'edged' || attackType === 'shooting';
+  const bad = f.color === 'white' || (strict && f.color === 'green');
+  let cost = null;
+  if(bad){
+    const need = lowestRollForColor(end, strict ? 'yellow' : 'green');
+    cost = need == null ? null : Math.max(1, need - f.roll);
+  }
+  return { roll: f.roll, color: f.color, rank: f.effectiveRank, bad, cost, saved: !bad, spent: 0 };
+}
+function askKarmaSave(info){
+  if(typeof window !== 'undefined' && typeof window.__karmaAuto === 'function') return Promise.resolve(!!window.__karmaAuto(info));
+  return new Promise(resolve => { STATE.karmaPrompt = Object.assign({}, info, { resolve }); render(); });
+}
+function karmaPromptHtml(){
+  const p = STATE.karmaPrompt;
+  if(!p) return '';
+  return `<div class="combat-panel karma-panel"><strong>The original result would have your hero incapacitated by this attack.</strong>
+    ${escapeHtml(p.by)}'s ${escapeHtml(p.attack)} scored a Kill result and your Endurance check (roll ${p.roll}) failed.
+    Would you like to spend <strong>${p.cost}</strong> Karma to change that result and stay in the fight?
+    <span class="karma-have">You have ${STATE.currentKarma} Karma.</span>
+    <div style="margin-top:8px;"><button id="btn-karma-yes">Spend ${p.cost} Karma</button> <button id="btn-karma-no" class="secondary">Take the hit</button></div></div>`;
+}
+/* Runs the Kill check for a Kill result that has already cost the hero its damage. */
+async function settleKill(r){
+  if(!(r.after === 'kill' && r.damage > 0 && STATE.currentHealth > 0)) return r;
+  const kc = killCheckRoll(STATE.activeHero, r.type || 'shooting');
+  r.killCheck = kc;
+  if(kc.bad){
+    if(kc.cost != null && (STATE.currentKarma || 0) >= kc.cost && await askKarmaSave({ cost: kc.cost, by: r.name, attack: r.attack || 'attack', roll: kc.roll })){
+      STATE.currentKarma -= kc.cost; kc.spent = kc.cost; kc.saved = true;
+    } else {
+      kc.saved = false; STATE.currentHealth = 0; r.devastating = true;
+    }
+  }
+  return r;
+}
+async function settleHeroDamage(r){
+  if(r.damage > 0) STATE.currentHealth = Math.max(0, STATE.currentHealth - r.damage);
+  if(r.after === 'stun') STATE.heroStunned = true;
+  return settleKill(r);
+}
+function killCheckLine(kc){
+  if(!kc) return '';
+  return `Kill check — Endurance (${kc.rank}) · Roll ${kc.roll} · ${kc.bad ? 'FAILED' : 'passed'}${kc.spent ? ' · ' + kc.spent + ' Karma spent: you stay on your feet' : kc.bad ? ' · you are incapacitated' : ' · you shrug it off'}`;
+}
+function foeRollLines(cr){
+  const out = [];
+  (cr.events || []).forEach(ev => {
+    switch(ev.kind){
+      case 'surprised-foes': out.push('You have the drop on them: +2 to hit this round, and the foes cannot act until round 2.'); break;
+      case 'ambushed': out.push('You have been ambushed: the foes act first this round with +2 to hit you.'); break;
+      case 'attack': {
+        let s = `${ev.name} attacks with ${ev.attack}${ev.rank ? ' (' + ev.rank + ')' : ''} · Roll ${ev.roll} · ${ev.label}`;
+        if(ev.damage > 0) s += ` · ${ev.damage} damage${ev.armorAbsorbed > 0 ? ', armor absorbed ' + ev.armorAbsorbed : ''}`;
+        else if(ev.armorAbsorbed > 0) s += ` · armor absorbed ${ev.armorAbsorbed}, no damage`;
+        else if(ev.color !== 'white') s += ' · no damage';
+        if(ev.area && ev.pierced) s += ` · armor weakened on your ${ev.area}`;
+        if(ev.after === 'stun') s += ' · you are stunned'; else if(ev.after === 'slam') s += ' · you are slammed';
+        out.push(s);
+        if(ev.killCheck) out.push(killCheckLine(ev.killCheck));
+        break; }
+      case 'sonic': out.push(`${ev.name} uses ${ev.attack}${ev.rank ? ' (' + ev.rank + ')' : ''} · Roll ${ev.roll} · ${['no effect', 'you are rattled', 'you are badly dazed', 'you are overwhelmed and lose your next action'][ev.level || 0]}`); break;
+      case 'escape': out.push(`${ev.name} struggles against your hold${ev.rank ? ' (' + ev.rank + ')' : ''} · Roll ${ev.roll} · ${ev.freed ? 'breaks free' + (ev.damage > 0 ? ' · ' + ev.damage + ' damage to you' : '') : 'still held'}`);
+        if(ev.killCheck) out.push(killCheckLine(ev.killCheck)); break;
+      case 'grapple': out.push(`${ev.name} tries to grab you${ev.rank ? ' (' + ev.rank + ')' : ''}${ev.roll ? ' · Roll ' + ev.roll : ''} · ${ev.held ? 'you are held' : 'they miss'}`); break;
+      case 'holding': out.push(`${ev.name} keeps you held.`); break;
+      case 'stunned': out.push(`${ev.name} is stunned and loses their turn.`); break;
+      case 'staggered': out.push(`${ev.name} is staggered and loses their turn.`); break;
+      case 'surrender': out.push(`${ev.name} surrenders: ${ev.reason || 'hopelessly outmatched'}.`); break;
+      case 'join': out.push(`${ev.name} joins the fight.`); break;
+      case 'standdown': out.push(`The foes stand down: ${ev.reason || 'they comply with your demand'}.`); break;
+      default: break;
+    }
+  });
+  return out;
+}
+
 const COMBAT_MAX_FOES = 6;
 const AFTEREFFECTS = {
   blunt:{yellow:'slam', red:'stun'}, edged:{yellow:'stun', red:'kill'}, shooting:{red:'kill'},
@@ -4708,7 +4851,7 @@ function resolveFoeTurn(enemy, shift){
   if(prof.sonic){
     const lvl = feat.color === 'white' ? 0 : feat.color === 'green' ? 1 : feat.color === 'yellow' ? 2 : 3;
     if(lvl) STATE.heroDisrupt = Math.max(STATE.heroDisrupt || 0, lvl);
-    return { kind:'sonic', name: enemy.name, attack: prof.name, roll: feat.roll, color: feat.color, level: lvl, damage: 0 };
+    return { kind:'sonic', name: enemy.name, attack: prof.name, rank: feat.effectiveRank, roll: feat.roll, color: feat.color, level: lvl, damage: 0 };
   }
   const raw = damageForAttack(prof.damageRank, feat.color);
   const area = heroArmor(STATE.activeHero) ? pickArmorArea() : null;
@@ -4716,7 +4859,7 @@ function resolveFoeTurn(enemy, shift){
   const maA = talentHas(enemy.talents, 'martial arts a') && foeUnarmed && feat.color !== 'white';
   const effColor = maA ? resolveFeat(prof.rollRank, (shift || 0) + fts.cs + 1, feat.roll).color : feat.color;
   const ao = armorHit('hero', STATE.activeHero, null, raw, prof.type, effColor, prof.name, prof.source || null, { area, pierce: !!prof.pierce, martialD: foeUnarmed && talentHas(enemy.talents, 'martial arts d') });
-  return { kind:'attack', name: enemy.name, attack: prof.name, type: prof.type, roll: feat.roll, color: feat.color, area: (feat.color !== 'white' && prof.pierce) ? area : null, pierced: !!ao.pierced,
+  return { kind:'attack', name: enemy.name, attack: prof.name, type: prof.type, rank: feat.effectiveRank, roll: feat.roll, color: feat.color, area: (feat.color !== 'white' && prof.pierce) ? area : null, pierced: !!ao.pierced,
            label: actionLabel(prof.type, feat.color), damage: ao.damage, after: ao.after, armorText: ao.text, armorAbsorbed: ao.absorbed };
 }
 /* An ordinary foe surrenders once it is clearly overmatched. Named villains
@@ -4736,9 +4879,8 @@ function resolveFoeEscape(e){
     const raw = damageForAttack(rankNumberForName(pw.rank), feat.color);
     const ao = armorHit('hero', STATE.activeHero, null, raw, src ? 'energy' : 'blunt', feat.color, pw.name, src || null);
     damage = ao.damage; after = ao.after; armorText = ao.text;
-    if(damage > 0){ if(after === 'kill') STATE.currentHealth = 0; else STATE.currentHealth = Math.max(0, STATE.currentHealth - damage); if(after === 'stun') STATE.heroStunned = true; }
   }
-  return { kind:'escape', name: e.name, freed, power: pw ? pw.name : null, damage, after, armorText };
+  return { kind:'escape', name: e.name, freed, power: pw ? pw.name : null, rank: feat.effectiveRank, roll: feat.roll, type: pw ? (pw.source || sourceOf(pw.name) ? 'energy' : 'blunt') : 'blunt', attack: pw ? pw.name : 'a violent wrench', damage, after, armorText };
 }
 function foeSurrenders(enemy, activeCount){
   const sheet = namedEnemyFor(enemy.name);
@@ -4820,7 +4962,7 @@ function pushCombatNote(text){
   STATE.log.push({ who:'gm', text, mechanics:null });
   pushFullLog('gm', text, null);
 }
-async function startCombat(hero, chapter, log){
+async function startCombat(hero, chapter, log, surprise){
   if(STATE.combat) return false;
   let foes = [];
   try{ foes = await callCombatSetup(hero, chapter, log); }catch(e){ foes = []; }
@@ -4849,8 +4991,11 @@ async function startCombat(hero, chapter, log){
   const order = active.map(e => { e.status = 'active'; e.stunned = false; return { key: enemyKey(e), init: rollD10() + rankNumberForName(e.stats.Intuition) + talentInitBonus(e.talents) }; });
   order.sort((a, b) => b.init - a.init);
   queue.forEach(e => { e.status = 'queued'; });
-  STATE.combat = { round: 1, heroInit, order, queue: queue.map(enemyKey) };
-  pushCombatNote(`Combat begins — Round 1. ${foeLinesText()}.`);
+  STATE.combat = { round: 1, heroInit, order, queue: queue.map(enemyKey), surprise: surprise || null };
+  const aware = surprise === 'hero' ? ' You have the drop on them: they have not noticed you. You act first this round with +2 to hit, and they cannot act until round 2.'
+    : surprise === 'foes' ? ' You have been ambushed: they act first this round with +2 to hit you.'
+    : ' Everyone has noticed everyone: initiative decides who acts first.';
+  pushCombatNote(`Combat begins — Round 1. ${foeLinesText()}.${aware}`);
   return true;
 }
 function endCombat(reason){
@@ -4867,35 +5012,41 @@ async function resolveCombatRound(hero, chapter, text, opts){
   let mechanics = null, retreated = false, ended = null;
   let postShift = 0, didTransform = false, heroActionsUsed = 0, skippedAction = false;
   const lastCh = (() => { const cs = currentAdventureChapters(); return cs.length ? cs[cs.length-1].id : null; })();
-  const runFoe = (o, shift) => {
+  const runFoe = async (o, shift) => {
     const e = STATE.enemies[o.key];
     if(!e || foeStatus(e) !== 'active' || STATE.currentHealth <= 0) return;
     if(e.staggerSkip){ events.push({ kind:'staggered', name: e.name }); e.staggerSkip = false; e.currentHealth = Math.ceil(e.maxHealth / 2); return; }
     if(e.stunned){ events.push({ kind:'stunned', name: e.name }); e.stunned = false; return; }
-    if(e.held){ events.push(resolveFoeEscape(e)); return; }
+    if(e.held){ const re = resolveFoeEscape(e); await settleHeroDamage(re); events.push(re); return; }
     if(STATE.heroHeld && STATE.heroHeld.by === e.name){ events.push({ kind:'holding', name: e.name }); return; }
     if(e.grapples && !STATE.heroHeld && rollD10() <= 5){
       const gr = resolveFeat(rankNumberForName(e.stats.Strength), 0);
-      if(gr.color === 'yellow' || gr.color === 'red'){ STATE.heroHeld = { by: e.name, strength: rankNumberForName(e.stats.Strength) }; events.push({ kind:'grapple', name: e.name, held: true }); }
-      else events.push({ kind:'grapple', name: e.name, held: false });
+      if(gr.color === 'yellow' || gr.color === 'red'){ STATE.heroHeld = { by: e.name, strength: rankNumberForName(e.stats.Strength) }; events.push({ kind:'grapple', name: e.name, held: true, rank: gr.effectiveRank, roll: gr.roll }); }
+      else events.push({ kind:'grapple', name: e.name, held: false, rank: gr.effectiveRank, roll: gr.roll });
       return;
     }
-    if(foeSurrenders(e, activeFoes().length)){ e.status = 'surrendered'; events.push({ kind:'surrender', name: e.name }); return; }
+    if(foeSurrenders(e, activeFoes().length)){
+      const spct = e.maxHealth ? e.currentHealth / e.maxHealth : 1;
+      e.status = 'surrendered';
+      events.push({ kind:'surrender', name: e.name, reason: spct <= 0.3 ? 'badly hurt and clearly outmatched' : 'the last one standing, hurt, with no way to win' });
+      return;
+    }
     const foeActs = speedActions(e);
     for(let fa = 0; fa < foeActs && STATE.currentHealth > 0; fa++){
       const r = resolveFoeTurn(e, shift);
-      if(r.damage > 0){
-        if(r.after === 'kill'){ STATE.currentHealth = 0; r.devastating = true; }
-        else STATE.currentHealth = Math.max(0, STATE.currentHealth - r.damage);
-      }
-      if(r.after === 'stun') STATE.heroStunned = true;
+      await settleHeroDamage(r);
+      r.downed = STATE.currentHealth <= 0;
       events.push(r);
     }
   };
   if(STATE.heroHeld){ const ge = Object.values(STATE.enemies).find(x => x.name === STATE.heroHeld.by); if(!ge || foeStatus(ge) !== 'active' || ge.stunned) STATE.heroHeld = null; }
-  const pre = c.order.filter(o => o.init > c.heroInit);
-  const post = c.order.filter(o => !(o.init > c.heroInit));
-  pre.forEach(o => runFoe(o, 0));
+  const surprise = c.round === 1 ? c.surprise : null;
+  let pre = c.order.filter(o => o.init > c.heroInit);
+  let post = c.order.filter(o => !(o.init > c.heroInit));
+  let preShift = 0;
+  if(surprise === 'hero'){ pre = []; post = []; events.push({ kind:'surprised-foes' }); }
+  else if(surprise === 'foes'){ pre = c.order.slice(); post = []; preShift = 2; events.push({ kind:'ambushed' }); }
+  for(const o of pre) await runFoe(o, preShift);
   if(STATE.currentHealth > 0){
     const regen = getPowerRank(hero, 'Regeneration') || 0;
     if(regen > 0 && STATE.currentHealth < maxHealth(hero)){
@@ -4922,9 +5073,10 @@ async function resolveCombatRound(hero, chapter, text, opts){
         const c0 = acts[ai];
         const stepText = c0.stepText || ('action ' + (ai + 1));
         if(retreated || !activeFoes().length){ steps.push({ text: stepText, attempted: false }); continue; }
-        if(c0.retreats){ retreated = true; steps.push({ text: stepText, attempted: false }); continue; }
+        if(c0.retreats && retreatIntent(text)){ retreated = true; steps.push({ text: stepText, attempted: false }); continue; }
         c0.heroIsTarget = false;
         if(c0.enemyName || c0.targetsEnemy) c0.enemyName = matchCombatFoe(c0.enemyName, c0.targetsEnemy);
+        if(surprise === 'hero' && (c0.enemyName || c0.targetsEnemy)) c0.columnShift = Math.min(6, (c0.columnShift || 0) + 2);
         if(STATE.heroDisrupt === 1 || STATE.heroDisrupt === 2){ c0.columnShift = Math.max(-6, (c0.columnShift || 0) - (STATE.heroDisrupt === 2 ? 3 : 2)); events.push({ kind:'sonic-dazed', level: STATE.heroDisrupt }); STATE.heroDisrupt = 0; }
         if(STATE.heroStunned){ c0.columnShift = Math.max(-4, (c0.columnShift || 0) - 2); events.push({ kind:'dazed' }); STATE.heroStunned = false; }
         const m = resolveOne(hero, chapter, c0);
@@ -4953,7 +5105,7 @@ async function resolveCombatRound(hero, chapter, text, opts){
   if(retreated){
     events.push({ kind:'retreat' });
   } else {
-    post.forEach(o => runFoe(o, postShift));
+    for(const o of post) await runFoe(o, postShift);
   }
   // New foes step in as others fall.
   const joined = [];
@@ -4974,7 +5126,7 @@ async function resolveCombatRound(hero, chapter, text, opts){
 function combatBlockText(cr){
   const lines = cr.events.map(ev => {
     switch(ev.kind){
-      case 'attack': return `${ev.name} attacks with ${ev.attack}: ${ev.label} (${ev.color.toUpperCase()}). ${ev.damage > 0 ? 'It HITS the hero.' : ev.armorAbsorbed > 0 ? 'It strikes the hero but does no damage.' : 'It MISSES.'}${ev.area && ev.pierced ? ' The round lands on the hero\'s ' + ev.area + '.' : ''}${ev.armorText ? ' ' + ev.armorText : ''}${ev.devastating ? ' This is a DEVASTATING blow: the hero is gravely wounded and goes down.' : ev.after === 'stun' ? ' The hero is left reeling and dazed.' : ev.after === 'slam' ? ' The hero is knocked back or down.' : ''}`;
+      case 'attack': return `${ev.name} attacks with ${ev.attack}: ${ev.label} (${ev.color.toUpperCase()}). ${ev.damage > 0 ? 'It HITS the hero.' : ev.armorAbsorbed > 0 ? 'It strikes the hero but does no damage.' : 'It MISSES.'}${ev.area && ev.pierced ? ' The round lands on the hero\'s ' + ev.area + '.' : ''}${ev.armorText ? ' ' + ev.armorText : ''}${ev.devastating || ev.downed ? ' This blow puts the hero DOWN: show him struck down and unable to continue, clearly beaten. Do NOT have him get up, and do NOT bring ORACLE in yet.' : ev.killCheck && ev.killCheck.spent ? ' The blow would have felled the hero, but he digs deep and stays on his feet, hurt and still fighting.' : ev.killCheck ? ' The hero is badly hurt but stays on his feet.' : ev.after === 'stun' ? ' The hero is left reeling and dazed.' : ev.after === 'slam' ? ' The hero is knocked back or down.' : ''}`;
       case 'sonic': return ev.level ? `${ev.name} turns a sonic disruptor on the hero (${ev.attack}): a ${ev.level === 1 ? 'painful, rattling hum' : ev.level === 2 ? 'skull-shaking blast of sound' : 'crushing wave of sound'} that ignores his armor and does no wound but ${ev.level === 3 ? 'leaves him staggered and unable to act at all next round' : ev.level === 2 ? 'leaves him badly dazed, so his next action is much harder' : 'leaves him dazed, so his next action is harder'}.` : `${ev.name} aims a sonic disruptor at the hero (${ev.attack}) but he shakes it off.`;
       case 'sonic-lost': return `The hero is still reeling from the sonic blast and cannot act this round: he staggers, clutching his head. He does nothing this round.`;
       case 'sonic-dazed': return `The hero is still rattled by the sonic blast, so his action this round is harder and clumsier.`;
@@ -4983,7 +5135,9 @@ function combatBlockText(cr){
       case 'grapple': return ev.held ? `${ev.name} grabs the hero and HOLDS them: the hero can do nothing next round except try to break free. No damage is done.` : `${ev.name} tries to grab the hero but the hero twists away.`;
       case 'stunned': return `${ev.name} is stunned and loses their turn.`;
       case 'staggered': return `${ev.name} is staggered and loses their turn, then pulls himself together.`;
-      case 'surrender': return `${ev.name} sees they are hopelessly beaten and SURRENDERS (drops their weapon or raises their hands). Narrate a clear surrender beat; the fight with them is over. Do NOT end the chapter just because of this.`;
+      case 'surrender': return `${ev.name} SURRENDERS (${ev.reason || 'hopelessly outmatched'}). Write a clear surrender beat in the scene: show why they give up (they are hurt and outmatched), what they do (drop the weapon, raise their hands, say something), and what happens to them next. The fight with them is over. Do NOT end the chapter just because of this.`;
+      case 'surprised-foes': return `AMBUSH BY THE HERO: the foes had not noticed the hero. He strikes first; they cannot act this round. Show them caught off guard.`;
+      case 'ambushed': return `AMBUSH ON THE HERO: the foes spring their attack before the hero can react. Show the surprise clearly, then the attacks in the order given.`;
       case 'transform': return ev.to ? `The hero spends their whole action changing into their TUNGSTEN form: the skin hardens into gleaming tungsten armor. They do nothing else this round.` : `The hero spends their whole action changing back into their ordinary HUMAN form. They do nothing else this round.`;
       case 'regen': return `The hero's Regeneration knits their wounds at the start of their turn (a quick visible recovery).`;
       case 'dazed': return `The hero is still dazed from the last blow (this action is harder).`;
@@ -5009,15 +5163,19 @@ function mechanicsStartCombat(m){
   const list = m.steps ? m.steps.filter(x => x.m).map(x => x.m) : [m];
   return list.some(x => x.enemyResult || (x.heroIsTarget && x.enemyName));
 }
-function applyHeroKill(m){
-  if(!m) return false;
+async function applyHeroKill(m){
+  const out = { down: false, saved: false, lines: [] };
+  if(!m) return out;
   const list = m.steps ? m.steps.filter(x => x.m).map(x => x.m) : [m];
-  let hit = false;
   for(const x of list){
-    if(x.heroIsTarget && x.damage > 0 && x.after === 'kill'){ hit = true; }
+    if(x.heroIsTarget && x.damage > 0 && x.after === 'kill' && STATE.currentHealth > 0){
+      const r = { name: x.enemyName || 'The attacker', attack: x.enemyWeapon || x.enemyPowerUsed || 'attack', type: x.actionType, damage: x.damage, after: 'kill' };
+      await settleKill(r);
+      out.lines.push(killCheckLine(r.killCheck));
+      if(r.devastating) out.down = true; else out.saved = true;
+    }
   }
-  if(hit) STATE.currentHealth = 0;
-  return hit;
+  return out;
 }
 function combatPanelHtml(){
   const c = STATE.combat;
@@ -5053,7 +5211,7 @@ async function submitAction(opts){
   const chapter = currentChapter();
 
   try{
-    let mechanics = null, extraBlock = '', cr = null, devastating = false;
+    let mechanics = null, extraBlock = '', cr = null, devastating = false, soloRolls = [];
     let repairSeconds = 0, repairNote = null;
     const repairWanted = !STATE.combat && !opts.transform && repairIntent(text) && !!heroArmor(hero);
     let checkedName = null;
@@ -5085,12 +5243,15 @@ async function submitAction(opts){
         // Classifier hiccups shouldn't block the story — fall back to no roll.
         mechanics = null;
       }
+      if(groupRescueIntent(text)) extraBlock += '\nGROUP EVACUATION: the player is bringing the whole crowd to safety in ONE action. Resolve the entire job now using the fixed result above (green or better: everyone is brought safely across, summarized as a few vivid trips; white: most are safe but a complication leaves some behind or hurt). Do not stretch it over several actions and do not add stalls.';
       applyHitAftereffects(mechanics);
       if(mechanics && mechanics.damage){
         STATE.currentHealth = Math.max(0, STATE.currentHealth - mechanics.damage);
       }
-      devastating = applyHeroKill(mechanics);
-      if(devastating) extraBlock += '\nA foe has landed a DEVASTATING blow: the hero is gravely wounded and goes down.';
+      const kr = await applyHeroKill(mechanics);
+      devastating = kr.down; soloRolls = soloRolls.concat(kr.lines);
+      if(devastating) extraBlock += '\nA foe has landed a DEVASTATING blow: the hero is struck down and beaten. Show him clearly defeated and unable to continue. Do NOT bring ORACLE in yet.';
+      else if(kr.saved) extraBlock += '\nThe blow would have felled the hero, but he digs deep and stays on his feet, hurt and still fighting.';
     }
     extraBlock += armorNarratorText(hero) + resistNarratorText(hero) + speedNarratorText(hero) + villainNarratorText();
     if(checkedName) extraBlock += `\nThe hero is checking on ${checkedName}: they are stabilized, alive but unconscious, and will recover.`;
@@ -5106,17 +5267,23 @@ async function submitAction(opts){
     cleaned = cleaned.replace(/\[WORKSHOP\]/gi, '').trim();
     const sighting = takeVillainSighting(cleaned);
     cleaned = sighting.text;
-    const wantsCombatTag = /\[COMBAT\]/i.test(cleaned);
-    cleaned = cleaned.replace(/\[COMBAT\]/gi, '').trim();
+    const ctag = cleaned.match(/\[COMBAT(?::\s*(HERO|FOES))?\]/i);
+    const wantsCombatTag = !!ctag;
+    const combatSurprise = ctag && ctag[1] ? (ctag[1].toUpperCase() === 'HERO' ? 'hero' : 'foes') : null;
+    cleaned = cleaned.replace(/\[COMBAT(?::\s*(HERO|FOES))?\]/gi, '').trim();
+    const standDown = /\[STAND_DOWN\]/i.test(cleaned);
+    cleaned = cleaned.replace(/\[STAND_DOWN\]/gi, '').trim();
     let complete = false;
     if(cleaned.includes('[CHAPTER_COMPLETE]')){
       complete = true;
       cleaned = cleaned.replace('[CHAPTER_COMPLETE]','').trim();
     }
+    const rollLines = cr ? foeRollLines(cr) : soloRolls;
     const gmEntry = {who:'gm', text: cleaned, mechanics};
+    if(rollLines.length) gmEntry.rolls = rollLines;
     if(sighting.villain) gmEntry.villain = sighting.villain;
     STATE.log.push(gmEntry);
-    pushFullLog('gm', cleaned, mechanics);
+    pushFullLog('gm', cleaned, mechanics, rollLines.length ? { rolls: rollLines } : null);
     if(cr){
       const surrendered = cr.events.some(ev => ev.kind === 'surrender');
       const reg = cr.events.find(ev => ev.kind === 'regen');
@@ -5126,6 +5293,11 @@ async function submitAction(opts){
       else if(cr.ended === 'hero-down') endCombat(null);
       else if(STATE.combat) pushCombatNote(`Round ${STATE.combat.round} — ${foeLinesText()}.`);
       if(complete && (STATE.combat || surrendered)) complete = false;
+    }
+    if(standDown && STATE.combat && !(cr && cr.ended)){
+      const names = activeFoes().map(e => e.name);
+      activeFoes().forEach(e => { e.status = 'surrendered'; });
+      endCombat(`${names.join(', ')} stand${names.length === 1 ? 's' : ''} down: they comply with your demand and the fighting stops.`);
     }
     if(repairSeconds){
       if(repairNote) pushCombatNote(repairNote);
@@ -5146,11 +5318,12 @@ async function submitAction(opts){
       let windText;
       try{ windText = await callOracleSecondWind(hero, chapter, STATE.log); }
       catch(e){ windText = 'Victor Cross\'s voice cuts through the roar: "Hold on, I\'ve got you!" ORACLE agents drag you behind cover and throw everything they have at the threat while you gasp for breath. "Get up," Victor says. "You have one more chance."'; }
-      const windEntry = {who:'gm', text: windText, mechanics:null};
+      const windEntry = {who:'gm', text: windText, mechanics:null, defeat:true};
       STATE.log.push(windEntry);
-      pushFullLog('gm', windText, null);
+      pushFullLog('gm', windText, null, { defeat:true });
       STATE.currentHealth = Math.ceil(maxHealth(hero)/2);
       STATE.combat = null; STATE.heroStunned = false;
+      pushCombatNote(defeatAftermathText(hero, false));
     } else if(knockedOut){
       // The hero went down before finishing the chapter's own objectives —
       // ORACLE steps in. This forces the chapter complete regardless of
@@ -5158,26 +5331,27 @@ async function submitAction(opts){
       try{
         const rescueReply = await callOracleRescue(hero, chapter, STATE.log);
         const rescueCleaned = rescueReply.replace('[CHAPTER_COMPLETE]','').trim();
-        const rescueEntry = {who:'gm', text: rescueCleaned, mechanics:null};
+        const rescueEntry = {who:'gm', text: rescueCleaned, mechanics:null, defeat:true};
         STATE.log.push(rescueEntry);
-        pushFullLog('gm', rescueCleaned, null);
+        pushFullLog('gm', rescueCleaned, null, { defeat:true });
         complete = true;
       }catch(e){
         // If the rescue call itself fails, don't strand the player at 0
         // Health with no way forward — still force the chapter onward.
         const fallbackRescueText = 'Victor Cross\'s voice crackles through your earpiece: "Hang on — ORACLE is inbound." The cavalry arrives just in time.';
-        STATE.log.push({who:'gm', text: fallbackRescueText, mechanics:null});
-        pushFullLog('gm', fallbackRescueText, null);
+        STATE.log.push({who:'gm', text: fallbackRescueText, mechanics:null, defeat:true});
+        pushFullLog('gm', fallbackRescueText, null, { defeat:true });
         complete = true;
       }
       // ORACLE patches the hero up enough to continue the story; Health
       // resets to half of max going into the next chapter rather than 0.
       STATE.currentHealth = Math.ceil(maxHealth(hero)/2);
       STATE.combat = null; STATE.heroStunned = false;
+      pushCombatNote(defeatAftermathText(hero, true));
     }
 
     if(!STATE.combat && !complete && !knockedOut && STATE.currentHealth > 0 && (wantsCombatTag || mechanicsStartCombat(mechanics))){
-      await startCombat(hero, chapter, STATE.log);
+      await startCombat(hero, chapter, STATE.log, combatSurprise);
     }
 
     if(complete){

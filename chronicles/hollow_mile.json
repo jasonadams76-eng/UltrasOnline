@@ -25,7 +25,8 @@
         "Victor has arranged for ORACLE personnel to secure the immediate area, but he does not yet know what happened.",
         "The chapter should end with the hero discovering that the disappearance was not random. Something beneath the city was activated at the exact moment the train vanished."
       ],
-      "imagePrompt": "A cinematic superhero mystery scene inside a dark New York subway tunnel. Empty tracks disappear into unnatural darkness, faint blue-white electrical distortions shimmer in the air, and abandoned maintenance equipment lies beside the rails. Atmospheric, realistic comic-book concept art, dramatic lighting, no visible superheroes, no text."
+      "imagePrompt": "A cinematic superhero mystery scene inside a dark New York subway tunnel. Empty tracks disappear into unnatural darkness, faint blue-white electrical distortions shimmer in the air, and abandoned maintenance equipment lies beside the rails. Atmospheric, realistic comic-book concept art, dramatic lighting, no visible superheroes, no text.",
+      "notYet": "The missing train and its passengers are NOT found in this chapter: they are in another spatial layer that is only reached much later. Do not show the train, any passenger or the operator, Frankie Vega, the Calder Street facility, the research annex, the project director or his scientists, Blackwell and Stone, or any rescue. The hero only learns that something beneath the city was activated at the moment the train vanished."
     },
     {
       "id": "a_favor_for_frankie",
@@ -50,7 +51,8 @@
         "Do not invent additional history for Frankie or establish him as secretly connected to the experiment. His role is that of an underworld source who knows enough to point the hero in the right direction.",
         "The chapter should end with the hero heading to the Calder Street location."
       ],
-      "imagePrompt": "A cinematic comic-book illustration of a lean, weathered middle-aged informant with slicked-back dark hair and stubble, wearing a black button-up shirt and charcoal wool coat. He sits in a dimly lit New York diner booth, looking cautious but faintly amused. Rain streaks the window behind him. Realistic superhero crime-drama art, no text."
+      "imagePrompt": "A cinematic comic-book illustration of a lean, weathered middle-aged informant with slicked-back dark hair and stubble, wearing a black button-up shirt and charcoal wool coat. He sits in a dimly lit New York diner booth, looking cautious but faintly amused. Rain streaks the window behind him. Realistic superhero crime-drama art, no text.",
+      "notYet": "Frankie only points the hero toward Calder Street. Do not show the inside of the Calder Street facility, its guards, workers or equipment, the project director, Blackwell and Stone, or the missing train and passengers. No rescue happens here."
     },
     {
       "id": "below_calder_street",
@@ -75,7 +77,8 @@
         "Do not reveal the full explanation yet. The important discovery is that the missing train was involved in a deliberate experiment, not an accident.",
         "If the hero is captured or overwhelmed, ORACLE agents can intervene in accordance with the established game rules."
       ],
-      "imagePrompt": "A hidden abandoned subway platform beneath New York, converted into a secret experimental research site. Portable generators, scientific equipment, cables, sensor arrays, and industrial lights surround a platform with a faded number zero marking. A few security guards stand watch. Dark atmospheric realistic comic-book concept art, no text."
+      "imagePrompt": "A hidden abandoned subway platform beneath New York, converted into a secret experimental research site. Portable generators, scientific equipment, cables, sensor arrays, and industrial lights surround a platform with a faded number zero marking. A few security guards stand watch. Dark atmospheric realistic comic-book concept art, no text.",
+      "notYet": "The missing train and passengers are not found or reachable here, and no rescue happens. Do not give the full explanation of the experiment. Blackwell and Stone are not met yet (next chapter). The research annex, the project director and entering the other spatial layer all belong to later chapters."
     },
     {
       "id": "the_oracle_briefing",
@@ -103,7 +106,8 @@
         "Do not connect this project to the Infinity Codex or establish any relationship between the experiment and the Genesis Alliance beyond the consultants' existing history.",
         "The chapter ends when ORACLE detects a new signal coming from the city's transit communication network."
       ],
-      "imagePrompt": "An advanced ORACLE research briefing room. Adrian Blackwell, a middle-aged male scientist with swept-back dark hair graying at the temples, a mustache and gray goatee, wears a white lab coat and studies a holographic spatial model. Evelyn Stone, a woman with shoulder-length brown wavy hair wearing a white lab coat over a teal shirt, examines digital readings. Victor Cross stands nearby in a tan trench coat. Realistic cinematic superhero concept art, no text."
+      "imagePrompt": "An advanced ORACLE research briefing room. Adrian Blackwell, a middle-aged male scientist with swept-back dark hair graying at the temples, a mustache and gray goatee, wears a white lab coat and studies a holographic spatial model. Evelyn Stone, a woman with shoulder-length brown wavy hair wearing a white lab coat over a teal shirt, examines digital readings. Victor Cross stands nearby in a tan trench coat. Realistic cinematic superhero concept art, no text.",
+      "notYet": "The transmission from the train, the research annex, the project director, entering the other spatial layer, finding the train, and any rescue of the passengers must not happen yet."
     },
     {
       "id": "a_voice_from_nowhere",
@@ -130,7 +134,8 @@
         "The chapter should establish urgency. The passengers are alive, but the conditions on the other side may not remain stable.",
         "Avoid revealing the exact nature or origin of the disturbance. It is a threat created by the unstable spatial overlap, not an established villain from the ULTRAS universe."
       ],
-      "imagePrompt": "A dark subway station at night with an old public-address speaker crackling with electricity. Digital advertising screens flicker with distorted images of an alternate city. A faint ghostly silhouette of a subway train appears reflected in a dark window. Atmospheric cinematic superhero mystery art, no text."
+      "imagePrompt": "A dark subway station at night with an old public-address speaker crackling with electricity. Digital advertising screens flicker with distorted images of an alternate city. A faint ghostly silhouette of a subway train appears reflected in a dark window. Atmospheric cinematic superhero mystery art, no text.",
+      "notYet": "The voice is a transmission only. The hero does not confront the project director, enter the other spatial layer, reach the train, or rescue anyone in this chapter. Do not give the passengers a location the hero can walk to yet."
     },
     {
       "id": "the_man_at_the_controls",
@@ -156,7 +161,8 @@
         "The control systems are damaged or unstable. The director believes they can be used again, but doing so may worsen the situation.",
         "The chapter ends with the hero gaining access to the primary control system and the means to attempt a passage into the other spatial layer."
       ],
-      "imagePrompt": "A secret industrial research annex filled with experimental power regulators, heavy electrical machinery, large control consoles, and glowing spatial instruments. A worried middle-aged project director stands before the equipment while security personnel watch the entrance. Realistic cinematic comic-book concept art, no text."
+      "imagePrompt": "A secret industrial research annex filled with experimental power regulators, heavy electrical machinery, large control consoles, and glowing spatial instruments. A worried middle-aged project director stands before the equipment while security personnel watch the entrance. Realistic cinematic comic-book concept art, no text.",
+      "notYet": "The hero does not enter the other spatial layer, find the train, or rescue any passenger in this chapter. The passage is only made available at the very end."
     },
     {
       "id": "the_other_side",
@@ -182,7 +188,8 @@
         "The hero must locate the train and establish a safe route back to the passage.",
         "The chapter ends when the hero finds the train and realizes that getting everyone home will be more difficult than simply reopening the passage."
       ],
-      "imagePrompt": "A surreal alternate version of New York City at night, viewed from an empty subway platform. Buildings are subtly distorted, streetlights glow through unnatural fog, and subway tracks curve into impossible darkness. A stranded subway train is visible in the distance. Cinematic realistic superhero science-fiction concept art, no text."
+      "imagePrompt": "A surreal alternate version of New York City at night, viewed from an empty subway platform. Buildings are subtly distorted, streetlights glow through unnatural fog, and subway tracks curve into impossible darkness. A stranded subway train is visible in the distance. Cinematic realistic superhero science-fiction concept art, no text.",
+      "notYet": "This chapter only FINDS the train. The people aboard are the operator and twenty-three passengers: twenty-four in total. Never change that number. Do NOT evacuate anyone, carry anyone to safety, or return anyone to the passage in this chapter: the evacuation belongs to the next chapter. Do not shut down or close the passage, and do not deal with the project director here."
     },
     {
       "id": "the_closing_window",
@@ -208,7 +215,8 @@
         "Do not require a particular hero power to solve the evacuation. Every hero should have a reasonable way to contribute.",
         "The chapter should end when the civilians reach the passage, but the disturbance reaches the area just as the final people are about to cross."
       ],
-      "imagePrompt": "A dramatic superhero rescue scene in a distorted alternate subway station. A group of frightened civilians gathers beside a damaged subway train while an unnatural spatial distortion approaches through the tunnel. A glowing portal back to the real city flickers nearby. Cinematic comic-book action art, no text."
+      "imagePrompt": "A dramatic superhero rescue scene in a distorted alternate subway station. A group of frightened civilians gathers beside a damaged subway train while an unnatural spatial distortion approaches through the tunnel. A glowing portal back to the real city flickers nearby. Cinematic comic-book action art, no text.",
+      "notYet": "The final shutdown of the experiment, the last confrontation with the project director, and closing the passage for good belong to later chapters. This chapter ends when the civilians reach the passage and the disturbance arrives."
     },
     {
       "id": "the_city_between",
@@ -233,7 +241,8 @@
         "The disturbance remains a consequence of the unstable spatial overlap. Do not turn it into a newly established ULTRAS villain.",
         "The chapter ends when the hero reaches the field controls and begins the final shutdown process."
       ],
-      "imagePrompt": "A dramatic city intersection where two versions of New York City overlap. Subway infrastructure rises through the street, buildings appear doubled and distorted, traffic lights flicker, and strange spatial ripples bend the surrounding environment. A superhero approaches a large experimental control device. Cinematic comic-book science-fiction art, no text."
+      "imagePrompt": "A dramatic city intersection where two versions of New York City overlap. Subway infrastructure rises through the street, buildings appear doubled and distorted, traffic lights flicker, and strange spatial ripples bend the surrounding environment. A superhero approaches a large experimental control device. Cinematic comic-book science-fiction art, no text.",
+      "notYet": "The passage is not fully closed and the experiment is not permanently ended in this chapter; the final closing and the last confrontation belong to the final chapter."
     },
     {
       "id": "the_last_train_home",

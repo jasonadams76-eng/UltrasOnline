@@ -8,6 +8,7 @@
 ## Rules
 - `id` (adventure and chapter): lowercase letters, numbers, underscores only; unique across ALL adventures. Never change an id after players have saves.
 - Each chapter needs `id`, `title`, `eyebrow`, `opening`, `gmInstructions`. `imagePrompt` is optional.
+- `notYet` is optional but strongly recommended: a line (or lines) naming story beats that belong to LATER chapters and must not be played out in this one (for example "the missing train is not found here", or a fixed headcount). The game also automatically tells the narrator the titles of all later chapters so it does not jump ahead.
 - `opening` and `gmInstructions` are arrays of lines (or one string). Empty string = blank line.
 - Chapters play in the order listed. Each `gmInstructions` should end the chapter via the game's standard completion marker rules (the global GM rules already handle this).
 - A file with a mistake is skipped and the others still load; the admin account sees a notice on the adventure screen.
