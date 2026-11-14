@@ -1731,7 +1731,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-13.2';
+const APP_VERSION = '2026-11-14.1';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -2119,6 +2119,9 @@ function nonAttackRuleText(hero){
 /* Recovery between fights. Every hero heals their Endurance rank number per
    24 hours (counted proportionally). Regeneration heals its rank number every
    6 seconds (one combat turn); the hero gets whichever is larger. */
+/* In combat, Regeneration heals HALF its rank number (rounded down, at least 1)
+   at the start of the hero's turn. Out of combat the full rank applies (above). */
+function combatRegenAmount(rank){ return Math.max(1, Math.floor((rank || 0) / 2)); }
 function recoveryHeal(hero, seconds){
   const regen = getPowerRank(hero, 'Regeneration') || 0;
   const end = (hero.stats && hero.stats.Endurance) || 0;
@@ -4896,7 +4899,7 @@ async function resolveCombatRound(hero, chapter, text, opts){
   if(STATE.currentHealth > 0){
     const regen = getPowerRank(hero, 'Regeneration') || 0;
     if(regen > 0 && STATE.currentHealth < maxHealth(hero)){
-      const gain = Math.min(regen, maxHealth(hero) - STATE.currentHealth);
+      const gain = Math.min(combatRegenAmount(regen), maxHealth(hero) - STATE.currentHealth);
       STATE.currentHealth += gain;
       syncNaturalArmor(hero);
       events.push({ kind:'regen', amount: gain });
