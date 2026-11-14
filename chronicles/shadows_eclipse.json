@@ -19,7 +19,8 @@
         "GM GUIDANCE: Open with chaos and confusion rather than a clear villain to punch — this is a mystery chapter, and the Shades should feel eerie and alien rather than a straightforward mob of mooks (they don't speak, don't seem to loot or plan, and dissipate into smoke rather than dying normally when defeated). Let the player's powers and stats meaningfully shape how the rescues go. Seed at least one small detail that doesn't add up yet (a scorched handprint too large to be human, a hooded figure glimpsed retreating down an alley just as the hero arrives, a Shade that flinches away from the crystal rather than toward it) as a loose thread for later chapters — don't explain it. Chapter is complete once civilians are safe and the hero has the black crystal in hand.",
         "TONE: Tense, atmospheric, mystery-forward — the sense that something has gone quietly, deeply wrong beneath an ordinary night."
       ],
-      "imagePrompt": "A dense downtown city at night with six full blocks completely dark: no streetlights, no lit windows. Cars stopped dead in a wide intersection with headlights off, small groups of people standing on the sidewalk looking up at the rooftops. One thin jagged streak of black lightning arcs across the dim blue-gray sky above the buildings. Wet asphalt, eerie quiet."
+      "imagePrompt": "A dense downtown city at night with six full blocks completely dark: no streetlights, no lit windows. Cars stopped dead in a wide intersection with headlights off, small groups of people standing on the sidewalk looking up at the rooftops. One thin jagged streak of black lightning arcs across the dim blue-gray sky above the buildings. Wet asphalt, eerie quiet.",
+      "notYet": "Do not name the Eclipse Collective, the Void Emperor, the seven fragments, Dr. Amara Voss, the underground lab or the dimensional anchors. The hero finds only the black crystal and the Shades, and learns nothing about who caused the blackout."
     },
     {
       "id": "ecl2",
@@ -37,7 +38,8 @@
         "GM GUIDANCE: Play up the \"someone is watching\" tension — the mercenaries arrive with unnerving precision, as if they knew the crystal's exact location and Dr. Voss's schedule, which should read as ominous rather than be explained yet. Let the player's approach (stealthy interception, open confrontation, protecting Voss first vs. going on the offensive) matter and shape how the fight unfolds. Dr. Voss is not a fighter and should be an active concern during the scene — a smart player protecting her should be rewarded narratively. Chapter is complete once the immediate attack is repelled/resolved and the player has learned the Eclipse Collective's name.",
         "TONE: Escalating dread — a quiet, cerebral scene curdling fast into a home invasion by very capable, very calm professionals."
       ],
-      "imagePrompt": "A cluttered university physics lab at night, a woman scientist in a lab coat at a desk lit by a single desk lamp, holding up a faceted black crystal that glows with a slow pulsing violet light, monitors and oscilloscopes around her, a dark hallway visible through the open door."
+      "imagePrompt": "A cluttered university physics lab at night, a woman scientist in a lab coat at a desk lit by a single desk lamp, holding up a faceted black crystal that glows with a slow pulsing violet light, monitors and oscilloscopes around her, a dark hallway visible through the open door.",
+      "notYet": "Dr. Voss's findings are preliminary: the crystal is 'unlocking' something. Do not reveal the Void Emperor, the seven fragments, the observatory or the Collective's true goal. The mercenaries' emblem is seen, but their organization is not explained. No underground facility yet."
     },
     {
       "id": "ecl3",
@@ -54,7 +56,8 @@
         "GM GUIDANCE: Give this chapter a slow-burn horror-adjacent tension — flickering emergency lighting, half-finished experiment logs, a chamber of failed containment tubes — building toward Revenant as a genuine mini-boss fight (tougher and more dangerous than the mercenaries, with a startling \"getting back up\" beat once during the fight to sell the stakes before it can finally be put down). Let clever, non-lethal approaches to freeing prisoners or bypassing security be rewarded, not just combat. Chapter is complete once the prisoners are freed and Revenant is dealt with.",
         "TONE: Claustrophobic, unsettling, techno-horror creeping into pulp-adventure — the Collective's first real monster."
       ],
-      "imagePrompt": "An open steel hatch in a city street leading down to a rusted service ladder in an abandoned subway tunnel, peeling tile walls, a single flashlight beam cutting through dust, old track disappearing into darkness."
+      "imagePrompt": "An open steel hatch in a city street leading down to a rusted service ladder in an abandoned subway tunnel, peeling tile walls, a single flashlight beam cutting through dust, old track disappearing into darkness.",
+      "notYet": "Do not reveal the Void Emperor, the seven fragments or the observatory. Project Revenant and the prisoners are the focus. The three dimensional anchors, the Hunter and city-wide distortions belong to later chapters."
     },
     {
       "id": "ecl4",
@@ -71,7 +74,8 @@
         "GM GUIDANCE: Play this as a race-against-time, three-part chapter — narrate a real sense of urgency and give each anchor site its own flavor of environmental hazard so the pacing doesn't feel repetitive (one might favor Agility/mobility, one Strength/brute force, one Reason/Intuition to actually figure out how to safely disable rather than blow it up). Let a genuinely clever solution at any anchor go faster/cleaner than a purely destructive one, without punishing force-based heroes either. Chapter is complete once all three anchors are down and the immediate anomalies have stopped.",
         "TONE: Big disaster-movie energy, high stakes, whole-city scale, tinged with the same wrongness established since Chapter One."
       ],
-      "imagePrompt": "A city street at dusk where the sky has a visible crack-like distortion, streetlights glowing violet, a skyscraper in the distance half faded out as if flickering out of existence, pedestrians on the sidewalk frozen and staring upward."
+      "imagePrompt": "A city street at dusk where the sky has a visible crack-like distortion, streetlights glowing violet, a skyscraper in the distance half faded out as if flickering out of existence, pedestrians on the sidewalk frozen and staring upward.",
+      "notYet": "Destroy the three anchors and save civilians. Do not introduce the Hunter as an attacker, the observatory, the Void Emperor's name or story, or the Shadow Conduits and Shadow Titans."
     },
     {
       "id": "ecl5",
@@ -89,7 +93,8 @@
         "GM GUIDANCE: Make the Hunter feel genuinely dangerous and personal — they should know things about the hero's patterns/haunts that suggest real surveillance, and get at least one genuine \"gotcha\" moment (a well-placed ambush, a called shot) before the hero turns the tables, so the eventual win feels earned. Let the chase span multiple mini-encounters rather than resolving in a single roll; each should escalate in danger. The Hunter should be willing to retreat and re-engage rather than dying outright on a single bad exchange, until finally cornered/defeated for good. Chapter is complete once the Hunter is down and the data drive is in hand.",
         "TONE: Tense cat-and-mouse thriller energy — the hero on the back foot for once, no safe place to breathe."
       ],
-      "imagePrompt": "A rooftop at night with a large electronic billboard behind a water tower, a bullet hole punched through the water tower with water streaming out, a lone figure ducking behind a vent, city skyline in the background."
+      "imagePrompt": "A rooftop at night with a large electronic billboard behind a water tower, a bullet hole punched through the water tower with water streaming out, a lone figure ducking behind a vent, city skyline in the background.",
+      "notYet": "The Hunter stalks and is defeated here, and the data drive is recovered. Do not reveal the Void Emperor's story, the seven fragments or the observatory here; the drive can only point toward the next location. No Shadow Conduits or Titans."
     },
     {
       "id": "ecl6",
@@ -107,7 +112,8 @@
         "GM GUIDANCE: This chapter is about revelation more than combat — let the guard encounters on the way down be a real but secondary challenge, and give the archive chamber itself real weight and atmosphere (ancient reliefs depicting the original sealing, a countdown of sorts showing how many fragments the Collective already holds — most of them). Deliver the Void Emperor reveal as a genuine gut-punch turn: this was never just about strange technology, it's an ancient, world-ending threat about to be deliberately unleashed. Chapter is complete once the hero has reached the archive and learned this truth.",
         "TONE: Awe and dread in equal measure — the pulp mystery cracking open into cosmic stakes."
       ],
-      "imagePrompt": "An abandoned mountain observatory with a dark dome under a starry sky, a derelict telescope hall inside, a stone stairway spiraling down into rock beneath it, faint violet light pulsing from below."
+      "imagePrompt": "An abandoned mountain observatory with a dark dome under a starry sky, a derelict telescope hall inside, a stone stairway spiraling down into rock beneath it, faint violet light pulsing from below.",
+      "notYet": "The archive teaches the truth about the Void Emperor and the seals. Do not stage the seventh-fragment temple, the Shadow Conduits or Titans, the entry to the Emperor's prison or the final battle."
     },
     {
       "id": "ecl7",
@@ -125,7 +131,8 @@
         "GM GUIDANCE: Let this chapter feel like a proper pulp-adventure set piece — swinging across a chasm, a pressure-plate gauntlet, a collapsing passage — genuinely testing the hero's stats/powers in ways beyond straight combat. However this chapter MUST end with the Collective's elite soldiers (or their leader in person, if you want a personal touch) claiming the fragment anyway, snatching it away at the last possible moment even if the hero played this chapter well — narrate this as a narrow, earned defeat rather than the hero simply failing; make clear the hero fought hard and smart and still lost this one, to raise the stakes into the finale. Chapter is complete once the fragment is lost to the Collective and the hero is left to regroup.",
         "TONE: High-adventure spectacle curdling into a genuine gut-punch loss — Empire Strikes Back energy."
       ],
-      "imagePrompt": "The blasted-open stone gate of an ancient temple in the jungle, scorch marks and rubble from fresh explosive charges, thin smoke rising, tracks of boots in the dust leading inside, dim afternoon light."
+      "imagePrompt": "The blasted-open stone gate of an ancient temple in the jungle, scorch marks and rubble from fresh explosive charges, thin smoke rising, tracks of boots in the dust leading inside, dim afternoon light.",
+      "notYet": "The race for the seventh fragment happens here. Do not start the full ritual, the four Shadow Conduits, or the Shadow Titans, and do not enter the Void Emperor's prison. The Emperor does not appear."
     },
     {
       "id": "ecl8",
@@ -141,9 +148,10 @@
         "GOALS FOR THIS CHAPTER: The player must destroy all four Shadow Conduits (and by extension face down or drive off their attendant Shadow Titans) before a hard, dramatically-narrated time limit expires, racing across a city now suffering world-scale disaster-level effects (falling debris, mass evacuations, warped terrain) along the way.",
         "GM GUIDANCE: This is a full world-at-stake set piece — let the scale and danger feel enormous, and don't be afraid to let the hero improvise wildly creative solutions to each Titan/Conduit given their specific powers. Regardless of how well the player does, the ritual should still PARTIALLY succeed by the end of this chapter — the Void Emperor begins to emerge no matter what, though the hero's efforts (conduits destroyed, Titans driven off, lives saved) should clearly have blunted the worst of it and set up the final confrontation on better footing than if they'd done nothing. Chapter is complete once all four conduits are down/disabled, even as the Emperor's emergence begins regardless.",
         "FINALE FORESHADOWING: Before this chapter ends, have Dr. Voss or Victor Cross hint that the Emperor cannot be beaten by force and that the crystals and the gateway are how he will finally be stopped.",
-      "TONE: Apocalyptic disaster-movie spectacle, all-out action, with an unavoidable dark turn at the very end."
+        "TONE: Apocalyptic disaster-movie spectacle, all-out action, with an unavoidable dark turn at the very end."
       ],
-      "imagePrompt": "A city under a bruise-purple sky, four huge pillars of dark violet light rising from different parts of the skyline, a visible crack across the sky, rust-colored streetlights, people standing frozen in the middle of a street."
+      "imagePrompt": "A city under a bruise-purple sky, four huge pillars of dark violet light rising from different parts of the skyline, a visible crack across the sky, rust-colored streetlights, people standing frozen in the middle of a street.",
+      "notYet": "Destroy the four Conduits and face the Shadow Titans here. Do not enter the Emperor's prison dimension, show the Chains of Eternity or fear-manifestations, or fight the Collective's leader or the Emperor."
     },
     {
       "id": "ecl9",
@@ -160,7 +168,8 @@
         "GM GUIDANCE: Lean hard into the surreal, personal-horror tone here — let the fear-manifestations say/reveal things that land emotionally for this specific hero based on their sheet, without being cruel for cruelty's sake; overcoming each one should feel like a genuine character beat, not just another fight. The escape sequence at the end should be a tense, fast-paced set piece in its own right. Chapter is complete once all four chains are destroyed and the hero escapes back to reality.",
         "TONE: Surreal, introspective, high-tension — Inception-meets-cosmic-horror inside a body-horror dimension, resolving into a triumphant escape."
       ],
-      "imagePrompt": "A surreal otherworldly landscape of tilted floating stone platforms under a sky with no sun, four chains of black light stretching across the distance holding a huge dark shape in place, strange colors bleeding across the horizon."
+      "imagePrompt": "A surreal otherworldly landscape of tilted floating stone platforms under a sky with no sun, four chains of black light stretching across the distance holding a huge dark shape in place, strange colors bleeding across the horizon.",
+      "notYet": "Destroy the four Chains and escape the collapsing dimension here. Do not fight the Collective's leader, let the Void Emperor fully emerge, or use the black crystal for the final seal. That is the last chapter."
     },
     {
       "id": "ecl10",
@@ -178,9 +187,10 @@
         "GOALS FOR THIS CHAPTER: The player must (1) defeat the empowered Eclipse Collective leader in Phase 1, (2) survive and ultimately overcome the Void Emperor in the reality-warping Phase 2 confrontation, and (3) use the black crystal to resolve the gateway in Phase 3 according to whichever ending the player chooses.",
         "GM GUIDANCE: This is the climax of the entire chronicle — let every established detail from the hero's sheet and the adventure's prior chapters (their powers, their talents, specific beats from earlier chapters, even the fear-manifestations from Chapter Nine) pay off narratively here. Give the Void Emperor phase real cosmic weight and let the environment itself become a hazard/tool. Once Phase 3's choice is made and narrated to a satisfying conclusion, deliver a full epilogue: power returns to the city, the surviving Eclipse Collective members scatter and vanish, the rescued scientists (including Dr. Voss) begin safely studying whatever crystal fragments remain, and the city hails the hero as its protector — but close on a quiet, ominous final image of a single tiny shard of black crystal, hidden in the ruins below, beginning to glow again. Clearly end the story after this epilogue beat. If the player's own next action responds to that final image (e.g. trying to destroy or secure the shard) rather than starting something new, resolve that action in a short concluding beat and then end the story there instead — do not let a player-initiated response to the epilogue's own closing image leave the chapter open indefinitely.",
         "VOID EMPEROR RULES (very important): The Void Emperor is far too powerful for any hero to beat in combat, and force can only stagger him for a moment. Before Phase 2 begins, and again whenever the hero keeps trading blows with him, Victor Cross, Dr. Voss (if rescued) or the Emperor himself must make clear in the fiction that the Emperor draws his power from the crystals and the dimensional gateway, that the hero cannot beat him with force, and that destroying the crystals and overloading the gateway with the black crystal is what ends him. Never let a knockdown or a staggered Emperor end the story; the story only ends through Phase 3.",
-      "TONE: Maximum cinematic stakes — triumphant, cosmic, a little haunting at the very last line, leaving a door open for a future chronicle."
+        "TONE: Maximum cinematic stakes — triumphant, cosmic, a little haunting at the very last line, leaving a door open for a future chronicle."
       ],
-      "imagePrompt": "A torn, glowing black rift in the night sky above a mountain observatory, a robed figure standing at its center with arms raised while streams of shadow energy flow into them, stars visible inside the rift."
+      "imagePrompt": "A torn, glowing black rift in the night sky above a mountain observatory, a robed figure standing at its center with arms raised while streams of shadow energy flow into them, stars visible inside the rift.",
+      "notYet": "This is the finale: resolve the leader, the Void Emperor and the crystal here, in order. Do not begin a new storyline."
     }
   ]
 }

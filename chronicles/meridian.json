@@ -19,7 +19,8 @@
         "GM GUIDANCE: Adjudicate the player's stated plan honestly using their Strength/Agility/Intellect/Willpower and stated powers — reward clever, in-character plans, and let poor plans have real but survivable complications (smoke inhalation, a collapsing floor, a rescued civilian panicking). Do not railroad; if the player wants to try something unconventional, let them, and narrate a fair outcome. Introduce a moment of genuine tension (a trapped child, an elderly resident who won't leave without a pet, a support beam giving way) to make the choices matter. Once civilians are safe AND the device has been found or clearly implied to be found, the chapter is complete. If finding the device happens to surface a NEW person still in danger (someone pounding on a locked door, trapped behind debris, etc.), that person must actually be freed and safe before the chapter can end — do not close the chapter on a beat that leaves anyone confirmed still trapped or in danger.",
         "TONE: Pulpy, cinematic, a little wry, but treat danger and civilians with real weight."
       ],
-      "imagePrompt": "Night in a city: an apartment tower with flames blazing from the windows of its eleventh floor, thick smoke, tenants running out into the street in nightclothes, fire trucks parked at the end of the block, orange firelight on wet pavement."
+      "imagePrompt": "Night in a city: an apartment tower with flames blazing from the windows of its eleventh floor, thick smoke, tenants running out into the street in nightclothes, fire trucks parked at the end of the block, orange firelight on wet pavement.",
+      "notYet": "Warden Ash and the Cinder Syndicate's name are NOT revealed here, and the hero does not learn who is behind the fire. Do not show the black-market auction, Marlow Pike's tip, the relay tower, the blackout plot or any confrontation with Ash. The only lead is the hidden jammer."
     },
     {
       "id": "ch2",
@@ -39,7 +40,8 @@
         "WARDEN ASH AT THE AUCTION (very important): Warden Ash is the armored broker running this auction, but he must NOT be captured, knocked out or defeated in this chapter: he is the villain of the finale at the relay tower. The hero may fight him, hurt him, disarm him or take the ledger, but Ash always escapes before the chapter ends (a Signal Jammer burst, smoke, a hidden hatch or exit through the loading bay, thugs covering his retreat). If the hero seems to beat him, show him slipping away wounded, vowing to finish the plan at the relay tower. Never narrate him as unconscious, restrained, arrested or dead.",
         "TONE: Noir-tinged heist energy — tension, banter, a sense that everyone here has an angle."
       ],
-      "imagePrompt": "Interior of an old dockside grain exchange at night: tall rusted silos, a catwalk, a few shadowy figures in dark jackets gathered around a table under a single hanging work lamp, a small metal device with an ember-inside-a-broken-ring mark on the table."
+      "imagePrompt": "Interior of an old dockside grain exchange at night: tall rusted silos, a catwalk, a few shadowy figures in dark jackets gathered around a table under a single hanging work lamp, a small metal device with an ember-inside-a-broken-ring mark on the table.",
+      "notYet": "Do not stage the final confrontation with Warden Ash at the relay tower, and do not let the hero defeat or capture Ash here. The hero may only learn who Ash is and that the relay tower is the target. The blackout is not triggered and the charges are not found or disarmed in this chapter."
     },
     {
       "id": "ch3",
@@ -59,7 +61,8 @@
         "GM GUIDANCE: This is the climax — raise the stakes, let the hero's established stats/powers/bio pay off narratively (reference specifics from their sheet). Warden Ash should get one genuine complication or twist in response to the player's first move (reveals a hostage, triggers a partial arm sequence, taunts about the player's specific weakness) before the player can close it out, so the ending feels earned rather than instant. Once the immediate crisis (Ash dealt with, charges stopped) is resolved, deliver a satisfying wrap-up epilogue paragraph and clearly end the story. WARDEN ASH'S SHEET (the game tracks this itself): a skilled human mastermind with tech gear and no true superpowers. Fighting, Agility, Endurance, Intuition and Psyche are Excellent, Strength is Good and Reason is Remarkable. He wears Ceramic Plate Armor (Excellent) and fights with an Arc Baton (Excellent electrical shock), uses a Signal Jammer to disrupt radios and phones, and controls the Remote Charges rigged to the substation. His real name, age and face stay unknown. He is beatable by outmaneuvering him, and combat is not required to win. APPEARANCE: a pale, cracked ceramic mask with dark round lenses and a long black coat; he watches from a high steel platform on the relay tower above the substation.",
         "TONE: Big, cinematic, a little triumphant, with a final beat that leaves a door open for \"next time.\""
       ],
-      "imagePrompt": "The Meridian City central relay tower at night, a masked figure in a long black coat and a pale cracked ceramic mask with dark round lenses standing on a high steel lattice platform above a lit city grid and a sprawling electrical substation, dramatic dark blue sky, cinematic superhero comic-book realism, no text."
+      "imagePrompt": "The Meridian City central relay tower at night, a masked figure in a long black coat and a pale cracked ceramic mask with dark round lenses standing on a high steel lattice platform above a lit city grid and a sprawling electrical substation, dramatic dark blue sky, cinematic superhero comic-book realism, no text.",
+      "notYet": "This is the finale: resolve Ash, the charges and the blackout threat here. Do not resolve the 'larger heist' behind the blackout; leave it vague and ominous as a sequel hook."
     }
   ]
 }

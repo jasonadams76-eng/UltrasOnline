@@ -483,6 +483,7 @@ const STATE = {
   adventureId: null,   // which adventure (from ADVENTURES) this playthrough belongs to
   chapterId: null,
   log: [],             // {who:'gm'|'player', text} — current chapter only, wiped on chapter advance
+  rollAudit: null,     // dice tally for the audit (see recordRoll)
   fullLog: [],         // {chapterId, chapterTitle, chapterEyebrow, who, text, mechanics} — accumulates across the whole adventure, for the Print Adventure export
   busy: false,
   error: null,
@@ -1407,6 +1408,49 @@ function colorThresholds(colIdx){
 
 function rollD100(){ return 1 + Math.floor(Math.random()*100); }
 
+/* ---------- Roll audit ----------
+   Every real dice roll (not the "what would this need" lookups that pass a
+   forced roll) is tallied here, split into hero and foe rolls, and saved with
+   the game so an admin can check whether a player's luck was ordinary. */
+let ROLL_WHO = 'hero';
+function newRollAudit(){
+  const side = () => ({n:0, sum:0, white:0, green:0, yellow:0, red:0, low:0, high:0, min:null, max:null});
+  return { hero: side(), foe: side(), bad: 0, badList: [], recent: [] };
+}
+function recordRoll(roll, color){
+  if(!STATE.rollAudit || !STATE.rollAudit.hero) STATE.rollAudit = newRollAudit();
+  const a = STATE.rollAudit, t = ROLL_WHO === 'foe' ? a.foe : a.hero;
+  if(!Number.isInteger(roll) || roll < 1 || roll > 100){
+    a.bad++; if(a.badList.length < 20) a.badList.push(String(roll)); return;
+  }
+  t.n++; t.sum += roll; if(t[color] != null) t[color]++;
+  if(roll <= 10) t.low++;
+  if(roll >= 91) t.high++;
+  t.min = t.min == null ? roll : Math.min(t.min, roll);
+  t.max = t.max == null ? roll : Math.max(t.max, roll);
+  a.recent.push((ROLL_WHO === 'foe' ? 'F' : 'H') + roll);
+  if(a.recent.length > 40) a.recent.shift();
+}
+/* Plain-English audit lines. Flags impossible values and a low-roll rate that is
+   very unlikely by chance (a fair d100 gives 1-10 about 10% of the time). */
+function rollAuditLines(a){
+  if(!a || !a.hero) return [];
+  const out = [];
+  const side = (label, t) => {
+    if(!t.n) { out.push(`${label}: no rolls.`); return; }
+    const avg = (t.sum / t.n).toFixed(1), lowPct = Math.round(100 * t.low / t.n);
+    let line = `${label}: ${t.n} rolls, average ${avg} (a fair d100 averages 50.5), range ${t.min}-${t.max}; ${t.low} rolls of 1-10 (${lowPct}%, expected about 10%), ${t.high} of 91-100; colors W${t.white} G${t.green} Y${t.yellow} R${t.red}.`;
+    const sd = Math.sqrt(t.n * 0.1 * 0.9), z = sd ? (t.low - t.n * 0.1) / sd : 0;
+    if(t.n >= 20 && z >= 2.5) line += ' LOW-ROLL FLAG: more 1-10 rolls than chance usually gives.';
+    out.push(line);
+  };
+  side('Hero', a.hero); side('Foes', a.foe);
+  if(a.bad) out.push(`INVALID ROLLS: ${a.bad} roll(s) outside 1-100 (${a.badList.join(', ')}).`);
+  else out.push('All rolls were whole numbers from 1 to 100.');
+  if(a.recent && a.recent.length) out.push('Last rolls (H = hero, F = foe): ' + a.recent.join(' '));
+  return out;
+}
+
 /* Resolves a FEAT: given an ability's numeric rank, a column shift (+/- CS),
    and an optional forced roll, returns the color and supporting info. */
 function resolveFeat(abilityNumber, columnShift=0, roll=null){
@@ -1419,6 +1463,7 @@ function resolveFeat(abilityNumber, columnShift=0, roll=null){
   if(bucket>=redStart) color='red';
   else if(bucket>=yellowStart) color='yellow';
   else if(bucket>=greenStart) color='green';
+  if(roll==null) recordRoll(r, color);
   return {
     roll:r, color,
     baseRank: RANK_ORDER[baseCol],
@@ -1674,6 +1719,7 @@ async function loadGame(heroId, adventureId){
 /* Never throws (callers treat saving as best-effort); returns true/false. */
 async function saveGame(heroId, gameState){
   if(STATE.heroSnap && !gameState.heroSnap) gameState.heroSnap = STATE.heroSnap;
+  if(STATE.rollAudit && !gameState.rollAudit) gameState.rollAudit = STATE.rollAudit;
   try{
     await apiCall('PUT', '/api/game', { hero_id: heroId, adventure_id: gameState.adventureId, json: JSON.stringify(gameState) });
     hideSaveWarning();
@@ -1685,9 +1731,14 @@ async function saveGame(heroId, gameState){
 }
 function slimTranscript(log){
   if(!Array.isArray(log) || !log.length) return undefined;
-  return log.map(e=>({chapterId:e.chapterId, chapterTitle:e.chapterTitle, chapterEyebrow:e.chapterEyebrow, who:e.who, text:e.text,
+  const auditLines = rollAuditLines(STATE.rollAudit);
+  const out = log.map(e=>({chapterId:e.chapterId, chapterTitle:e.chapterTitle, chapterEyebrow:e.chapterEyebrow, who:e.who, text:e.text,
     mechanics: e.mechanics ? {ability:e.mechanics.ability, effectiveRank:e.mechanics.effectiveRank, roll:e.mechanics.roll, label:e.mechanics.label} : null,
     rolls: Array.isArray(e.rolls) && e.rolls.length ? e.rolls.map(t => String(t).slice(0, 220)) : undefined, defeat: e.defeat ? true : undefined}));
+  if(auditLines.length && STATE.rollAudit && (STATE.rollAudit.hero.n || STATE.rollAudit.foe.n)){
+    out.push({chapterId:'ROLL_AUDIT', chapterTitle:'Roll audit', chapterEyebrow:'Dice check', who:'gm', text:'Summary of every dice roll in this mission.', mechanics:null, rolls: auditLines.map(t => String(t).slice(0, 220))});
+  }
+  return out;
 }
 async function pushKarma(heroId, adventureId, review, fullLog){
   if(!review || !Array.isArray(review.awards)) return false;
@@ -1738,7 +1789,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-14.2';
+const APP_VERSION = '2026-11-14.3';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -2404,7 +2455,7 @@ CURRENT CHAPTER (hidden from player — never quote this verbatim):
 Title: ${chapter.title}
 ${chapter.gmInstructions}
 
-THE HERO HAS JUST BEEN BEATEN: the fight you just narrated ended with him knocked out and unable to go on. Write a vivid 3-4 paragraph beat, in this order. (1) State plainly that he lost this fight: what struck him down, that he blacked out or collapsed, and that the threat was winning. Do not soften this into a victory. (2) Victor Cross and an ORACLE strike team arrive and pull him out: they carry him clear, stabilize him, and deal with the threat (stopping the foes, securing civilians, whatever the scene needs). Make clear that it was ORACLE who saved the day, not the hero. (3) The hero comes round, hurt, with medics at his side, aware that he was beaten and that it cost him (a wound, a bruised reputation, someone else having to finish the job). Do not scold him, but do NOT call it a triumph and do NOT say the crisis is over as if he won. End your reply with the exact line "[CHAPTER_COMPLETE]" on its own line. Do not mention that token exists.`;
+THE HERO HAS JUST BEEN BEATEN: the fight you just narrated ended with him knocked out and unable to go on. Write a vivid 3-4 paragraph beat, in this order. (1) State plainly that he lost this fight: what struck him down, that he blacked out or collapsed, and that the threat was winning. Do not soften this into a victory. (2) Victor Cross and an ORACLE strike team arrive and pull him out: they carry him clear, stabilize him, and drive the foes back or hold them off. Make clear that it was ORACLE who saved him, not the hero. The threat is NOT resolved: the foes, the danger and the mission's goal are all still there, and you must say so. (3) The hero comes round, hurt, with medics at his side, aware that he was beaten and that it cost him. Close with him back on his feet at or near the scene, the problem still in front of him, and ORACLE giving him a moment before he goes back in. Do not scold him, do NOT call it a triumph, do NOT say the crisis is over, and do NOT end or wrap up the chapter. Do NOT write the token "[CHAPTER_COMPLETE]" anywhere in your reply.`;
 
   const contents = [];
   const MAX_HISTORY = 20;
@@ -4109,6 +4160,7 @@ function applySavedGame(hero, saved){
   STATE.chapterId = saved.chapterId;
   STATE.log = saved.log;
   STATE.fullLog = Array.isArray(saved.fullLog) ? saved.fullLog : [];
+  STATE.rollAudit = saved.rollAudit && saved.rollAudit.hero ? saved.rollAudit : newRollAudit();
   STATE.pendingAdvance = saved.pendingAdvance || null;
   STATE.currentHealth = (typeof saved.currentHealth === 'number') ? saved.currentHealth : maxHealth(hero);
   STATE.currentKarma = (typeof saved.currentKarma === 'number') ? saved.currentKarma : maxKarma(hero);
@@ -4225,6 +4277,7 @@ function renderAdventureSelect(){
       STATE.chapterId = getAdventure(advId).chapters[0].id;
       STATE.log = [];
       STATE.fullLog = [];
+      STATE.rollAudit = newRollAudit();
       pushFullLog('gm', currentChapter().opening, null);
       STATE.pendingAdvance = null;
       STATE.heroSnap = heroSnap(hero);
@@ -4845,6 +4898,10 @@ function foeAttackProfile(enemy){
   return { tags: ['unarmed'], name: 'a heavy blow', type: 'blunt', rollRank: rankNumberForName(enemy.stats['Fighting Ability']), damageRank: rankNumberForName(enemy.stats['Strength']) };
 }
 function resolveFoeTurn(enemy, shift){
+  ROLL_WHO = 'foe';
+  try{ return resolveFoeTurnInner(enemy, shift); } finally { ROLL_WHO = 'hero'; }
+}
+function resolveFoeTurnInner(enemy, shift){
   const prof = foeAttackProfile(enemy);
   const fts = talentShift(enemy.talents, prof.tags || []);
   const feat = resolveFeat(prof.rollRank, (shift || 0) + fts.cs);
@@ -4865,6 +4922,10 @@ function resolveFoeTurn(enemy, shift){
 /* An ordinary foe surrenders once it is clearly overmatched. Named villains
    never do unless their sheet says "surrenders". */
 function resolveFoeEscape(e){
+  ROLL_WHO = 'foe';
+  try{ return resolveFoeEscapeInner(e); } finally { ROLL_WHO = 'hero'; }
+}
+function resolveFoeEscapeInner(e){
   const held = e.held;
   const strNum = rankNumberForName(e.stats.Strength);
   const pows = (e.powers || []).filter(p => isAttackPower(e, p)).sort((a, b) => rankNumberForName(b.rank) - rankNumberForName(a.rank));
@@ -5311,43 +5372,26 @@ async function submitAction(opts){
 
     const knockedOut = STATE.currentHealth <= 0 && !complete;
 
-    const isLastChapter = (() => { const cs = currentAdventureChapters(); return cs.length && cs[cs.length-1].id === chapter.id; })();
-    if(knockedOut && isLastChapter && !STATE.secondWindUsed){
-      // Final chapter, first defeat: a second wind instead of the end.
-      STATE.secondWindUsed = true;
-      let windText;
-      try{ windText = await callOracleSecondWind(hero, chapter, STATE.log); }
-      catch(e){ windText = 'Victor Cross\'s voice cuts through the roar: "Hold on, I\'ve got you!" ORACLE agents drag you behind cover and throw everything they have at the threat while you gasp for breath. "Get up," Victor says. "You have one more chance."'; }
-      const windEntry = {who:'gm', text: windText, mechanics:null, defeat:true};
-      STATE.log.push(windEntry);
-      pushFullLog('gm', windText, null, { defeat:true });
-      STATE.currentHealth = Math.ceil(maxHealth(hero)/2);
-      STATE.combat = null; STATE.heroStunned = false;
-      pushCombatNote(defeatAftermathText(hero, false));
-    } else if(knockedOut){
-      // The hero went down before finishing the chapter's own objectives —
-      // ORACLE steps in. This forces the chapter complete regardless of
-      // what the player was mid-attempting.
+    if(knockedOut){
+      // The hero went down: ORACLE pulls him out, patches him up, and the SAME
+      // chapter carries on (every adventure, present and future). Only the
+      // Public Defeat Karma penalty marks the loss.
       try{
         const rescueReply = await callOracleRescue(hero, chapter, STATE.log);
-        const rescueCleaned = rescueReply.replace('[CHAPTER_COMPLETE]','').trim();
+        const rescueCleaned = rescueReply.replace(/\[CHAPTER_COMPLETE\]/g,'').trim();
         const rescueEntry = {who:'gm', text: rescueCleaned, mechanics:null, defeat:true};
         STATE.log.push(rescueEntry);
         pushFullLog('gm', rescueCleaned, null, { defeat:true });
-        complete = true;
       }catch(e){
-        // If the rescue call itself fails, don't strand the player at 0
-        // Health with no way forward — still force the chapter onward.
-        const fallbackRescueText = 'Victor Cross\'s voice crackles through your earpiece: "Hang on — ORACLE is inbound." The cavalry arrives just in time.';
+        // If the rescue call itself fails, don't strand the player at 0 Health.
+        const fallbackRescueText = 'Victor Cross\'s voice crackles through your earpiece: "Hang on — ORACLE is inbound." Agents drag you clear and drive the threat back, but it is not over: the danger is still out there, and you are hurt.';
         STATE.log.push({who:'gm', text: fallbackRescueText, mechanics:null, defeat:true});
         pushFullLog('gm', fallbackRescueText, null, { defeat:true });
-        complete = true;
       }
-      // ORACLE patches the hero up enough to continue the story; Health
-      // resets to half of max going into the next chapter rather than 0.
+      // ORACLE patches the hero up enough to carry on; Health resets to half of max.
       STATE.currentHealth = Math.ceil(maxHealth(hero)/2);
       STATE.combat = null; STATE.heroStunned = false;
-      pushCombatNote(defeatAftermathText(hero, true));
+      pushCombatNote(defeatAftermathText(hero, false));
     }
 
     if(!STATE.combat && !complete && !knockedOut && STATE.currentHealth > 0 && (wantsCombatTag || mechanicsStartCombat(mechanics))){

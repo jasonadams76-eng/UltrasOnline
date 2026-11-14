@@ -12,3 +12,6 @@
 - `opening` and `gmInstructions` are arrays of lines (or one string). Empty string = blank line.
 - Chapters play in the order listed. Each `gmInstructions` should end the chapter via the game's standard completion marker rules (the global GM rules already handle this).
 - A file with a mistake is skipped and the others still load; the admin account sees a notice on the adventure screen.
+
+## Knockouts (all adventures)
+When the hero is beaten (Health 0), ORACLE pulls him out, he wakes at half Health, a Public Defeat Karma penalty is recorded, and the SAME chapter carries on. This is built into the game, so it applies to every adventure, including new ones. A chapter never ends because the hero lost a fight, so write each chapter's `gmInstructions` and `notYet` so that the chapter's goal can still be reached after a rescue.

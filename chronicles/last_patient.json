@@ -30,7 +30,8 @@
         "Renata Cole, a night-shift nurse, privately asks the hero to investigate. She has noticed that the recoveries are too fast and the patients are frightened, and she fears speaking up to hospital administration. She is sincere, nervous and not part of any conspiracy. Do not introduce Victor Cross or ORACLE in this chapter; ORACLE first appears in Chapter Four.",
         "The chapter should establish that the recoveries are real, but something about the patients' condition is not normal."
       ],
-      "imagePrompt": "A modern New York City hospital room at night. A patient sits upright in bed despite having suffered severe injuries, looking confused and frightened. Medical monitors show unusual readings while a nurse watches from the doorway. A quiet, unsettling medical thriller atmosphere, realistic cinematic comic-book concept art, no text."
+      "imagePrompt": "A modern New York City hospital room at night. A patient sits upright in bed despite having suffered severe injuries, looking confused and frightened. Medical monitors show unusual readings while a nurse watches from the doorway. A quiet, unsettling medical thriller atmosphere, realistic cinematic comic-book concept art, no text.",
+      "notYet": "Do not stage the paper trail, Kyle Dunn, the shredded notes, ORACLE, Blackwell or Stone, the synchronized episode, the hidden facility, Dr. Nathaniel Mercer in person, or any treatment chamber. The hero only observes the recoveries, the shared dream and Marcus Webb's distress."
     },
     {
       "id": "shared_dreams",
@@ -60,7 +61,8 @@
         "The hero discovers that all of the affected patients were assigned to a particular treatment program shortly after admission.",
         "The chapter ends with the discovery of an unusual set of treatment records that do not appear in the hospital's normal medical documentation."
       ],
-      "imagePrompt": "Several hospital patients in separate beds appear to be experiencing the same unsettling dream. Their eyes are closed, but faint reflections of the same sterile white room appear in the glass and medical equipment around them. Surreal psychological medical thriller, realistic comic-book illustration, no text."
+      "imagePrompt": "Several hospital patients in separate beds appear to be experiencing the same unsettling dream. Their eyes are closed, but faint reflections of the same sterile white room appear in the glass and medical equipment around them. Surreal psychological medical thriller, realistic comic-book illustration, no text.",
+      "notYet": "Stay on the patients' experiences and bodies. Do not search hospital records, meet Kyle Dunn, bring in ORACLE or the consultants, or stage the synchronized episode or the hidden facility. Mercer is not confronted."
     },
     {
       "id": "the_missing_records",
@@ -89,7 +91,8 @@
         "The hospital's administrators may be unaware of the full scope of the experiment. Some may have approved a research program without understanding what was actually being done.",
         "The chapter ends with the hero identifying Dr. Nathaniel Mercer as the physician overseeing the experimental program and learning that Mercer has restricted access to a separate research area."
       ],
-      "imagePrompt": "A dim hospital records room filled with filing cabinets and computer terminals. A desk holds medical charts with sections blacked out and handwritten annotations. A single monitor displays an unusual patient treatment schedule. Dark investigative medical thriller aesthetic, cinematic realistic comic-book art, no readable text."
+      "imagePrompt": "A dim hospital records room filled with filing cabinets and computer terminals. A desk holds medical charts with sections blacked out and handwritten annotations. A single monitor displays an unusual patient treatment schedule. Dark investigative medical thriller aesthetic, cinematic realistic comic-book art, no readable text.",
+      "notYet": "The records trail and Kyle Dunn belong here. Do not bring in ORACLE, Victor Cross, Blackwell or Stone yet, and do not stage the synchronized episode, the hidden facility or a confrontation with Mercer. Kyle is not killed or seriously harmed."
     },
     {
       "id": "oracle_consultation",
@@ -118,7 +121,8 @@
         "Victor makes clear that the priority is protecting the patients and determining who is responsible. ORACLE does not authorize the consultants to conduct their own experiments on the affected individuals.",
         "The chapter ends when Stone identifies a pattern in the patients' medical readings. Their biological changes appear to be synchronized, as though the patients are responding to a common stimulus."
       ],
-      "imagePrompt": "An ORACLE scientific briefing room. Victor Cross stands in his tan trench coat while Adrian Blackwell and Evelyn Stone examine patient scans and biological data on large displays. Blackwell looks intensely curious, while Stone appears concerned. Cinematic realistic superhero science-thriller concept art, no text."
+      "imagePrompt": "An ORACLE scientific briefing room. Victor Cross stands in his tan trench coat while Adrian Blackwell and Evelyn Stone examine patient scans and biological data on large displays. Blackwell looks intensely curious, while Stone appears concerned. Cinematic realistic superhero science-thriller concept art, no text.",
+      "notYet": "The consultants give an incomplete, uncertain analysis and cannot state the treatment's purpose. Do not stage the synchronized episode, the hidden facility, Marcus Webb's removal to a chamber or a confrontation with Mercer."
     },
     {
       "id": "the_second_phase",
@@ -144,7 +148,8 @@
         "The hero may discover evidence that the next phase will involve every patient who received the experimental treatment.",
         "The chapter ends with a warning that the next activation is imminent. The patients may be in danger if the process continues."
       ],
-      "imagePrompt": "A tense hospital ward during a mysterious medical emergency. Several patients experience synchronized reactions as monitors flicker and medical equipment malfunctions. Nurses and doctors rush to help while an unsettling glow reflects across the room. Cinematic realistic superhero thriller art, no text."
+      "imagePrompt": "A tense hospital ward during a mysterious medical emergency. Several patients experience synchronized reactions as monitors flicker and medical equipment malfunctions. Nurses and doctors rush to help while an unsettling glow reflects across the room. Cinematic realistic superhero thriller art, no text.",
+      "notYet": "Do not reveal the hidden facility's location, confront Mercer, show his full goal or stage the final synchronization. Nothing is resolved: the patients are frightened and not hostile, and the episodes only point to a scheduled second phase."
     },
     {
       "id": "the_hidden_facility",
@@ -173,7 +178,8 @@
         "Security may be present, but the laboratory is primarily a scientific facility. Not every employee is a combatant or willing participant.",
         "The chapter ends when the hero discovers that Mercer intends to begin the next phase very soon, regardless of the patients' condition."
       ],
-      "imagePrompt": "A concealed medical research laboratory behind a hospital's restricted doors. Rows of advanced treatment chambers, biological monitoring equipment, computers, and clinical workstations fill the sterile room. Research data glows on monitors while Dr. Nathaniel Mercer stands near the main control station. Dark cinematic science-fiction comic-book art, no text."
+      "imagePrompt": "A concealed medical research laboratory behind a hospital's restricted doors. Rows of advanced treatment chambers, biological monitoring equipment, computers, and clinical workstations fill the sterile room. Research data glows on monitors while Dr. Nathaniel Mercer stands near the main control station. Dark cinematic science-fiction comic-book art, no text.",
+      "notYet": "The hero finds the facility and the records. Do not stage the full conversation and choice with Mercer (next chapter), the final patient synchronization or the shutdown of the control system. Marcus Webb is found but the climax is not played here."
     },
     {
       "id": "the_doctors_choice",
@@ -201,7 +207,8 @@
         "Mercer is a standalone antagonist created for The Last Patient. He is not part of the larger ULTRAS villain canon and will not be treated as a recurring villain.",
         "The chapter ends when the next phase begins, either because Mercer activates it or because the hero's intervention triggers an emergency response from the system."
       ],
-      "imagePrompt": "A dramatic confrontation inside a sterile experimental laboratory. Dr. Nathaniel Mercer, a determined physician, stands beside a bank of advanced medical control systems while a frightened patient struggles inside a glass treatment chamber. A superhero faces Mercer across the room. Cinematic realistic comic-book medical thriller art, no text."
+      "imagePrompt": "A dramatic confrontation inside a sterile experimental laboratory. Dr. Nathaniel Mercer, a determined physician, stands beside a bank of advanced medical control systems while a frightened patient struggles inside a glass treatment chamber. A superhero faces Mercer across the room. Cinematic realistic comic-book medical thriller art, no text.",
+      "notYet": "This is the confrontation and choice with Mercer. Do not resolve the final synchronization, shut down the control system, or give the aftermath. The patients' network and the final treatment come later."
     },
     {
       "id": "the_patient_network",
@@ -230,7 +237,8 @@
         "Mercer may cooperate if the situation becomes clearly dangerous, or may continue trying to preserve the experiment.",
         "The chapter ends when the hero reaches the central treatment controls and discovers that the process is approaching an irreversible threshold."
       ],
-      "imagePrompt": "A dramatic hospital research ward where multiple patients sit upright in separate treatment chambers, all looking in the same direction. Medical monitors display synchronized readings, overhead lights flicker, and automated doors open in the background. An unsettling science-fiction medical thriller scene, realistic comic-book art, no text."
+      "imagePrompt": "A dramatic hospital research ward where multiple patients sit upright in separate treatment chambers, all looking in the same direction. Medical monitors display synchronized readings, overhead lights flicker, and automated doors open in the background. An unsettling science-fiction medical thriller scene, realistic comic-book art, no text.",
+      "notYet": "Protect the patients and prevent the process from advancing, but do not complete the shutdown or the climax: the central control system is still running at the end of this chapter. No aftermath scene."
     },
     {
       "id": "the_final_treatment",
@@ -260,7 +268,8 @@
         "OUTCOMES (adjudicate honestly from the hero's method, and never let one bad roll create an unwinnable ending): A controlled wind-down, as Stone recommends, is safest for the patients but slow, so the hero must also physically protect people from overload hazards while it runs. An abrupt shutdown, as Blackwell recommends, works quickly but some patients suffer lasting, non-fatal harm. If the hero stalls or fails, the system reaches its threshold and some patients complete a partial transformation and will need ORACLE monitoring. No patient dies because of the system unless the player's own actions clearly cause it. In every case the chapter still ends with the system shut down or brought under control, whether by the hero, by ORACLE's emergency override, or by a final desperate action.",
         "The chapter ends when the system is shut down or otherwise brought under control."
       ],
-      "imagePrompt": "A climactic superhero scene in a medical research laboratory. A central experimental treatment machine overloads with electrical sparks and glowing energy while a hero works to shut it down. Behind glass, patients are visible in treatment chambers as emergency lights flash. Dramatic cinematic comic-book art, no text."
+      "imagePrompt": "A climactic superhero scene in a medical research laboratory. A central experimental treatment machine overloads with electrical sparks and glowing energy while a hero works to shut it down. Behind glass, patients are visible in treatment chambers as emergency lights flash. Dramatic cinematic comic-book art, no text.",
+      "notYet": "This is the climax: resolve the shutdown here. Do not play the aftermath, the ORACLE debrief or the closing Marcus Webb scene; those belong to the last chapter."
     },
     {
       "id": "the_last_patient",
@@ -290,7 +299,8 @@
         "Marcus explains that, just before the connection ended, they heard something that did not sound like any of the other patients.",
         "Leave the meaning of this final detail unresolved. It is an optional mystery for a future adventure, not confirmation of a new established entity, villain, or connection to existing ULTRAS lore."
       ],
-      "imagePrompt": "A quiet hospital room in the early morning after a crisis. A recovering patient sits beside the window looking out over New York City. A doctor checks the patient's chart while Victor Cross stands in the hallway speaking with ORACLE personnel. The atmosphere is hopeful but carries a subtle sense of mystery. Cinematic realistic comic-book art, no text."
+      "imagePrompt": "A quiet hospital room in the early morning after a crisis. A recovering patient sits beside the window looking out over New York City. A doctor checks the patient's chart while Victor Cross stands in the hallway speaking with ORACLE personnel. The atmosphere is hopeful but carries a subtle sense of mystery. Cinematic realistic comic-book art, no text.",
+      "notYet": "This is the aftermath only. Do not start a new fight, reopen the shutdown or begin a new storyline."
     }
   ]
 }

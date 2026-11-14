@@ -19,7 +19,8 @@
         "GM GUIDANCE: Adjudicate rescue/aid actions honestly using the hero's stats and powers. The windbreaker man is skittish, not dangerous — he'll bolt on foot or bluff weakly if confronted, and if caught or persuaded he'll only give up the smallest thread (the LLC name) before clamming up entirely, since he's more scared of his bosses than of a hero. Let the player also find the clue through investigation of the fire scene itself if they don't chase him. Chapter is complete once the hero has both handled the human cost of the scene AND has a concrete lead: the name \"Corvetti Realty Holdings LLC.\"",
         "TONE: Grounded, street-level, a little grim underneath the heroics — this is a neighborhood tragedy, not a spectacle."
       ],
-      "imagePrompt": "A burned-out check-cashing storefront in a Brooklyn street on a gray afternoon, blackened windows and scorched brick, fire marshal in a white helmet examining the wall, firefighters coiling hoses, a man in a windbreaker photographing the wreckage from a parked car down the block."
+      "imagePrompt": "A burned-out check-cashing storefront in a Brooklyn street on a gray afternoon, blackened windows and scorched brick, fire marshal in a white helmet examining the wall, firefighters coiling hoses, a man in a windbreaker photographing the wreckage from a parked car down the block.",
+      "notYet": "The Corvetti family's name, the insurance-fraud scheme, Frankie Vega's help, the Ledger drop, Raymond Fiore and Dominic Corvetti are all LATER. The windbreaker man gives up at most the name 'Corvetti Realty Holdings LLC'. Do not reveal that the fires are a string of arsons for insurance money or that occupied buildings are chosen on purpose."
     },
     {
       "id": "il2",
@@ -37,7 +38,8 @@
         "GM GUIDANCE: Let the player attempt the FEAT/roleplay of finding and pressuring or persuading Vega however suits their hero (Reason/Intuition to track him down, Psyche/Intuition or Fighting Ability to lean on him if that fits the hero's style, or a straightforward negotiation). If the player fumbles the approach, Vega can still be reached but is colder and more grudging — don't dead-end the plot on a bad roll. Chapter is complete once the player has confirmed the Corvetti family's involvement and heard about the pattern of fires at their own recently-acquired properties.",
         "TONE: Noir informant energy — transactional, wary, a little sleazy, with Vega always working an angle of his own — but also funny and likable, so his charm and wisecracks show even while he haggles."
       ],
-      "imagePrompt": "A shabby storefront law office on a Brooklyn street at dusk, faded sign and venetian blinds in the window, stacks of paper files visible inside, a man in a trench coat leaning in a doorway across the street."
+      "imagePrompt": "A shabby storefront law office on a Brooklyn street at dusk, faded sign and venetian blinds in the window, stacks of paper files visible inside, a man in a trench coat leaning in a doorway across the street.",
+      "notYet": "Frankie Vega gives only the Corvetti family link and the rumor that they burn their own places. Do not stage a stakeout of the Bushwick credit union or an arson attempt, and do not reveal the Ledger drop, the insurance-fraud method, Raymond Fiore ('the Accountant') or Dominic Corvetti."
     },
     {
       "id": "il3",
@@ -55,7 +57,8 @@
         "GM GUIDANCE: If the player stakes out the location, let them catch the arson crew in the act for a tense but non-lethal confrontation — the crew are low-level muscle, not masterminds, and should be beatable but not trivial (give them a getaway vehicle or a smoke/incendiary distraction to use as an escape tool even if the hero wins the fight, so at least one flees if outright captured feels too easy). If the player instead warns the tenants/owner directly, the arson attempt gets called off/delayed and the hero instead finds evidence of the planned attempt (timer device, accelerant canisters) left behind in a hasty abandonment. Either path should end with the hero having the \"Ledger drop, Thursday\" clue. Chapter complete once that clue is in hand and the immediate site is safe.",
         "TONE: Tense stakeout-to-action escalation; a real sense that the hero is racing the clock for ordinary people's lives and homes."
       ],
-      "imagePrompt": "A cramped credit union office on a Bushwick street corner, apartment windows above it with laundry on a fire escape, a dark sedan parked across the street with two men watching the entrance."
+      "imagePrompt": "A cramped credit union office on a Bushwick street corner, apartment windows above it with laundry on a fire escape, a dark sedan parked across the street with two men watching the entrance.",
+      "notYet": "The crew drops only a clue pointing to 'the Ledger drop, Thursday'. Do not show the handoff itself, the ledger's contents, the occupied-building insurance scheme, Fiore or R.F. Group, Alden Court or Dominic Corvetti. The arson crew is low-level muscle and is not the finale."
     },
     {
       "id": "il4",
@@ -74,7 +77,8 @@
         "GM GUIDANCE: Let the player's approach (stealth, force, misdirection, talking their way in) shape how this plays out; reward cleverness, let failure escalate to a fight rather than dead-end the plot. The ledger's true meaning doesn't have to be spelled out instantly — a receptive player might need a beat of piecing it together, or a hacker/researcher-type ally/contact could help decode the shorthand. Chapter complete once the hero has the ledger (or its key contents) and understands the scheme targets occupied buildings on purpose.",
         "TONE: Tense infiltration/heist energy tipping into real anger once the scheme's cruelty becomes clear."
       ],
-      "imagePrompt": "The rear lot behind a shuttered bowling alley in Queens at night, an unmarked panel van parked under a flickering sodium light, a man handing a thick accounting ledger to a courier by the open van door."
+      "imagePrompt": "The rear lot behind a shuttered bowling alley in Queens at night, an unmarked panel van parked under a flickering sodium light, a man handing a thick accounting ledger to a courier by the open van door.",
+      "notYet": "The ledger reveals the scheme (over-insured properties, occupied buildings chosen deliberately). It does NOT name the Accountant: Raymond Fiore, R.F. Group and Dominic Corvetti's base are learned later. Do not stage Alden Court, the 48-hour clock or any confrontation with Fiore."
     },
     {
       "id": "il5",
@@ -92,7 +96,8 @@
         "GM GUIDANCE: As before, make the player work for the information through roleplay/negotiation/leverage rather than handing it over for free; if the approach goes poorly, Vega still eventually gives up the name but colder and with an extra jab about the hero owing him now. Chapter complete once the hero has Raymond Fiore's name and the R.F. Group office location.",
         "TONE: Return-visit informant energy — familiar but still transactional, with an undercurrent that Vega is nervous about how big this is getting."
       ],
-      "imagePrompt": "A plain office building in Ridgewood, Queens at dusk, a lit third floor window, a directory board in the lobby with the letters R.F. Group, a handwritten margin note in a ledger lying open on a car seat."
+      "imagePrompt": "A plain office building in Ridgewood, Queens at dusk, a lit third floor window, a directory board in the lobby with the letters R.F. Group, a handwritten margin note in a ledger lying open on a car seat.",
+      "notYet": "The hero only gets Raymond Fiore's name and the R.F. Group office location from Vega. Do not stage the raid on R.F. Group here, and do not reveal the overall boss's location or plans. Alden Court, the Corvetti retaliation and the warehouse in Long Island City are later."
     },
     {
       "id": "il6",
@@ -109,7 +114,8 @@
         "GM GUIDANCE: Fiore himself is not a fighter — if directly confronted he'll try to talk his way out, offer a bribe, or stall for time while quietly trying to trigger a destruction failsafe (shredder, remote wipe) rather than physically resist; let a clever or fast player stop this in time, and let a slower approach mean some evidence is lost but not all of it (he can't destroy everything). The security guards should present a genuine but beatable challenge. Chapter complete once the hero has either Fiore himself in custody, a confession, or hard evidence in hand — and either way, learns from what's seized or from Fiore under pressure that the family's overall boss — Corvetti family underboss Dominic \"The Ledger\" Corvetti himself — has personally signed off on the next and biggest target: a large occupied apartment building in Corona, Queens, timed to burn within the next 48 hours for the biggest payout yet.",
         "TONE: Controlled tension escalating into a fight — Fiore's calm, bloodless menace versus the more physical threat of his security detail."
       ],
-      "imagePrompt": "A quiet third-floor office suite with beige carpet, filing cabinets, a shredder and a glass-walled conference room, a precise-looking man in a gray suit seated alone at a long table with neat stacks of paper and a laptop."
+      "imagePrompt": "A quiet third-floor office suite with beige carpet, filing cabinets, a shredder and a glass-walled conference room, a precise-looking man in a gray suit seated alone at a long table with neat stacks of paper and a laptop.",
+      "notYet": "Fiore is caught or his evidence seized here; the family's overall boss is only named. Do not show the Alden Court arson attempt, the Corvetti retaliation against the hero, the Long Island City warehouse or the final confrontation with Dominic Corvetti."
     },
     {
       "id": "il7",
@@ -127,7 +133,8 @@
         "GM GUIDANCE: Reward preparation — a well-prepared hero should have real advantages going into the confrontation (tenants already evacuated, a chosen ambush point, allies in position) while an unprepared one faces a messier, more dangerous version of the same fight. This crew should be a genuine step up in competence and coordination from earlier henchmen, but is still ultimately professional criminals, not superpowered threats. Chapter complete once the arson attempt at Alden Court is thwarted and the building/tenants are safe.",
         "TONE: Ticking-clock thriller tension building to a genuinely dangerous action set-piece protecting ordinary people's homes."
       ],
-      "imagePrompt": "A five-story apartment building in Corona, Queens in the evening, lit windows with families visible, a stairwell door in the side alley, a hero-eye view from the opposite rooftop, ticking clock on a wristwatch in the foreground."
+      "imagePrompt": "A five-story apartment building in Corona, Queens in the evening, lit windows with families visible, a stairwell door in the side alley, a hero-eye view from the opposite rooftop, ticking clock on a wristwatch in the foreground.",
+      "notYet": "Alden Court is the stake here. Do not stage the Corvetti family's direct retaliation against the hero (next chapter), Dominic Corvetti's warehouse base in Long Island City or the final showdown. Corvetti is not met in person yet."
     },
     {
       "id": "il8",
@@ -145,7 +152,8 @@
         "GM GUIDANCE: If Vega is involved, keep him consistent — self-interested, not heroic, giving only what he must to protect himself, but capable of a genuinely useful warning if it also serves his own survival. The confrontation(s) in this chapter should feel personal and dangerous, testing the hero's resourcefulness under pressure rather than being a straightforward brawl. Chapter complete once the hero has weathered the Corvetti family's move against them and has a solid lead on Dominic Corvetti's location — a warehouse office in Long Island City serving as the family's real operational base.",
         "TONE: Paranoid thriller tension — the hunter becoming the hunted, with real personal risk."
       ],
-      "imagePrompt": "A dark rooftop at night in New York, a figure in a hero costume looking across to a fire escape where a man in a dark coat is photographing the scene with a long lens, city lights behind."
+      "imagePrompt": "A dark rooftop at night in New York, a figure in a hero costume looking across to a fire escape where a man in a dark coat is photographing the scene with a long lens, city lights behind.",
+      "notYet": "The family moves against the hero here and the hero learns where Dominic Corvetti is or what he will do next. Do not storm the Long Island City warehouse, corner Corvetti or fight him in this chapter."
     },
     {
       "id": "il9",
@@ -162,7 +170,8 @@
         "GM GUIDANCE: This is the penultimate chapter — build real tension and let the hero's actions here (evidence secured, security dealt with, Corvetti cornered or chased down) matter for how the finale plays out, but don't let Corvetti actually escape the story here; he should be cornered, trapped, or otherwise forced into a final confrontation, even if he tries to flee. Chapter complete once Corvetti is cornered/confronted directly, ready for the final showdown.",
         "TONE: High-tension heist-reversal — the villain scrambling, the hero closing in, real urgency."
       ],
-      "imagePrompt": "A warehouse office in Long Island City at night, a glass-walled office on a mezzanine with a man in an expensive suit pulling ledgers from a safe into a metal drum, orange flames beginning inside the drum, forklifts and pallets below."
+      "imagePrompt": "A warehouse office in Long Island City at night, a glass-walled office on a mezzanine with a man in an expensive suit pulling ledgers from a safe into a metal drum, orange flames beginning inside the drum, forklifts and pallets below.",
+      "notYet": "The hero storms the warehouse and corners Dominic Corvetti, but the final fight, his capture and the last resolution of the accelerant threat belong to the next chapter. Do not let Corvetti escape the story and do not end the case here."
     },
     {
       "id": "il10",
@@ -179,7 +188,8 @@
         "GM GUIDANCE: Let Corvetti talk during the fight — self-justifying, bitter, maybe even offering a genuine bribe or a plea mid-fight as things turn against him, since he's a businessman at heart even now. Once he's defeated/captured and the fire threat is neutralized, deliver a satisfying epilogue: Corvetti and what's left of his organization go down hard thanks to the evidence trail the hero built (Fiore, the ledger, the seized books), the Alden Court tenants and the other affected families get to stay in their homes, the neighborhood breathes easier — and give a small, character-appropriate final beat with Frankie Vega, true to his nature: he's not thanking the hero for saving the day, he's making sure his own name never surfaces in any of it, and maybe grudgingly admits the hero did all right this time, before vanishing back into the city he actually trusts more than any hero. Clearly end the story after this epilogue beat.",
         "TONE: Grounded, hard-fought street-level finale — personal, consequential, and satisfying without ever tipping into cosmic or world-ending stakes."
       ],
-      "imagePrompt": "A loading dock behind a warehouse at night, a propped-open fire door spilling yellow light, a truck loaded with red fuel drums behind it, a heavyset man in an expensive suit standing in the doorway with his hands raised, smoke in the air."
+      "imagePrompt": "A loading dock behind a warehouse at night, a propped-open fire door spilling yellow light, a truck loaded with red fuel drums behind it, a heavyset man in an expensive suit standing in the doorway with his hands raised, smoke in the air.",
+      "notYet": "This is the finale: resolve Corvetti, his crew and the accelerant threat here. Do not open a new case or hand the hero a sequel plot."
     }
   ]
 }
