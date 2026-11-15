@@ -1851,7 +1851,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-15.4';
+const APP_VERSION = '2026-11-15.5';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -3976,7 +3976,7 @@ function renderTranscript(){
   };
 }
 function playerLastActivity(p){
-  const times = [p.last_login, p.created_at].concat((p.missions||[]).map(m=>m.last_played), (p.missions||[]).map(m=>m.completed_at)).filter(Boolean);
+  const times = [p.last_activity, p.last_login, p.created_at].concat((p.missions||[]).map(m=>m.last_played), (p.missions||[]).map(m=>m.completed_at)).filter(Boolean);
   return times.sort().pop() || '';
 }
 function renderPlayers(){
@@ -4018,7 +4018,7 @@ function renderPlayers(){
       return `<div class="pl-card">
         <div class="pl-head"><span class="pl-email">${escapeHtml(p.email)}${p.is_admin?' (admin)':''}</span>
           <span class="tag">${p.confirmed ? 'confirmed' : 'NOT confirmed'}</span></div>
-        <div class="pl-meta">Joined ${escapeHtml(fmtDateTime(p.created_at))} · Last sign-in ${p.last_login ? escapeHtml(fmtDateTime(p.last_login)) : '—'}</div>
+        <div class="pl-meta">Joined ${escapeHtml(fmtDateTime(p.created_at))} · Last activity ${(p.last_activity || p.last_login) ? escapeHtml(fmtDateTime(p.last_activity || p.last_login)) : '—'} · Last sign-in ${p.last_login ? escapeHtml(fmtDateTime(p.last_login)) : '—'}</div>
         ${heroHtml}
         <div class="pl-official"><label>Official player of:
           <select class="official-sel" data-user="${p.id}">${opts}</select></label></div>
