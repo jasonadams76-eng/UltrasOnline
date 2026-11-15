@@ -1729,17 +1729,31 @@ async function saveGame(heroId, gameState){
     return false;
   }
 }
-/* A multi-step action stores its rolls as text ("45, 72"). The server keeps only a
-   number in the roll field, so that text came back as 0. Keep the text safe by moving
-   it into the label (which the server keeps as written) and send a real number. */
+/* The server keeps a transcript entry's label to about 80 characters and its roll as a
+   number. So: shorten the label ("(yellow result vs Typical intensity)" becomes "(yellow)"),
+   put a multi-step action's roll list at the front of it, and send the full, untrimmed
+   text as an extra line (slimTranscript) that the admin view shows in full. */
+const LABEL_CAP = 80;
+function compactLabel(label){
+  return String(label || '').replace(/\s*\((\w+) result vs [^)]*\)/g, ' ($1)').replace(/\s*\((\w+) result\)/g, ' ($1)').replace(/\s+/g, ' ').trim();
+}
+function fitLabel(text){
+  return text.length <= LABEL_CAP ? text : text.slice(0, LABEL_CAP - 1).trimEnd() + '…';
+}
 function slimMechanics(m){
-  const out = {ability:m.ability, effectiveRank:m.effectiveRank, roll:m.roll, label:m.label};
+  const out = {ability:m.ability, effectiveRank:m.effectiveRank, roll:m.roll, label:fitLabel(compactLabel(m.label))};
   if(typeof m.roll === 'string' && /[^0-9]/.test(m.roll.trim()) && m.roll.trim() !== '—'){
     const first = parseInt(m.roll, 10);
     out.roll = Number.isFinite(first) ? first : 0;
-    out.label = 'Rolls ' + m.roll + ' → ' + (m.label || '');
+    out.label = fitLabel('Rolls ' + m.roll + ': ' + compactLabel(m.label));
   }
   return out;
+}
+function mechanicsDetailLine(m){
+  if(!m) return null;
+  const full = String(m.label || ''), multi = typeof m.roll === 'string' && /[^0-9]/.test(m.roll) && m.roll !== '—';
+  if(!multi && full.length <= LABEL_CAP) return null;
+  return ('Full roll detail: ' + (multi ? 'rolls ' + m.roll + ' — ' : '') + full).slice(0, 600);
 }
 /* The "FEAT: ..." line for a saved transcript entry. */
 function featLineText(m){
@@ -1752,7 +1766,7 @@ function slimTranscript(log){
   const auditLines = rollAuditLines(STATE.rollAudit);
   const out = log.map(e=>({chapterId:e.chapterId, chapterTitle:e.chapterTitle, chapterEyebrow:e.chapterEyebrow, who:e.who, text:e.text,
     mechanics: e.mechanics ? slimMechanics(e.mechanics) : null,
-    rolls: Array.isArray(e.rolls) && e.rolls.length ? e.rolls.map(t => String(t).slice(0, 220)) : undefined, defeat: e.defeat ? true : undefined}));
+    rolls: (() => { const r = (Array.isArray(e.rolls) ? e.rolls.map(t => String(t).slice(0, 220)) : []); const d = e.who === 'gm' ? mechanicsDetailLine(e.mechanics) : null; if(d) r.push(d); return r.length ? r : undefined; })(), defeat: e.defeat ? true : undefined}));
   if(auditLines.length && STATE.rollAudit && (STATE.rollAudit.hero.n || STATE.rollAudit.foe.n)){
     out.push({chapterId:'ROLL_AUDIT', chapterTitle:'Roll audit', chapterEyebrow:'Dice check', who:'gm', text:'Summary of every dice roll in this mission.', mechanics:null, rolls: auditLines.map(t => String(t).slice(0, 220))});
   }
@@ -1807,7 +1821,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-15.1';
+const APP_VERSION = '2026-11-15.2';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
