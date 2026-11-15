@@ -1729,11 +1729,29 @@ async function saveGame(heroId, gameState){
     return false;
   }
 }
+/* A multi-step action stores its rolls as text ("45, 72"). The server keeps only a
+   number in the roll field, so that text came back as 0. Keep the text safe by moving
+   it into the label (which the server keeps as written) and send a real number. */
+function slimMechanics(m){
+  const out = {ability:m.ability, effectiveRank:m.effectiveRank, roll:m.roll, label:m.label};
+  if(typeof m.roll === 'string' && /[^0-9]/.test(m.roll.trim()) && m.roll.trim() !== '—'){
+    const first = parseInt(m.roll, 10);
+    out.roll = Number.isFinite(first) ? first : 0;
+    out.label = 'Rolls ' + m.roll + ' → ' + (m.label || '');
+  }
+  return out;
+}
+/* The "FEAT: ..." line for a saved transcript entry. */
+function featLineText(m){
+  const lbl = String(m.label || '');
+  const rollPart = /^Rolls /.test(lbl) ? '' : ` · Roll ${m.roll}`;
+  return `FEAT: ${m.ability} (${m.effectiveRank})${rollPart} · ${lbl}`;
+}
 function slimTranscript(log){
   if(!Array.isArray(log) || !log.length) return undefined;
   const auditLines = rollAuditLines(STATE.rollAudit);
   const out = log.map(e=>({chapterId:e.chapterId, chapterTitle:e.chapterTitle, chapterEyebrow:e.chapterEyebrow, who:e.who, text:e.text,
-    mechanics: e.mechanics ? {ability:e.mechanics.ability, effectiveRank:e.mechanics.effectiveRank, roll:e.mechanics.roll, label:e.mechanics.label} : null,
+    mechanics: e.mechanics ? slimMechanics(e.mechanics) : null,
     rolls: Array.isArray(e.rolls) && e.rolls.length ? e.rolls.map(t => String(t).slice(0, 220)) : undefined, defeat: e.defeat ? true : undefined}));
   if(auditLines.length && STATE.rollAudit && (STATE.rollAudit.hero.n || STATE.rollAudit.foe.n)){
     out.push({chapterId:'ROLL_AUDIT', chapterTitle:'Roll audit', chapterEyebrow:'Dice check', who:'gm', text:'Summary of every dice roll in this mission.', mechanics:null, rolls: auditLines.map(t => String(t).slice(0, 220))});
@@ -1789,7 +1807,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-14.3';
+const APP_VERSION = '2026-11-15.1';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -3739,7 +3757,7 @@ function renderTranscript(){
       let head = '';
       if(e.chapterId !== last){ last = e.chapterId; head = `<div class="chapter-eyebrow display" style="margin-top:18px;">${escapeHtml(e.chapterEyebrow||'')}</div><h3 style="margin:2px 0 8px;">${escapeHtml(e.chapterTitle||'')}</h3>`; }
       const m = e.mechanics;
-      const feat = (e.who==='gm' && m) ? `<div class="tag">FEAT: ${escapeHtml(m.ability)} (${escapeHtml(m.effectiveRank)}) · Roll ${m.roll} · ${escapeHtml(m.label)}</div>` : '';
+      const feat = (e.who==='gm' && m) ? `<div class="tag">${escapeHtml(featLineText(m))}</div>` : '';
       const rl = (e.who==='gm' && Array.isArray(e.rolls)) ? e.rolls.map(t => `<div class="tag">${escapeHtml(t)}</div>`).join('') : '';
       return `${head}<div class="entry ${e.who}"><div class="who">${e.who==='gm' ? 'Game Master' : escapeHtml(heroLabel(d.hero_id))}</div>${feat}${rl}<div class="text">${escapeHtml(e.text)}</div></div>`;
     }).join('');
