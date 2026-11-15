@@ -432,6 +432,16 @@
   .board-meta button{ margin-left:auto; }
   .board-body{ margin-top:4px; white-space:pre-wrap; overflow-wrap:anywhere; }
   .board-empty{ padding:14px 0; color:#4a5878; font-style:italic; }
+  .board-tabs{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; padding:10px 16px 0; border-bottom:2px solid var(--paper-dim); }
+  .board-tab{ background:var(--paper-dim); color:var(--ink); border:2px solid var(--ink); border-bottom:none; border-radius:6px 6px 0 0; padding:6px 12px; font-size:.8rem; box-shadow:none; position:relative; top:2px; }
+  .board-tab.on{ background:var(--ink); color:#fff; }
+  .board-dot{ display:inline-block; width:9px; height:9px; margin-left:7px; border-radius:50%; background:#e02424; vertical-align:middle; box-shadow:0 0 0 2px #fff; }
+  .board-manage-btn{ margin-left:auto; margin-bottom:6px; }
+  .board-manage{ padding:10px 16px; background:var(--paper-dim); border-bottom:2px solid var(--paper-dim); }
+  .board-mrow{ display:flex; gap:6px; align-items:center; margin:6px 0; flex-wrap:wrap; }
+  .board-mrow.arch .board-mname{ opacity:.55; }
+  .board-mname{ flex:1 1 160px; min-width:0; font:inherit; padding:5px 8px; border:2px solid var(--ink); border-radius:6px; }
+  .board-mnote{ font-size:.75rem; color:#4a5878; margin-top:6px; }
   .title-screen.no-banner .title-banner{ display:none; }
   .title-screen.no-banner .title-fallback{ display:block; }
   .title-screen .sub{ margin:18px 0 20px; }
@@ -1841,7 +1851,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-15.3';
+const APP_VERSION = '2026-11-15.4';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -3341,16 +3351,32 @@ function renderHub(){
 
 /* ---------- Ultras Discussion: a board only official players and the Game Master can use ----------
    The server decides who gets in (it answers 403 to everyone else), so a regular player never
-   sees the board. The same holds if the server has not been updated yet (404): nothing shows. */
+   sees the board. The same holds if the server has not been updated yet (404): nothing shows.
+   Topics are tabs. Only the Game Master creates and manages them. A red dot on a tab means other
+   people posted there since this player last opened it. */
 const BOARD_MAX = 1000;
-async function loadBoard(){
+const BOARD_TOPIC_KEY = 'ultras_board_topic';
+async function loadBoard(opts){
+  opts = opts || {};
   if(!AUTH.token) return;
+  const prev = STATE.board || {};
   try{
-    const r = await apiCall('GET', '/api/board');
-    STATE.board = { posts: Array.isArray(r.posts) ? r.posts : [], error: null };
+    const tl = await apiCall('GET', '/api/board/topics');
+    const topics = Array.isArray(tl.topics) ? tl.topics : [];
+    const active = topics.filter(t => !t.archived);
+    let want = opts.topic != null ? opts.topic : (prev.topic != null ? prev.topic : parseInt(lsGet(BOARD_TOPIC_KEY), 10));
+    if(!active.some(t => t.id === want)) want = active.length ? active[0].id : null;
+    let posts = [];
+    if(want != null){
+      const r = await apiCall('GET', '/api/board?topic=' + encodeURIComponent(want));   // opening a topic clears its dot
+      posts = Array.isArray(r.posts) ? r.posts : [];
+      const cur = topics.find(t => t.id === want); if(cur) cur.unread = false;
+      lsSet(BOARD_TOPIC_KEY, String(want));
+    }
+    STATE.board = { topics, topic: want, posts, isGm: !!tl.is_gm, manage: !!prev.manage && !!tl.is_gm, error: null };
   }catch(e){
     if(e && (e.status === 401 || e.status === 403 || e.status === 404)) STATE.board = null;
-    else STATE.board = { posts: (STATE.board && STATE.board.posts) || [], error: (e && e.message) || 'Could not load the board.' };
+    else STATE.board = Object.assign({ topics: [], topic: null, posts: [], isGm: false, manage: false }, prev, { error: (e && e.message) || 'Could not load the board.' });
   }
   paintBoard();
 }
@@ -3358,21 +3384,50 @@ function boardPostHtml(p){
   const gm = p.label === 'Game Master';
   return `<div class="board-post"><div class="board-meta"><b class="board-who display${gm ? ' gm' : ''}">${escapeHtml(p.label || 'Player')}</b><span>${escapeHtml(fmtDateTime(p.created_at))}</span>${p.can_delete ? `<button class="secondary small" data-del="${Number(p.id)}">Delete</button>` : ''}</div><div class="board-body">${escapeHtml(p.body || '')}</div></div>`;
 }
+function boardManageHtml(b){
+  const rows = b.topics.map((t, i) => `<div class="board-mrow${t.archived ? ' arch' : ''}">
+      <input class="board-mname" data-rename="${t.id}" value="${escapeHtml(t.name)}" maxlength="40" aria-label="Topic name">
+      <button class="secondary small" data-save="${t.id}">Save</button>
+      <button class="secondary small" data-move="up" data-id="${t.id}"${i === 0 ? ' disabled' : ''} aria-label="Move up">&uarr;</button>
+      <button class="secondary small" data-move="down" data-id="${t.id}"${i === b.topics.length - 1 ? ' disabled' : ''} aria-label="Move down">&darr;</button>
+      <button class="secondary small" data-arch="${t.id}" data-to="${t.archived ? 0 : 1}">${t.archived ? 'Restore' : 'Archive'}</button>
+    </div>`).join('');
+  return `<div class="board-manage">${rows}
+    <div class="board-mrow"><input id="board-newtopic" class="board-mname" maxlength="40" placeholder="New topic name"><button id="btn-topic-add" class="small">Add topic</button></div>
+    <div class="board-mnote">Archived topics are hidden from players; their messages are kept.</div></div>`;
+}
 function paintBoard(){
   const slot = document.getElementById('board-slot');
   if(!slot) return;
   if(!STATE.board){ slot.innerHTML = ''; return; }
   const b = STATE.board;
+  const active = b.topics.filter(t => !t.archived);
+  const tabs = active.map(t => `<button class="board-tab${t.id === b.topic ? ' on' : ''}" data-topic="${t.id}" role="tab" aria-selected="${t.id === b.topic}">${escapeHtml(t.name)}${t.unread ? '<span class="board-dot" title="New messages" aria-label="New messages"></span>' : ''}</button>`).join('');
+  const cur = active.find(t => t.id === b.topic);
   slot.innerHTML = `<section class="board">
     <div class="board-head"><h3 class="display board-title">Ultras Discussion</h3><div class="board-sub">Only official players and the Game Master can see this board.</div></div>
-    <div class="board-compose">
-      <textarea id="board-text" maxlength="${BOARD_MAX}" rows="3" placeholder="Write a message for the other players..."></textarea>
+    <div class="board-tabs" role="tablist">${tabs}${b.isGm ? `<button class="board-manage-btn secondary small" id="btn-board-manage">${b.manage ? 'Done' : 'Manage topics'}</button>` : ''}</div>
+    ${b.isGm && b.manage ? boardManageHtml(b) : ''}
+    ${cur ? `<div class="board-compose">
+      <textarea id="board-text" maxlength="${BOARD_MAX}" rows="3" placeholder="Write a message in ${escapeHtml(cur.name)}..."></textarea>
       <div class="board-row"><span class="board-count" id="board-count"></span><button id="btn-board-refresh" class="secondary small">Refresh</button><button id="btn-board-post" class="small">Post</button></div>
-    </div>
+    </div>` : '<div class="board-compose"><div class="board-empty">There are no topics yet.' + (b.isGm ? ' Use Manage topics to add one.' : ' Check back soon.') + '</div></div>'}
     ${b.error ? `<div class="board-err">${escapeHtml(b.error)}</div>` : ''}
-    <div class="board-list">${b.posts.length ? b.posts.map(boardPostHtml).join('') : '<div class="board-empty">No messages yet. Be the first to post.</div>'}</div>
+    ${cur ? `<div class="board-list">${b.posts.length ? b.posts.map(boardPostHtml).join('') : '<div class="board-empty">No messages yet. Be the first to post.</div>'}</div>` : ''}
   </section>`;
+  const fail = (e, what) => { STATE.board = Object.assign({}, b, { error: (e && e.message) || what }); paintBoard(); };
+  slot.querySelectorAll('[data-topic]').forEach(btn => { btn.onclick = () => { const id = Number(btn.getAttribute('data-topic')); if(id !== b.topic) loadBoard({ topic: id }); }; });
+  const mb = document.getElementById('btn-board-manage');
+  if(mb) mb.onclick = () => { b.manage = !b.manage; paintBoard(); };
+  if(b.isGm && b.manage){
+    const act = async (path, body) => { try{ await apiCall('POST', path, body); await loadBoard(); }catch(e){ fail(e, 'Could not save that change.'); } };
+    document.getElementById('btn-topic-add').onclick = () => { const v = document.getElementById('board-newtopic').value.trim(); if(v) act('/api/admin/board/topic', { name: v }); };
+    slot.querySelectorAll('[data-save]').forEach(btn => { btn.onclick = () => { const id = Number(btn.getAttribute('data-save')); const inp = slot.querySelector('[data-rename="' + id + '"]'); act('/api/admin/board/topic/update', { id, name: inp.value }); }; });
+    slot.querySelectorAll('[data-move]').forEach(btn => { btn.onclick = () => act('/api/admin/board/topic/update', { id: Number(btn.getAttribute('data-id')), direction: btn.getAttribute('data-move') }); });
+    slot.querySelectorAll('[data-arch]').forEach(btn => { btn.onclick = () => act('/api/admin/board/topic/update', { id: Number(btn.getAttribute('data-arch')), archived: btn.getAttribute('data-to') === '1' }); });
+  }
   const ta = document.getElementById('board-text'), cnt = document.getElementById('board-count');
+  if(!ta) return;
   const upd = () => { cnt.textContent = ta.value.length + ' / ' + BOARD_MAX; };
   ta.value = STATE.boardDraft || ''; upd();
   ta.oninput = () => { STATE.boardDraft = ta.value; upd(); };
@@ -3382,20 +3437,17 @@ function paintBoard(){
     if(!text) return;
     ev.target.disabled = true;
     try{
-      await apiCall('POST', '/api/board', { body: text });
+      await apiCall('POST', '/api/board', { topic_id: b.topic, body: text });
       STATE.boardDraft = '';
       await loadBoard();
-    }catch(e){
-      STATE.board = { posts: b.posts, error: (e && e.message) || 'Could not post.' };
-      paintBoard();
-    }
+    }catch(e){ fail(e, 'Could not post.'); }
   };
   slot.querySelectorAll('[data-del]').forEach(btn => {
     btn.onclick = async () => {
       if(!confirm('Delete this message?')) return;
       btn.disabled = true;
       try{ await apiCall('POST', '/api/board/delete', { id: Number(btn.getAttribute('data-del')) }); await loadBoard(); }
-      catch(e){ STATE.board = { posts: b.posts, error: (e && e.message) || 'Could not delete.' }; paintBoard(); }
+      catch(e){ fail(e, 'Could not delete.'); }
     };
   });
 }
