@@ -414,6 +414,24 @@
   .hub-label{ font-size:1.5rem; letter-spacing:.04em; text-transform:uppercase; line-height:1.1; }
   .hub-desc{ margin-top:4px; font-size:.95rem; color:#cfe0ff; }
   @media (max-width:760px){ .hub-grid{ grid-template-columns:1fr; gap:20px; } .hub-label{ font-size:1.25rem; } }
+  .board{ max-width:760px; margin:28px auto 4px; border:3px solid var(--ink); background:#fff; box-shadow:6px 6px 0 rgba(10,31,68,.55); }
+  .board-head{ background:var(--ink); color:#fff; padding:12px 16px; border-bottom:3px solid var(--hero-red); }
+  .board-title{ margin:0; font-size:1.5rem; letter-spacing:.04em; text-transform:uppercase; line-height:1.1; }
+  .board-sub{ margin-top:3px; font-size:.85rem; color:#cfe0ff; }
+  .board-compose{ padding:12px 16px; border-bottom:2px solid var(--paper-dim); }
+  .board-compose textarea{ width:100%; box-sizing:border-box; font:inherit; padding:8px 10px; border:2px solid var(--ink); border-radius:6px; resize:vertical; min-height:70px; }
+  .board-row{ display:flex; align-items:center; gap:8px; margin-top:8px; }
+  .board-count{ margin-right:auto; font-family:'JetBrains Mono',monospace; font-size:.75rem; color:#4a5878; }
+  .board-err{ margin:8px 16px 0; color:#a11; font-size:.85rem; }
+  .board-list{ max-height:420px; overflow-y:auto; padding:6px 16px 12px; }
+  .board-post{ padding:10px 0; border-bottom:1px solid var(--paper-dim); }
+  .board-post:last-child{ border-bottom:none; }
+  .board-meta{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-size:.8rem; color:#4a5878; }
+  .board-who{ color:var(--ink); font-size:.95rem; }
+  .board-who.gm{ color:var(--hero-red); }
+  .board-meta button{ margin-left:auto; }
+  .board-body{ margin-top:4px; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .board-empty{ padding:14px 0; color:#4a5878; font-style:italic; }
   .title-screen.no-banner .title-banner{ display:none; }
   .title-screen.no-banner .title-fallback{ display:block; }
   .title-screen .sub{ margin:18px 0 20px; }
@@ -505,6 +523,8 @@ const STATE = {
   authMode: 'login',   // 'login' | 'signup' | 'forgot' | 'reset'
   authMessage: null,   // {kind:'ok'|'err', text}
   resetToken: null,    // password-reset code from the emailed link
+  board: null,         // Ultras Discussion posts (null = this account has no access)
+  boardDraft: '',      // unsent text in the board box
   notice: null,        // one-time message shown on the roster
   advInfo: null,       // {saves:Set, done:Set} for the active hero on the adventure screen
   restartArmed: null,  // adventure id showing "start over?" confirmation
@@ -1821,7 +1841,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-15.2';
+const APP_VERSION = '2026-11-15.3';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -3306,6 +3326,7 @@ function renderHub(){
         ${card('hub-history','images/hub-history.jpg','Ultras History','Explore the archives to learn the History of The Ultras','Preview of the Ultras History screen')}
         ${card('hub-heroes','images/hub-heroes.jpg','Choose Your Hero','Pick an Ultra and go on a solo mission','The six Ultras')}
       </div>
+      <div id="board-slot"></div>
     </div>
   `;
   wireAccountBar();
@@ -3314,6 +3335,69 @@ function renderHub(){
   go('hub-heroes', ()=>{ STATE.screen = 'HERO_SELECT'; render(); window.scrollTo(0,0); });
   const pl = document.getElementById('btn-players');
   if(pl) pl.onclick = ()=>openPlayers();
+  paintBoard();
+  loadBoard();
+}
+
+/* ---------- Ultras Discussion: a board only official players and the Game Master can use ----------
+   The server decides who gets in (it answers 403 to everyone else), so a regular player never
+   sees the board. The same holds if the server has not been updated yet (404): nothing shows. */
+const BOARD_MAX = 1000;
+async function loadBoard(){
+  if(!AUTH.token) return;
+  try{
+    const r = await apiCall('GET', '/api/board');
+    STATE.board = { posts: Array.isArray(r.posts) ? r.posts : [], error: null };
+  }catch(e){
+    if(e && (e.status === 401 || e.status === 403 || e.status === 404)) STATE.board = null;
+    else STATE.board = { posts: (STATE.board && STATE.board.posts) || [], error: (e && e.message) || 'Could not load the board.' };
+  }
+  paintBoard();
+}
+function boardPostHtml(p){
+  const gm = p.label === 'Game Master';
+  return `<div class="board-post"><div class="board-meta"><b class="board-who display${gm ? ' gm' : ''}">${escapeHtml(p.label || 'Player')}</b><span>${escapeHtml(fmtDateTime(p.created_at))}</span>${p.can_delete ? `<button class="secondary small" data-del="${Number(p.id)}">Delete</button>` : ''}</div><div class="board-body">${escapeHtml(p.body || '')}</div></div>`;
+}
+function paintBoard(){
+  const slot = document.getElementById('board-slot');
+  if(!slot) return;
+  if(!STATE.board){ slot.innerHTML = ''; return; }
+  const b = STATE.board;
+  slot.innerHTML = `<section class="board">
+    <div class="board-head"><h3 class="display board-title">Ultras Discussion</h3><div class="board-sub">Only official players and the Game Master can see this board.</div></div>
+    <div class="board-compose">
+      <textarea id="board-text" maxlength="${BOARD_MAX}" rows="3" placeholder="Write a message for the other players..."></textarea>
+      <div class="board-row"><span class="board-count" id="board-count"></span><button id="btn-board-refresh" class="secondary small">Refresh</button><button id="btn-board-post" class="small">Post</button></div>
+    </div>
+    ${b.error ? `<div class="board-err">${escapeHtml(b.error)}</div>` : ''}
+    <div class="board-list">${b.posts.length ? b.posts.map(boardPostHtml).join('') : '<div class="board-empty">No messages yet. Be the first to post.</div>'}</div>
+  </section>`;
+  const ta = document.getElementById('board-text'), cnt = document.getElementById('board-count');
+  const upd = () => { cnt.textContent = ta.value.length + ' / ' + BOARD_MAX; };
+  ta.value = STATE.boardDraft || ''; upd();
+  ta.oninput = () => { STATE.boardDraft = ta.value; upd(); };
+  document.getElementById('btn-board-refresh').onclick = () => loadBoard();
+  document.getElementById('btn-board-post').onclick = async (ev) => {
+    const text = ta.value.trim();
+    if(!text) return;
+    ev.target.disabled = true;
+    try{
+      await apiCall('POST', '/api/board', { body: text });
+      STATE.boardDraft = '';
+      await loadBoard();
+    }catch(e){
+      STATE.board = { posts: b.posts, error: (e && e.message) || 'Could not post.' };
+      paintBoard();
+    }
+  };
+  slot.querySelectorAll('[data-del]').forEach(btn => {
+    btn.onclick = async () => {
+      if(!confirm('Delete this message?')) return;
+      btn.disabled = true;
+      try{ await apiCall('POST', '/api/board/delete', { id: Number(btn.getAttribute('data-del')) }); await loadBoard(); }
+      catch(e){ STATE.board = { posts: b.posts, error: (e && e.message) || 'Could not delete.' }; paintBoard(); }
+    };
+  });
 }
 
 function renderHeroSelect(isRefresh){
