@@ -8,6 +8,8 @@
 ## Rules
 - `id` (adventure and chapter): lowercase letters, numbers, underscores only; unique across ALL adventures. Never change an id after players have saves.
 - Each chapter needs `id`, `title`, `eyebrow`, `opening`, `gmInstructions`. `imagePrompt` is optional.
+- `escalations` is optional: a list of `{"after": N, "text": "..."}`. On the player's Nth turn in that chapter the narrator is told to make that thing visibly happen (a closing hazard, a ticking clock). Use it so a chapter has real pressure even when the player takes a slow, careful approach.
+- Adventure-level `facts` (a line or a list of lines, next to `title` and `blurb`) is optional but recommended: story facts that must never change (a headcount, a character's name and look, where the safe place is). The narrator is reminded of them on every turn, even in a long chapter.
 - `notYet` is optional but strongly recommended: a line (or lines) naming story beats that belong to LATER chapters and must not be played out in this one (for example "the missing train is not found here", or a fixed headcount). The game also automatically tells the narrator the titles of all later chapters so it does not jump ahead.
 - `opening` and `gmInstructions` are arrays of lines (or one string). Empty string = blank line.
 - Chapters play in the order listed. Each `gmInstructions` should end the chapter via the game's standard completion marker rules (the global GM rules already handle this).

@@ -1571,11 +1571,13 @@ function validateAdventure(doc, fileName){
   });
   return {
     id: doc.id, title: doc.title, tagline: doc.tagline, blurb: doc.blurb,
+    facts: doc.facts ? joinLines(doc.facts) : '',
     chapters: doc.chapters.map(ch => ({
       id: ch.id, title: ch.title, eyebrow: ch.eyebrow,
       opening: joinLines(ch.opening), gmInstructions: joinLines(ch.gmInstructions),
       notYet: ch.notYet ? joinLines(ch.notYet) : '',
       imagePrompt: ch.imagePrompt ? String(ch.imagePrompt) : '',
+      escalations: (Array.isArray(ch.escalations) ? ch.escalations : []).map(e => ({ after: Math.floor(Number(e && e.after)), text: joinLines(e && e.text).trim() })).filter(e => e.after >= 1 && e.text),
       hoursBefore: (ch.hoursBefore != null && isFinite(Number(ch.hoursBefore)) && Number(ch.hoursBefore) >= 0) ? Number(ch.hoursBefore) : null
     }))
   };
@@ -1853,7 +1855,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-15.6';
+const APP_VERSION = '2026-11-17.1';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -2071,7 +2073,7 @@ const KARMA_MAX_AWARDS = 60;
 const KARMA_GUIDE = `HOW TO RECOGNIZE EACH AWARD IN THE STORY (read the whole transcript once for each group below):
 - Only count what actually happened in the story: attempts the narration shows failing (including impossible feats) earn nothing.
 - Crimes, Conspiracies and Offenses: the hero stops/prevents the crime or plot before it succeeds ("Stop or Prevent"), or captures/turns in the criminals ("Arrest"). A villain attack on a city, a bomb plot, a heist and a murder are examples.
-- Rescue: the hero protects people from imminent danger: pulling someone out of a fire, shielding a crowd, stopping a villain who was about to destroy a building, a city or a crowd (the people in danger are the ones rescued). Report one "Rescue" event for each separate rescue and give "people_saved", the number of people whose lives were saved (use your best estimate; 1 for one person, 5 or more for a crowd, a building, a city, a hostage group).
+- Rescue: the hero protects people from imminent danger: pulling someone out of a fire, shielding a crowd, stopping a villain who was about to destroy a building, a city or a crowd (the people in danger are the ones rescued). Report one "Rescue" event for each separate rescue and give "people_saved", the number of people whose lives were saved. Count each person ONCE for the whole adventure: if the same people are rescued, moved or counted again later, do not add them again, and use the story's own fixed headcount when it gives one (use your best estimate otherwise; 1 for one person, 5 or more for a crowd, a building, a city, a hostage group).
 - Defeating Foe: report one event per NAMED or super-powered opponent whose threat the hero ENDED: knocked out, captured, surrendered, talked down, tricked, trapped or otherwise neutralized, or who fled and is never seen again (their part in the story is over). Put the opponent's exact name in "foe" (the name the story uses). Do NOT give points: the code looks the foe up and sets the award. Do NOT report ordinary thugs, guards or unnamed foes, and do NOT report a foe who escaped but returns later in the story (only report them when they are finally neutralized, if ever). Report each foe once. THE VOID EMPEROR cannot be beaten in combat: report him as defeated if the hero destroys the crystals / the gateway or traps him; if the crystals were neither destroyed nor trapped, report nothing for him. A street criminal committing a crime still earns the crime award (Stop or Prevent or Arrest) as usual.
 - Role-Playing: a clever, in-character, memorable decision or line (a smart plan, a persuasive bluff, staying true to the hero's personality and motives). Be generous: report each distinct moment.
 - Showing Off: the hero uses powers flashily or heroically in front of a crowd or witnesses.
@@ -2142,8 +2144,8 @@ function applyKarmaEvents(events){
    {awards:[{category,points,note}], total}. Used at the epilogue and by the
    admin "Re-run Karma review" tool. Throws on a connection/format failure. */
 async function reviewKarmaText(heroDesc, transcript, defeats){
-  // A full 10-chapter chronicle is ~73k characters; this cap is only a backstop against a pathological save.
-  transcript = transcript.slice(0, 100000);
+  // A long chronicle can run past 190k characters; the model reads far more than that, so this cap is only a backstop against a pathological save (never cut a normal game).
+  transcript = transcript.slice(0, 700000);
   const names = Object.values(KARMA_TABLE).map(c=>c.name).filter(n=>n !== KARMA_MASS_RESCUE).concat([KARMA_FOE_CATEGORY]).join('; ');
   const prompt = `You are the referee reviewing a completed MARVEL SUPER HEROES (FASERIP) tabletop adventure to award Karma. Read the transcript and list every moment where the hero earned or lost Karma. The code that receives your answer looks up the points, so do NOT add up points yourself.
 
@@ -2350,6 +2352,18 @@ function stepsBlockText(mechanics){
     return `Step ${i+1} (${st.text}): ${m.usedPower ? 'Power' : 'Ability'} ${m.ability} (${m.effectiveRank}${m.columnShift ? ', shifted from '+m.baseRank+' by '+(m.columnShift>0?'+':'')+m.columnShift+' CS' : ''}), action type ${m.actionType}. Roll ${m.roll}, result color ${m.color.toUpperCase()}. Outcome: ${m.label}${mechNotes(m)}`;
   }).join('\n');
 }
+function adventureFactsText(){
+  let f = '';
+  try{ f = getAdventure(STATE.adventureId).facts || ''; }catch(e){ f = ''; }
+  return f ? `\nFIXED STORY FACTS (always true; never contradict or change them, whatever else was said earlier): ${f}` : '';
+}
+function chapterEscalationText(chapter, log){
+  const list = (chapter && chapter.escalations) || [];
+  if(!list.length) return '';
+  const turn = (log || []).filter(e => e.who === 'player').length + 1;
+  const due = list.filter(e => e.after === turn);
+  return due.length ? `\nSTORY PRESSURE THIS TURN: besides resolving the player's action, work this into your narration as something that visibly happens now (it must not be skipped, softened or deferred): ${due.map(e => e.text).join(' ')}` : '';
+}
 function chapterBoundaryText(chapter){
   let out = '';
   let later = [];
@@ -2413,7 +2427,7 @@ ${heroSheet}
 
 CURRENT CHAPTER (hidden from player — never quote this verbatim):
 Title: ${chapter.title}
-${chapter.gmInstructions}${chapterBoundaryText(chapter)}${namedEnemiesNarratorText(STATE.adventureId, log)}${mechanicsBlock}${extraBlock || ''}${healthContext ? `
+${chapter.gmInstructions}${adventureFactsText()}${chapterBoundaryText(chapter)}${chapterEscalationText(chapter, log)}${namedEnemiesNarratorText(STATE.adventureId, log)}${mechanicsBlock}${extraBlock || ''}${healthContext ? `
 
 HERO'S CURRENT CONDITION (never state numbers or the word "Health" — reflect this only as physical wear/breathlessness/injury in the prose when relevant): ${healthContext}` : ''}`;
 
@@ -2610,6 +2624,7 @@ ${recentBeats || '(The chapter opened and completed in one beat.)'}
 
 THE NEXT SCENE THIS STORY MUST ARRIVE AT ("${nextChapter.title}"):
 ${nextChapter.opening}
+${adventureFactsText()}
 
 TASK: Write 1-3 short paragraphs of connective narration that bridge the gap between exactly where the last beats above left the hero and the next scene above. This is a transition, not a new chapter turn — do not introduce a new obstacle, fight, or cliffhanger of your own. Ground it in cause and effect: if the last beats left something specific unresolved or mid-fight, briefly and plausibly wrap that up first (a last decisive blow, a forced retreat, being pulled away by a greater emergency, etc.) — never silently pretend it never happened. Then give a clear, in-fiction reason the hero travels, is taken, or arrives at the next scene's location. Do not restate or repeat the next scene's opening lines verbatim; end your bridge just before they'd begin, so it flows naturally into them. Do not end with "[CHAPTER_COMPLETE]" or any other token.`;
 
@@ -5512,6 +5527,11 @@ async function submitAction(opts){
     if(cleaned.includes('[CHAPTER_COMPLETE]')){
       complete = true;
       cleaned = cleaned.replace('[CHAPTER_COMPLETE]','').trim();
+    }
+    if(!cleaned){
+      // The reply was only control tags. Never log a blank line: ask once more, then fall back.
+      try{ cleaned = String(await callGM(hero, chapter, STATE.log.slice(0,-1), text, mechanics, healthContext, extraBlock) || '').replace(/\[(?:TIME:[^\]]*|WORKSHOP|STAND_DOWN|CHAPTER_COMPLETE|COMBAT(?::\s*(?:HERO|FOES))?)\]/gi, '').trim(); }catch(e){ cleaned = ''; }
+      if(!cleaned) cleaned = wantsCombatTag ? 'The moment breaks: everyone has noticed everyone, and the fight is on.' : 'The scene holds for a breath, waiting on your next move.';
     }
     const rollLines = cr ? foeRollLines(cr) : soloRolls;
     const gmEntry = {who:'gm', text: cleaned, mechanics};
