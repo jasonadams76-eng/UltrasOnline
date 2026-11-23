@@ -1855,7 +1855,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-17.1';
+const APP_VERSION = '2026-11-23.1';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -1898,6 +1898,11 @@ const GEMINI_WORKER_URL = ((window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.workerU
 if(!GEMINI_WORKER_URL && !GEMINI_API_KEY) console.warn('No workerUrl or Gemini API key found — create config.js next to index.html (see comment above).');
 const GEMINI_MODEL_PRIMARY = "gemini-3.5-flash-lite";
 const GEMINI_MODEL_FALLBACK = "gemini-3.1-flash-lite";
+const GEMINI_MODEL_LAST_RESORT = "gemini-4-hydrogen";   // slower and pricier: only reached when both Flash-Lite models fail
+const GEMINI_RETRY_STATUS = [429, 500, 502, 503, 504];
+const GEMINI_TIMEOUT_MS = 45000;
+const GEMINI_PASS_WAITS_MS = [0, 2000, 5000];   // wait before each full pass through the three models
+const sleepMs = ms => new Promise(r => setTimeout(r, ms));
 const IMAGE_MODEL = 'flux';          // Pollinations' base Flux model — free, no key required; stronger prompt adherence and more coherent, photoreal output than 'turbo'
 const IMAGE_STYLE = 'photorealistic live-action film still, shot on 35mm anamorphic lens, sharp focus, highly detailed textures, realistic skin, fabric and metal, natural volumetric lighting, rich cinematic color grading, high resolution.';
 
@@ -1918,27 +1923,60 @@ const CHAPTER_IMAGES = {};
    up. Returns the raw fetch Response either way — callers keep their existing
    response.ok / response.json() handling unchanged. */
 async function fetchGeminiWithFallback(requestBody) {
-  const callModel = (model) => fetch(
-    `${GEMINI_WORKER_URL || "https://generativelanguage.googleapis.com"}/v1beta/models/${model}:generateContent`,
-    {
-      method: "POST",
-      headers: GEMINI_WORKER_URL
-        ? { "Content-Type": "application/json" }
-        : { "Content-Type": "application/json", "x-goog-api-key": GEMINI_API_KEY },
-      body: JSON.stringify(requestBody)
+  const post = async (model, body) => {
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), GEMINI_TIMEOUT_MS);
+    try {
+      const r = await fetch(
+        `${GEMINI_WORKER_URL || "https://generativelanguage.googleapis.com"}/v1beta/models/${model}:generateContent`,
+        {
+          method: "POST",
+          headers: GEMINI_WORKER_URL
+            ? { "Content-Type": "application/json" }
+            : { "Content-Type": "application/json", "x-goog-api-key": GEMINI_API_KEY },
+          body: JSON.stringify(body),
+          signal: ctl.signal
+        }
+      );
+      r.usedModel = model;
+      return r;
+    } finally { clearTimeout(timer); }
+  };
+  // Gemini 4 Hydrogen is a thinking model: keep its thinking light and leave room for the reply.
+  const hydrogenBody = (withThinking) => {
+    const gc = Object.assign({}, requestBody.generationConfig || {});
+    gc.maxOutputTokens = ((typeof gc.maxOutputTokens === 'number') ? gc.maxOutputTokens : 700) + 2000;
+    if (withThinking) gc.thinkingConfig = { thinkingLevel: 'low' };
+    return Object.assign({}, requestBody, { generationConfig: gc });
+  };
+  const callModel = async (model) => {
+    if (model !== GEMINI_MODEL_LAST_RESORT) return post(model, requestBody);
+    let r = await post(model, hydrogenBody(true));
+    if (r.status === 400) r = await post(model, hydrogenBody(false));   // the thinking setting was refused: try once without it
+    return r;
+  };
+
+  const models = [GEMINI_MODEL_PRIMARY, GEMINI_MODEL_FALLBACK, GEMINI_MODEL_LAST_RESORT];
+  let last = null, lastErr = null;
+  for (let pass = 0; pass < GEMINI_PASS_WAITS_MS.length; pass++) {
+    if (GEMINI_PASS_WAITS_MS[pass]) await sleepMs(GEMINI_PASS_WAITS_MS[pass]);
+    let worthWaiting = false;
+    for (const model of models) {
+      try {
+        const r = await callModel(model);
+        if (r.ok) return r;
+        last = r; lastErr = null;
+        if (GEMINI_RETRY_STATUS.includes(r.status)) worthWaiting = true;
+        console.warn(`Gemini model ${model} returned ${r.status}; trying the next option`);
+      } catch (e) {
+        lastErr = e; worthWaiting = true;   // network error or timeout: treat as retryable
+        console.warn(`Gemini model ${model} failed (${e && e.name === 'AbortError' ? 'timed out' : e && e.message}); trying the next option`);
+      }
     }
-  );
-
-  let response = await callModel(GEMINI_MODEL_PRIMARY);
-  response.usedModel = GEMINI_MODEL_PRIMARY;
-
-  if (!response.ok && (response.status === 503 || response.status === 429)) {
-    console.warn(`Gemini model ${GEMINI_MODEL_PRIMARY} returned ${response.status} — retrying with fallback ${GEMINI_MODEL_FALLBACK}`);
-    response = await callModel(GEMINI_MODEL_FALLBACK);
-    response.usedModel = GEMINI_MODEL_FALLBACK;
+    if (!worthWaiting) break;   // 400/401/403 everywhere will not improve by waiting
   }
-
-  return response;
+  if (last) return last;
+  throw lastErr || new Error('Could not reach the narrator');
 }
 
 /* ---------- Karma awards (end-of-adventure review) ----------
@@ -4650,6 +4688,15 @@ function currentChapterMeta(){
   const chapter = currentChapter();
   return {title: chapter.title, eyebrow: chapter.eyebrow};
 }
+const TURN_STATE_KEYS = ['log','fullLog','currentHealth','currentKarma','enemies','secondWindUsed','combat','checkPrompts','armorLost','armorAreas','transformed','atWorkshop','villainsSeen','rollAudit','heroStunned','heroDisrupt','pendingAdvance'];
+function takeTurnSnapshot(){
+  const snap = {};
+  TURN_STATE_KEYS.forEach(k => { try{ snap[k] = JSON.parse(JSON.stringify(STATE[k] === undefined ? null : STATE[k])); }catch(e){ snap[k] = STATE[k]; } });
+  return snap;
+}
+function restoreTurnSnapshot(snap){
+  TURN_STATE_KEYS.forEach(k => { STATE[k] = snap[k]; });
+}
 function pushFullLog(who, text, mechanics, extra){
   const meta = currentChapterMeta();
   const entry = {chapterId: STATE.chapterId, chapterTitle: meta.title, chapterEyebrow: meta.eyebrow, who, text, mechanics: mechanics || null};
@@ -4824,7 +4871,7 @@ function renderPlay(){
         ${karmaPromptHtml()}${combatPanelHtml()}${checkPromptsHtml()}
         ${heroCanTransform(hero) ? `<div style="margin-bottom:8px;"><button id="btn-transform" class="secondary" ${STATE.busy?'disabled':''}>Transform: ${STATE.transformed ? 'return to human form' : 'change to tungsten form'}${STATE.combat ? ' (uses your action)' : ''}</button></div>` : ''}
         <div class="input-row">
-          <textarea id="player-input" placeholder="${STATE.combat ? (speedActions(hero) > 1 ? 'Your actions this round: up to ' + speedActions(hero) + ', one per line (Round ' + STATE.combat.round + ')' : 'Your action this turn (Round ' + STATE.combat.round + ')') : 'What does ' + escapeHtml(hero.alias) + ' do?'}" ${STATE.busy?'disabled':''}></textarea>
+          <textarea id="player-input" placeholder="${STATE.combat ? (speedActions(hero) > 1 ? 'Your actions this round: up to ' + speedActions(hero) + ', one per line (Round ' + STATE.combat.round + ')' : 'Your action this turn (Round ' + STATE.combat.round + ')') : 'What does ' + escapeHtml(hero.alias) + ' do?'}" ${STATE.busy?'disabled':''}>${escapeHtml(STATE.draft || '')}</textarea>
           <button id="btn-send" ${STATE.busy?'disabled':''}>${STATE.busy?'…':'Act'}</button>
         </div>
         ${STATE.busy ? `<div class="thinking">The Game Master is weighing the outcome…</div>` : ''}
@@ -5453,6 +5500,9 @@ async function submitAction(opts){
   if(!text || STATE.busy) return;
   STATE.busy = true;
   STATE.error = null;
+  STATE.draft = '';
+  const turnSnap = takeTurnSnapshot();
+  let narrated = false;   // true once the narrator has answered this turn
   STATE.log.push({who:'player', text});
   pushFullLog('player', text, null);
   render();
@@ -5510,6 +5560,7 @@ async function submitAction(opts){
     const healthPct = STATE.currentHealth / maxHealth(hero);
     const healthContext = healthPct <= 0.25 ? 'Badly hurt, running on fumes.' : healthPct <= 0.5 ? 'Taken real damage, feeling it.' : null;
     const reply = await callGM(hero, chapter, STATE.log.slice(0,-1), text, mechanics, healthContext, extraBlock);
+    narrated = true;
     let cleaned = reply;
     const timeSeconds = repairSeconds ? 0 : parseTimeTag(cleaned);
     cleaned = cleaned.replace(/\[TIME:[^\]]*\]/gi, '').trim();
@@ -5602,7 +5653,16 @@ async function submitAction(opts){
 
     await saveGame(hero.id, {adventureId: STATE.adventureId, chapterId: STATE.chapterId, log: STATE.log, fullLog: STATE.fullLog, pendingAdvance: STATE.pendingAdvance, currentHealth: STATE.currentHealth, currentKarma: STATE.currentKarma, enemies: STATE.enemies, secondWindUsed: !!STATE.secondWindUsed, combat: STATE.combat || null, checkPrompts: STATE.checkPrompts || [], armorLost: STATE.armorLost || 0, armorAreas: STATE.armorAreas || {}, transformed: !!STATE.transformed, atWorkshop: !!STATE.atWorkshop, villainsSeen: STATE.villainsSeen || []});
   }catch(e){
-    STATE.error = 'The signal dropped: ' + e.message + '. Try again.';
+    console.warn('Turn failed:', e && e.message);
+    if(narrated){
+      STATE.error = 'The signal dropped: ' + e.message + '. Try again.';
+    }else{
+      restoreTurnSnapshot(turnSnap);   // nothing was narrated: undo the half-played turn so a retry is clean
+      if(!opts.transform) STATE.draft = text;
+      STATE.error = opts.transform
+        ? 'The narrator is busy right now. Nothing was lost; press the button again to try once more.'
+        : 'The narrator is busy right now. Your action is saved in the box. Press Act to try again.';
+    }
   }finally{
     STATE.retreatNow = false;
     STATE.busy = false;
