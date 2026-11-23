@@ -139,6 +139,12 @@
   .input-row{ display:flex; gap:10px; margin-top:14px; }
   .input-row textarea{ flex:1; }
   .thinking{ font-family:'JetBrains Mono',monospace; font-size:0.8rem; color:#666; }
+  .thinking .cursor{ display:inline-block; margin-left:2px; color:#0b3d91; animation: busyblink 1s steps(2, start) infinite; }
+  .thinking #busy-text{ animation: busypulse 1.6s ease-in-out infinite; }
+  #busy-secs{ opacity:.7; margin-left:6px; }
+  @keyframes busyblink{ to{ visibility:hidden; } }
+  @keyframes busypulse{ 0%,100%{ opacity:1; } 50%{ opacity:.55; } }
+  @media (prefers-reduced-motion: reduce){ .thinking .cursor, .thinking #busy-text{ animation:none; } }
 
   .hero-sheet-mini{ font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:#333; margin-top:8px; line-height:1.6; }
   .top-bar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
@@ -1855,7 +1861,7 @@ const GEMINI_API_KEY = (window.ULTRAS_CONFIG && window.ULTRAS_CONFIG.geminiApiKe
 /* ---------- Update notice ----------
    APP_VERSION is bumped whenever this file changes. The page re-reads the live copy and, if its version differs
    from the one running, shows a bar with a Reload button. Failures (offline etc.) are silent. */
-const APP_VERSION = '2026-11-23.1';
+const APP_VERSION = '2026-11-23.2';
 const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let updateDismissedFor = null, updateChecking = false;
 function liveIndexUrl(){ return location.href.split('#')[0].split('?')[0]; }
@@ -1959,12 +1965,14 @@ async function fetchGeminiWithFallback(requestBody) {
   const models = [GEMINI_MODEL_PRIMARY, GEMINI_MODEL_FALLBACK, GEMINI_MODEL_LAST_RESORT];
   let last = null, lastErr = null;
   for (let pass = 0; pass < GEMINI_PASS_WAITS_MS.length; pass++) {
-    if (GEMINI_PASS_WAITS_MS[pass]) await sleepMs(GEMINI_PASS_WAITS_MS[pass]);
+    if (GEMINI_PASS_WAITS_MS[pass]) { setBusyNote(`The narrator is still busy. Trying again (round ${pass + 1} of ${GEMINI_PASS_WAITS_MS.length})…`); await sleepMs(GEMINI_PASS_WAITS_MS[pass]); }
     let worthWaiting = false;
     for (const model of models) {
+      if (model === GEMINI_MODEL_FALLBACK && pass === 0) setBusyNote('The narrator is busy. Trying a backup narrator…');
+      if (model === GEMINI_MODEL_LAST_RESORT && pass === 0) setBusyNote('Still busy. Calling in the strongest backup (this can take longer)…');
       try {
         const r = await callModel(model);
-        if (r.ok) return r;
+        if (r.ok) { setBusyNote(''); return r; }
         last = r; lastErr = null;
         if (GEMINI_RETRY_STATUS.includes(r.status)) worthWaiting = true;
         console.warn(`Gemini model ${model} returned ${r.status}; trying the next option`);
@@ -2555,6 +2563,7 @@ HERO'S CURRENT CONDITION (never state numbers or the word "Health" — reflect t
    for them. This keeps solo play moving without punishing a bad run of rolls
    too harshly, while still making the knockout feel like a real story beat. */
 async function callOracleRescue(hero, chapter, log){
+  setBusyStage('ORACLE is pulling you out…');
   const heroSheet = `Name: ${hero.name}
 Alias: ${hero.alias}
 Origin: ${hero.origin}
@@ -2599,6 +2608,7 @@ THE HERO HAS JUST BEEN BEATEN: the fight you just narrated ended with him knocke
    off while they recover; the story is NOT over. Only a second defeat ends
    the chapter through the normal rescue. */
 async function callOracleSecondWind(hero, chapter, log){
+  setBusyStage('You dig deep for a second wind…');
   const heroSheet = `Name: ${hero.name}
 Alias: ${hero.alias}
 Origin: ${hero.origin}
@@ -2642,6 +2652,7 @@ THE HERO HAS JUST BEEN OVERWHELMED in the final confrontation of the whole adven
    beats left dangling and gives an explicit, causal reason the hero is now
    wherever the next chapter begins, before the fixed opening text takes over. */
 async function callChapterTransition(hero, completedChapter, nextChapter, log){
+  setBusyStage('Writing the bridge to the next scene…');
   const heroSheet = `Name: ${hero.name}
 Alias: ${hero.alias}
 Powers: ${hero.powers.map(powerLabel).join(', ')}
@@ -4688,6 +4699,20 @@ function currentChapterMeta(){
   const chapter = currentChapter();
   return {title: chapter.title, eyebrow: chapter.eyebrow};
 }
+/* Live "what is the Game Master doing" line shown while a turn is in progress. */
+const BUSY = { base: '', note: '', since: 0, timer: null };
+function busyPaint(){
+  if(!STATE.busy){ stopBusy(); return; }
+  const t = document.getElementById('busy-text');
+  if(!t) return;
+  t.textContent = BUSY.note || BUSY.base || 'The Game Master is weighing the outcome…';
+  const sec = document.getElementById('busy-secs');
+  if(sec){ const n = Math.floor((Date.now() - BUSY.since) / 1000); sec.textContent = n >= 4 ? n + 's' : ''; }
+}
+function startBusy(text){ BUSY.since = Date.now(); BUSY.base = text || ''; BUSY.note = ''; clearInterval(BUSY.timer); BUSY.timer = setInterval(busyPaint, 1000); }
+function stopBusy(){ clearInterval(BUSY.timer); BUSY.timer = null; BUSY.note = ''; }
+function setBusyStage(text){ BUSY.base = text; BUSY.note = ''; busyPaint(); }
+function setBusyNote(text){ BUSY.note = text || ''; busyPaint(); }
 const TURN_STATE_KEYS = ['log','fullLog','currentHealth','currentKarma','enemies','secondWindUsed','combat','checkPrompts','armorLost','armorAreas','transformed','atWorkshop','villainsSeen','rollAudit','heroStunned','heroDisrupt','pendingAdvance'];
 function takeTurnSnapshot(){
   const snap = {};
@@ -4874,7 +4899,7 @@ function renderPlay(){
           <textarea id="player-input" placeholder="${STATE.combat ? (speedActions(hero) > 1 ? 'Your actions this round: up to ' + speedActions(hero) + ', one per line (Round ' + STATE.combat.round + ')' : 'Your action this turn (Round ' + STATE.combat.round + ')') : 'What does ' + escapeHtml(hero.alias) + ' do?'}" ${STATE.busy?'disabled':''}>${escapeHtml(STATE.draft || '')}</textarea>
           <button id="btn-send" ${STATE.busy?'disabled':''}>${STATE.busy?'…':'Act'}</button>
         </div>
-        ${STATE.busy ? `<div class="thinking">The Game Master is weighing the outcome…</div>` : ''}
+        ${STATE.busy ? `<div class="thinking" id="busy-line" role="status" aria-live="polite"><span id="busy-text">${escapeHtml(BUSY.note || BUSY.base || 'The Game Master is weighing the outcome…')}</span><span class="cursor" aria-hidden="true">▌</span><span id="busy-secs"></span></div>` : ''}
         ${STATE.error ? `<div class="error-box">${escapeHtml(STATE.error)}</div>` : ''}
       `}
 
@@ -4947,6 +4972,7 @@ async function advanceChapter(){
   if(STATE.chapterId !== 'FINISHED'){
     const nextChapter = currentChapter();
     STATE.busy = true;
+    startBusy('Closing out the chapter…');
     render();
     let bridge = null;
     try{
@@ -4956,7 +4982,7 @@ async function advanceChapter(){
       // blocking the player from continuing.
       bridge = null;
     }
-    STATE.busy = false;
+    STATE.busy = false; stopBusy();
     if(bridge && bridge.trim()){
       pushFullLog('gm', bridge.trim(), null);
     }
@@ -5501,6 +5527,7 @@ async function submitAction(opts){
   STATE.busy = true;
   STATE.error = null;
   STATE.draft = '';
+  startBusy('Reading your action…');
   const turnSnap = takeTurnSnapshot();
   let narrated = false;   // true once the narrator has answered this turn
   STATE.log.push({who:'player', text});
@@ -5521,6 +5548,7 @@ async function submitAction(opts){
       if(checkedName) STATE.checkPrompts = STATE.checkPrompts.filter(n => n !== checkedName);
     }
     if(STATE.combat){
+      setBusyStage(`Resolving round ${STATE.combat.round} of the fight…`);
       cr = await resolveCombatRound(hero, chapter, text, opts);
       mechanics = cr.mechanics;
       extraBlock = combatBlockText(cr);
@@ -5537,6 +5565,7 @@ async function submitAction(opts){
       repairSeconds = rp.seconds || 0;
       repairNote = rp.note || null;
     } else {
+      setBusyStage('Working out what your action risks…');
       try{
         mechanics = await resolveMechanics(hero, chapter, STATE.log.slice(0,-1), text);
       }catch(e){
@@ -5559,8 +5588,10 @@ async function submitAction(opts){
 
     const healthPct = STATE.currentHealth / maxHealth(hero);
     const healthContext = healthPct <= 0.25 ? 'Badly hurt, running on fumes.' : healthPct <= 0.5 ? 'Taken real damage, feeling it.' : null;
+    setBusyStage('The Game Master is writing the scene…');
     const reply = await callGM(hero, chapter, STATE.log.slice(0,-1), text, mechanics, healthContext, extraBlock);
     narrated = true;
+    setBusyStage('Recording the scene…');
     let cleaned = reply;
     const timeSeconds = repairSeconds ? 0 : parseTimeTag(cleaned);
     cleaned = cleaned.replace(/\[TIME:[^\]]*\]/gi, '').trim();
@@ -5666,6 +5697,7 @@ async function submitAction(opts){
   }finally{
     STATE.retreatNow = false;
     STATE.busy = false;
+    stopBusy();
     render();
   }
 }
